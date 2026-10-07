@@ -204,7 +204,21 @@ class PermissionRoleSeeder extends Seeder
 
             // Sales Invoice permissions
             ['name' => 'manage-sales-invoices', 'module' => 'sales-invoices', 'label' => 'Manage Sales Invoices'],
-            ['name' => 'manage-sales-return-invoices', 'module' => 'sales-invoices', 'label' => 'Manage Sales Return Invoices'],
+            ['name' => 'create-sales-invoices', 'module' => 'sales-invoices', 'label' => 'Create Sales Invoices'],
+            ['name' => 'edit-sales-invoices', 'module' => 'sales-invoices', 'label' => 'Edit Sales Invoices'],
+            ['name' => 'delete-sales-invoices', 'module' => 'sales-invoices', 'label' => 'Delete Sales Invoices'],
+            ['name' => 'view-sales-invoices', 'module' => 'sales-invoices', 'label' => 'View Sales Invoices'],
+            ['name' => 'print-sales-invoices', 'module' => 'sales-invoices', 'label' => 'Print Sales Invoices'],
+            ['name' => 'post-sales-invoices', 'module' => 'sales-invoices', 'label' => 'Post Sales Invoices'],
+            ['name' => 'manage-sales-invoice-setup', 'module' => 'sales-invoices', 'label' => 'Manage Sales Invoice Setup'],
+
+            // Sales Return permissions
+            ['name' => 'manage-sales-return-invoices', 'module' => 'sales-returns', 'label' => 'Manage Sales Returns'],
+            ['name' => 'create-sales-returns', 'module' => 'sales-returns', 'label' => 'Create Sales Returns'],
+            ['name' => 'view-sales-returns', 'module' => 'sales-returns', 'label' => 'View Sales Returns'],
+            ['name' => 'delete-sales-returns', 'module' => 'sales-returns', 'label' => 'Delete Sales Returns'],
+            ['name' => 'approve-sales-returns', 'module' => 'sales-returns', 'label' => 'Approve Sales Returns'],
+            ['name' => 'complete-sales-returns', 'module' => 'sales-returns', 'label' => 'Complete Sales Returns'],
         ];
 
         $roles = [
@@ -386,7 +400,19 @@ class PermissionRoleSeeder extends Seeder
                     'convert-sales-proposals',
                     'manage-proposal-system-setup',
                     'manage-sales-invoices',
+                    'create-sales-invoices',
+                    'edit-sales-invoices',
+                    'delete-sales-invoices',
+                    'view-sales-invoices',
+                    'print-sales-invoices',
+                    'post-sales-invoices',
+                    'manage-sales-invoice-setup',
                     'manage-sales-return-invoices',
+                    'create-sales-returns',
+                    'view-sales-returns',
+                    'delete-sales-returns',
+                    'approve-sales-returns',
+                    'complete-sales-returns',
                 ]
             ]
         ];
