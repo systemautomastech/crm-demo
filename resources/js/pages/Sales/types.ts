@@ -26,7 +26,7 @@ export interface SalesInvoice {
     created_by: number;
     created_at: string;
     updated_at: string;
-    customer?: User;
+    customer?: Customer | User;
     customer_details?: CustomerDetails;
     warehouse?: Warehouse;
     items?: SalesInvoiceItem[];
@@ -77,11 +77,30 @@ export interface SalesInvoiceItem {
     product?: ProductServiceItem;
 }
 
+export interface Customer {
+    id: number;
+    user_id?: number;
+    name?: string;
+    customer_name?: string;
+    email?: string;
+    customer_email?: string;
+    phone?: string;
+    customer_phone?: string;
+    address?: string;
+    customer_address?: string;
+    billing_address?: any;
+    shipping_address?: any;
+    [key: string]: any;
+}
+
 export interface User {
     id: number;
     name: string;
     email: string;
     type?: string;
+    customer_name?: string;
+    customer_email?: string;
+    customer_phone?: string;
 }
 
 export interface CustomerDetails {

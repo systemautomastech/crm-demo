@@ -721,7 +721,7 @@ export default function MediaLibraryDemo() {
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setDeleteDirectoryState({isOpen: true, id: directory.id});
+                                  setDeleteDirectoryState({isOpen: true, id: directory.id, isLoading: false});
                                 }}
                                 className="text-destructive focus:text-destructive"
                               >

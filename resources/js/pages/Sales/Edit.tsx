@@ -3,7 +3,7 @@ import { Head, useForm, usePage, router, Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { useFlashMessages } from '@/hooks/useFlashMessages';
 import { useFormFields } from '@/hooks/useFormFields';
-import { SalesInvoice, SalesInvoiceItem } from './types';
+import { SalesInvoice, SalesInvoiceItem, Customer } from './types';
 import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import InvoiceItemsTable from './components/InvoiceItemsTable';
 import { useTaxCalculator, calculateLineItemAmounts } from './components/TaxCalculator';
@@ -23,7 +23,7 @@ import RichTextEditor from '@/components/ui/rich-text-editor';
 
 interface EditProps {
     invoice: SalesInvoice;
-    customers: Array<{ id: number; name: string; email: string; phone?: string; address?: string }>;
+    customers: Customer[];
     products: Array<{ id: number; name: string; sku: string; sale_price: number; unit: string; unit_name?: string; type: string; taxes: Array<{ id: number; tax_name: string; rate: number }> }>;
     warehouses: Array<{ id: number; name: string; address: string }>;
     [key: string]: any;

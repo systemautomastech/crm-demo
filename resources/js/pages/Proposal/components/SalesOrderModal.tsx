@@ -72,7 +72,7 @@ interface SalesProposal {
     customer_email?: string | null;
     customer_phone?: string | null;
     customer_address?: string | null;
-    customer?: { id: number; name?: string; customer_name?: string; email?: string; customer_email?: string; phone?: string; address?: string } | null;
+    customer?: Customer | null;
     total_amount: number;
     sales_order_id?: number | null;
     status: string;

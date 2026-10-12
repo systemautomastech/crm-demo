@@ -19,7 +19,8 @@ interface SalesInvoice {
     invoice_number: string;
     customer: {
         id: number;
-        name: string;
+        name?: string;
+        customer_name?: string;
     };
     warehouse?: {
         id: number;

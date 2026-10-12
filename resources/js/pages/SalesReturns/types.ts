@@ -12,7 +12,7 @@ export interface SalesReturn {
     notes?: string;
     created_at: string;
     updated_at: string;
-    customer?: User;
+    customer?: Customer | User;
     customer_details?: CustomerDetails;
     warehouse?: Warehouse;
     items?: SalesReturnItem[];
@@ -35,11 +35,29 @@ export interface SalesReturnItem {
     product?: ProductServiceItem;
 }
 
+export interface Customer {
+    id: number;
+    user_id?: number;
+    name?: string;
+    customer_name?: string;
+    email?: string;
+    customer_email?: string;
+    phone?: string;
+    customer_phone?: string;
+    address?: string;
+    billing_address?: any;
+    shipping_address?: any;
+    [key: string]: any;
+}
+
 export interface User {
     id: number;
     name: string;
     email: string;
     type?: string;
+    customer_name?: string;
+    customer_email?: string;
+    customer_phone?: string;
 }
 
 export interface CustomerDetails {
