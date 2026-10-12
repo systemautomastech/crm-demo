@@ -1,6 +1,6 @@
 {
     "name": "automas/salesorder",
-    "description": "SalesOrder package for AutomasERP",
+    "description": "SalesOrder package for AutomasCRM",
     "type": "library",
     "license": "MIT",
     "require": {},
@@ -11,7 +11,7 @@
     },
     "authors": [
         {
-            "name": "AutomasERP",
+            "name": "AutomasCRM",
             "email": "systemautomastech@gmail.com"
         }
     ],

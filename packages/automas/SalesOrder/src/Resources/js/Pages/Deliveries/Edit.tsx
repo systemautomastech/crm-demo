@@ -137,7 +137,7 @@ export default function DeliveryEdit({ delivery, items = [] }: DeliveryEditProps
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base font-bold">{t('Delivery Information')}</CardTitle>
-                        <CardDescription>{t('Sales Order Reference:')} {order.order_number} ({customer.name || t('Customer')})</CardDescription>
+                        <CardDescription>{t('Sales Order Reference:')} {order.order_number} ({customer.customer_name || t('Customer')})</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

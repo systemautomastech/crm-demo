@@ -2,6 +2,7 @@
 
 namespace Automas\SalesOrder\Models;
 
+use App\Models\Customer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -80,6 +81,28 @@ class SalesOrder extends Model
         ];
     }
 
+    public static function getLastSalesOrderId($createdBy = null): int
+    {
+        $createdBy = $createdBy ?? creatorId();
+
+        $orderNumbers = static::where('created_by', $createdBy)
+            ->whereNotNull('order_number')
+            ->lockForUpdate()
+            ->pluck('order_number');
+
+        $max = 0;
+        foreach ($orderNumbers as $num) {
+            if (preg_match('/(\d+)/', $num, $matches)) {
+                $val = (int) $matches[1];
+                if ($val > $max) {
+                    $max = $val;
+                }
+            }
+        }
+
+        return $max;
+    }
+
     public static function generateOrderNumber($createdBy = null): string
     {
         $createdBy = $createdBy ?? creatorId();
@@ -87,14 +110,26 @@ class SalesOrder extends Model
         return DB::transaction(function () use ($createdBy) {
             $settings = SalesOrderSetting::getSettings($createdBy);
             $prefix   = $settings['so_prefix'] ?? 'SO';
-            $next     = (int) ($settings['so_starting_number'] ?? 1);
+            $settingNumber = (int) ($settings['so_starting_number'] ?? 1);
+
+            $lastId = static::getLastSalesOrderId($createdBy);
+
+            // Never go backwards: take the maximum of setting number and last number + 1
+            $next = max($settingNumber, $lastId + 1);
+
+            // Double check race condition loop to guarantee uniqueness
+            $orderNumber = $prefix . str_pad($next, 5, '0', STR_PAD_LEFT);
+            while (static::where('created_by', $createdBy)->where('order_number', $orderNumber)->exists()) {
+                $next++;
+                $orderNumber = $prefix . str_pad($next, 5, '0', STR_PAD_LEFT);
+            }
 
             SalesOrderSetting::setSettings(
                 ['so_starting_number' => (string) ($next + 1)],
                 $createdBy
             );
 
-            return $prefix . str_pad($next, 5, '0', STR_PAD_LEFT);
+            return $orderNumber;
         });
     }
 
@@ -130,7 +165,7 @@ class SalesOrder extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function creator(): BelongsTo
@@ -220,6 +255,32 @@ class SalesOrder extends Model
         }
 
         $this->update(['delivery_status' => $deliveryStatus]);
+    }
+
+    /**
+     * Check if there are any unallocated items remaining to be added to a new challan.
+     * Considers all active deliveries (status != cancelled).
+     */
+    public function hasRemainingItemsToDeliver(): bool
+    {
+        $items = $this->items()->with([
+            'deliveryItems' => function ($q) {
+                $q->whereHas('delivery', fn($dq) => $dq->where('status', '!=', SalesOrderDelivery::STATUS_CANCELLED));
+            }
+        ])->get();
+
+        if ($items->isEmpty()) {
+            return false;
+        }
+
+        foreach ($items as $item) {
+            $deliveredOrAllocated = $item->deliveryItems->sum('quantity');
+            if ($item->quantity > $deliveredOrAllocated) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected static function boot(): void

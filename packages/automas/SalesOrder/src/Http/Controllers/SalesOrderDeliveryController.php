@@ -117,7 +117,7 @@ class SalesOrderDeliveryController extends Controller
         })->filter(fn($i) => $i['remaining_quantity'] > 0)->values();
 
         if ($items->isEmpty()) {
-            return back()->with('error', __('All items are already fully delivered.'));
+            return back()->with('error', __('No items remain for new Challan.'));
         }
 
         return Inertia::render('SalesOrder/SalesOrders/Deliver', [
@@ -139,8 +139,8 @@ class SalesOrderDeliveryController extends Controller
         if ($salesOrder->status !== SalesOrder::STATUS_CONFIRMED) {
             return back()->with('error', __('Only confirmed Sales Orders can receive deliveries.'));
         }
-        if ($salesOrder->delivery_status === SalesOrder::DELIVERY_STATUS_FULL) {
-            return back()->with('error', __('This Sales Order is already fully delivered.'));
+        if ($salesOrder->delivery_status === SalesOrder::DELIVERY_STATUS_FULL || !$salesOrder->hasRemainingItemsToDeliver()) {
+            return back()->with('error', __('No items remain for new Challan.'));
         }
         if ($salesOrder->assignment_status !== SalesOrder::ASSIGNMENT_ACQUIRED) {
             return back()->with('error', __('You must acquire this Sales Order before creating a delivery.'));
@@ -475,6 +475,9 @@ class SalesOrderDeliveryController extends Controller
         }
         if ($delivery->creator_id == $user->id) {
             return true;
+        }
+        if (!$delivery->salesOrder) {
+            return $delivery->created_by == creatorId();
         }
         return $this->canAccessOrder($delivery->salesOrder);
     }

@@ -1,7 +1,7 @@
 {
     "name": "SalesOrder",
     "alias": "SalesOrder",
-    "description": "Standalone Sales Order module for AutomasERP",
+    "description": "Standalone Sales Order module for AutomasCRM",
     "priority": 60,
     "version": "1.0.0",
     "monthly_price": 0,

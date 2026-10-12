@@ -3,6 +3,11 @@
 namespace Automas\SalesOrder\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\SalesInvoice;
+use App\Models\SalesInvoiceItem;
+use App\Models\SalesInvoiceItemTax;
+use Automas\ProductService\Models\ProductServiceItem;
+use Automas\SalesOrder\Models\SalesOrderDelivery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,19 +24,30 @@ use Automas\SalesOrder\Events\DestroySalesOrder;
 use App\Models\User;
 use App\Models\UserGroup;
 use App\Models\Warehouse;
+use App\Models\Customer;
 use App\Services\CustomerService;
-use Automas\Account\Models\Customer;
 use Automas\Quotation\Models\SalesQuotation;
 
 class SalesOrderController extends Controller
 {
+    public function __construct(protected CustomerService $customerService)
+    {
+    }
+
     public function index(Request $request)
     {
         if (!Auth::user()->can('manage-sales-orders')) {
             return back()->with('error', __('Permission denied'));
         }
 
-        $salesOrders = SalesOrder::with(['customer', 'assignedUsers', 'items', 'assignedGroup', 'acquiredByUser'])
+        $salesOrders = SalesOrder::with([
+            'customer',
+            'warehouse',
+            'assignedUsers',
+            'assignedGroup',
+            'acquiredByUser',
+            'items.product.warehouseStocks',
+        ])
             ->accessible()
             ->when($request->name, fn($q) => $q->where(function ($sq) use ($request) {
                 $sq->where('name', 'like', '%' . $request->name . '%')
@@ -75,7 +91,8 @@ class SalesOrderController extends Controller
             $order->can_deliver = $order->status === SalesOrder::STATUS_CONFIRMED
                 && $order->delivery_status !== SalesOrder::DELIVERY_STATUS_FULL
                 && $order->assignment_status === SalesOrder::ASSIGNMENT_ACQUIRED
-                && ($order->acquired_by === $authUser->id || $isCompanyOrAdmin);
+                && ($order->acquired_by === $authUser->id || $isCompanyOrAdmin)
+                && $order->hasRemainingItemsToDeliver();
 
             $order->can_acquire = $order->delivery_status !== SalesOrder::DELIVERY_STATUS_FULL
                 && $order->assignment_status !== SalesOrder::ASSIGNMENT_ACQUIRED
@@ -86,10 +103,28 @@ class SalesOrderController extends Controller
                     || $authUser->can('acquire-sales-orders')
                 );
 
+            $orderWarehouseId = $order->warehouse_id;
+            $order->items = $order->items->map(function ($it) use ($orderWarehouseId) {
+                $p = $it->product;
+                $isService = ($p?->type ?? 'product') === 'service';
+                $stock = 0;
+                if ($isService) {
+                    $stock = 999999;
+                } elseif ($p && $p->relationLoaded('warehouseStocks')) {
+                    $stock = $orderWarehouseId
+                        ? (float) ($p->warehouseStocks->where('warehouse_id', $orderWarehouseId)->first()?->quantity ?? 0)
+                        : (float) $p->warehouseStocks->sum('quantity');
+                }
+                $it->stock_quantity = $stock;
+                $it->is_service = $isService;
+                $it->hasStock = $isService || ($stock >= $it->quantity);
+                return $it;
+            });
+
             return $order;
         });
 
-        $customers = $this->getCustomers();
+        $customers = $this->customerService->getCustomers();
         $users = $this->getWorkspaceUsers();
         $settings = SalesOrderSetting::getSettings();
         $userGroups = UserGroup::where('created_by', creatorId())
@@ -120,7 +155,7 @@ class SalesOrderController extends Controller
             ->get();
 
         return Inertia::render('SalesOrder/SalesOrders/Create', [
-            'customers' => $this->getCustomers(),
+            'customers' => $this->customerService->getCustomers(),
             'users' => $this->getWorkspaceUsers(),
             'userGroups' => $userGroups,
             'warehouses' => $this->getWarehouses(),
@@ -140,19 +175,19 @@ class SalesOrderController extends Controller
 
         // Convert addresses to JSON
         $billingAddress = [
-            'billing_address'        => $validated['billing_address'] ?? null,
-            'billing_city'           => $validated['billing_city'] ?? null,
-            'billing_state'          => $validated['billing_state'] ?? null,
-            'billing_country'        => $validated['billing_country'] ?? null,
-            'billing_postal_code'    => $validated['billing_postal_code'] ?? null,
+            'billing_address' => $validated['billing_address'] ?? null,
+            'billing_city' => $validated['billing_city'] ?? null,
+            'billing_state' => $validated['billing_state'] ?? null,
+            'billing_country' => $validated['billing_country'] ?? null,
+            'billing_postal_code' => $validated['billing_postal_code'] ?? null,
         ];
 
         $shippingAddress = [
-            'shipping_address'       => $validated['shipping_address'] ?? null,
-            'shipping_city'          => $validated['shipping_city'] ?? null,
-            'shipping_state'         => $validated['shipping_state'] ?? null,
-            'shipping_country'       => $validated['shipping_country'] ?? null,
-            'shipping_postal_code'   => $validated['shipping_postal_code'] ?? null,
+            'shipping_address' => $validated['shipping_address'] ?? null,
+            'shipping_city' => $validated['shipping_city'] ?? null,
+            'shipping_state' => $validated['shipping_state'] ?? null,
+            'shipping_country' => $validated['shipping_country'] ?? null,
+            'shipping_postal_code' => $validated['shipping_postal_code'] ?? null,
         ];
 
         $salesOrder = DB::transaction(function () use ($validated, $billingAddress, $shippingAddress, $request) {
@@ -237,19 +272,38 @@ class SalesOrderController extends Controller
 
         $salesOrder->load(['customer', 'warehouse', 'assignedUsers', 'allDeliveries.items.salesOrderItem', 'assignedGroup', 'acquiredByUser']);
 
+        $warehouseId = $salesOrder->warehouse_id;
+
         $items = $salesOrder->items()->with([
-            'product',
+            'product' => function ($pq) use ($warehouseId) {
+                if ($warehouseId) {
+                    $pq->with(['warehouseStocks' => fn($sq) => $sq->where('warehouse_id', $warehouseId)]);
+                } else {
+                    $pq->with('warehouseStocks');
+                }
+            },
             'taxes',
             'deliveryItems' => function ($q) {
-                $q->whereHas('delivery', fn($dq) => $dq->where('status', \Automas\SalesOrder\Models\SalesOrderDelivery::STATUS_DELIVERED));
+                $q->whereHas('delivery', fn($dq) => $dq->where('status', SalesOrderDelivery::STATUS_DELIVERED));
             }
-        ])->get()->map(function ($item) {
+        ])->get()->map(function ($item) use ($warehouseId) {
             $lineTotal = $item->quantity * $item->unit_price;
             $discountAmt = ($lineTotal * ($item->discount_percentage ?? 0)) / 100;
             $afterDiscount = $lineTotal - $discountAmt;
             $taxAmt = ($afterDiscount * ($item->tax_percentage ?? 0)) / 100;
             $delivered = $item->deliveryItems->sum('quantity');
             $remaining = max(0, $item->quantity - $delivered);
+
+            $product = $item->product;
+            $isService = ($product?->type ?? 'product') === 'service';
+            $stockQuantity = 0;
+            if ($isService) {
+                $stockQuantity = 999999;
+            } elseif ($product && $product->relationLoaded('warehouseStocks')) {
+                $stockQuantity = $warehouseId
+                    ? (float) ($product->warehouseStocks->first()?->quantity ?? 0)
+                    : (float) $product->warehouseStocks->sum('quantity');
+            }
 
             return [
                 'id' => $item->id,
@@ -265,6 +319,9 @@ class SalesOrderController extends Controller
                 'total_amount' => $afterDiscount + $taxAmt,
                 'delivered_quantity' => $delivered,
                 'remaining_quantity' => $remaining,
+                'stock_quantity' => $stockQuantity,
+                'is_service' => $isService,
+                'hasStock' => $isService || ($stockQuantity >= $item->quantity),
                 'unit' => $item->unit,
                 'description' => $item->description,
                 'taxes' => $item->taxes->map(fn($t) => ['tax_name' => $t->tax_name, 'tax_rate' => (float) $t->tax_rate])->toArray(),
@@ -289,9 +346,9 @@ class SalesOrderController extends Controller
 
         $isGroupMember = $salesOrder->assigned_group_id
             ? UserGroup::where('id', $salesOrder->assigned_group_id)
-            ->where('is_active', true)
-            ->whereHas('users', fn($q) => $q->where('users.id', $authUser->id))
-            ->exists()
+                ->where('is_active', true)
+                ->whereHas('users', fn($q) => $q->where('users.id', $authUser->id))
+                ->exists()
             : false;
 
         $isCompanyOrAdmin = in_array($authUser->type, ['company', 'superadmin', 'admin']);
@@ -311,7 +368,8 @@ class SalesOrderController extends Controller
             'canDeliver' => $salesOrder->status === SalesOrder::STATUS_CONFIRMED
                 && $salesOrder->delivery_status !== SalesOrder::DELIVERY_STATUS_FULL
                 && $salesOrder->assignment_status === SalesOrder::ASSIGNMENT_ACQUIRED
-                && ($salesOrder->acquired_by === $authUser->id || $isCompanyOrAdmin),
+                && ($salesOrder->acquired_by === $authUser->id || $isCompanyOrAdmin)
+                && $salesOrder->hasRemainingItemsToDeliver(),
             'canAssignGroup' => ($authUser->can('assign-group-sales-orders') || $authUser->can('reassign-sales-orders') || $authUser->can('edit-sales-orders') || $isCompanyOrAdmin),
             'canAcquire' => $salesOrder->delivery_status !== SalesOrder::DELIVERY_STATUS_FULL
                 && $salesOrder->assignment_status !== SalesOrder::ASSIGNMENT_ACQUIRED
@@ -359,8 +417,8 @@ class SalesOrderController extends Controller
         $salesOrder->load(['items.taxes', 'items.product', 'assignedUsers', 'assignedGroup']);
         $salesOrder->items->transform(function ($item) {
             $product = $item->product;
-            if (!$product && $item->product_id && class_exists(\Automas\ProductService\Models\ProductServiceItem::class)) {
-                $product = \Automas\ProductService\Models\ProductServiceItem::find($item->product_id);
+            if (!$product && $item->product_id && class_exists(ProductServiceItem::class)) {
+                $product = ProductServiceItem::find($item->product_id);
             }
 
             $lineTotal = $item->quantity * $item->unit_price;
@@ -392,7 +450,7 @@ class SalesOrderController extends Controller
 
         return Inertia::render('SalesOrder/SalesOrders/Edit', [
             'order' => $salesOrder,
-            'customers' => $this->getCustomers(),
+            'customers' => $this->customerService->getCustomers(),
             'users' => $this->getWorkspaceUsers(),
             'userGroups' => $userGroups,
             'warehouses' => $this->getWarehouses(),
@@ -446,19 +504,19 @@ class SalesOrderController extends Controller
             }
 
             $billingAddress = [
-                'billing_address'        => $validated['billing_address'] ?? null,
-                'billing_city'           => $validated['billing_city'] ?? null,
-                'billing_state'          => $validated['billing_state'] ?? null,
-                'billing_country'        => $validated['billing_country'] ?? null,
-                'billing_postal_code'    => $validated['billing_postal_code'] ?? null,
+                'billing_address' => $validated['billing_address'] ?? null,
+                'billing_city' => $validated['billing_city'] ?? null,
+                'billing_state' => $validated['billing_state'] ?? null,
+                'billing_country' => $validated['billing_country'] ?? null,
+                'billing_postal_code' => $validated['billing_postal_code'] ?? null,
             ];
 
             $shippingAddress = [
-                'shipping_address'       => $validated['shipping_address'] ?? null,
-                'shipping_city'          => $validated['shipping_city'] ?? null,
-                'shipping_state'         => $validated['shipping_state'] ?? null,
-                'shipping_country'       => $validated['shipping_country'] ?? null,
-                'shipping_postal_code'   => $validated['shipping_postal_code'] ?? null,
+                'shipping_address' => $validated['shipping_address'] ?? null,
+                'shipping_city' => $validated['shipping_city'] ?? null,
+                'shipping_state' => $validated['shipping_state'] ?? null,
+                'shipping_country' => $validated['shipping_country'] ?? null,
+                'shipping_postal_code' => $validated['shipping_postal_code'] ?? null,
             ];
 
             $status = $validated['status'] ?? $salesOrder->status;
@@ -874,14 +932,14 @@ class SalesOrderController extends Controller
             $salesOrder = DB::transaction(function () use ($quotation, $request, $customerService) {
                 if ($request->input('customer_type') === 'new' && $request->filled('customer_name')) {
                     $customer = $customerService->createCustomer([
-                        'customer_name'  => $request->input('customer_name') ?? $quotation->customer_name,
+                        'customer_name' => $request->input('customer_name') ?? $quotation->customer_name,
                         'customer_email' => $request->input('customer_email') ?? $quotation->customer_email,
                         'customer_phone' => $request->input('customer_phone') ?? $quotation->customer_phone,
-                        'address'        => $request->input('customer_address') ?? $quotation->address,
-                        'city'           => $request->input('customer_city'),
-                        'state'          => $request->input('customer_state'),
-                        'zip_code'       => $request->input('customer_zip_code'),
-                        'country'        => $request->input('customer_country'),
+                        'address' => $request->input('customer_address') ?? $quotation->address,
+                        'city' => $request->input('customer_city'),
+                        'state' => $request->input('customer_state'),
+                        'zip_code' => $request->input('customer_zip_code'),
+                        'country' => $request->input('customer_country'),
                     ]);
                 } elseif ($request->input('customer_type') === 'existing' && $request->filled('customer_id')) {
                     $customer = Customer::where('created_by', creatorId())
@@ -895,11 +953,11 @@ class SalesOrderController extends Controller
 
                 $items = $quotation->items()->with('taxes')->get();
                 $totals = $this->calculateTotals($items->map(fn($i) => [
-                    'quantity'            => $i->quantity,
-                    'unit_price'          => $i->unit_price,
+                    'quantity' => $i->quantity,
+                    'unit_price' => $i->unit_price,
                     'discount_percentage' => $i->discount_percentage ?? 0,
-                    'tax_percentage'      => $i->tax_percentage ?? 0,
-                    'taxes'               => $i->taxes->map(fn($t) => ['tax_name' => $t->tax_name, 'tax_rate' => $t->tax_rate])->toArray(),
+                    'tax_percentage' => $i->tax_percentage ?? 0,
+                    'taxes' => $i->taxes->map(fn($t) => ['tax_name' => $t->tax_name, 'tax_rate' => $t->tax_rate])->toArray(),
                 ])->toArray());
 
                 $assignedGroupId = null;
@@ -910,42 +968,42 @@ class SalesOrderController extends Controller
                 }
 
                 $salesOrder = SalesOrder::create([
-                    'name'              => $quotation->subject ?: ($quotation->quotation_number ?? 'From Quotation'),
-                    'quotation_id'          => $quotation->id,
-                    'status'            => SalesOrder::STATUS_CONFIRMED,
-                    'delivery_status'   => SalesOrder::DELIVERY_STATUS_PENDING,
+                    'name' => $quotation->subject ?: ($quotation->quotation_number ?? 'From Quotation'),
+                    'quotation_id' => $quotation->id,
+                    'status' => SalesOrder::STATUS_CONFIRMED,
+                    'delivery_status' => SalesOrder::DELIVERY_STATUS_PENDING,
                     'assignment_status' => $assignmentStatus,
                     'assigned_group_id' => $assignedGroupId,
-                    'customer_id'       => $customer->user_id ?? $quotation->customer->user_id ?? null,
-                    'warehouse_id'      => $quotation->warehouse_id,
-                    'order_date'        => now()->toDateString(),
-                    'billing_address'   => $customer->billing_address ?? null,
-                    'shipping_address'  => $customer->shipping_address ?? null,
-                    'notes'             => $quotation->notes ?? null,
-                    'subtotal'          => $totals['subtotal'],
-                    'tax_amount'        => $totals['tax_amount'],
-                    'discount_amount'   => $totals['discount_amount'],
-                    'total_amount'      => $totals['total_amount'],
-                    'creator_id'        => Auth::id(),
-                    'created_by'        => creatorId(),
+                    'customer_id' => $customer->user_id ?? $quotation->customer->user_id ?? null,
+                    'warehouse_id' => $quotation->warehouse_id,
+                    'order_date' => now()->toDateString(),
+                    'billing_address' => $customer->billing_address ?? null,
+                    'shipping_address' => $customer->shipping_address ?? null,
+                    'notes' => $quotation->notes ?? null,
+                    'subtotal' => $totals['subtotal'],
+                    'tax_amount' => $totals['tax_amount'],
+                    'discount_amount' => $totals['discount_amount'],
+                    'total_amount' => $totals['total_amount'],
+                    'creator_id' => Auth::id(),
+                    'created_by' => creatorId(),
                 ]);
 
                 foreach ($items as $item) {
                     $newItem = SalesOrderItem::create([
-                        'order_id'            => $salesOrder->id,
-                        'product_id'          => $item->product_id,
-                        'quantity'            => $item->quantity,
-                        'unit_price'          => $item->unit_price,
+                        'order_id' => $salesOrder->id,
+                        'product_id' => $item->product_id,
+                        'quantity' => $item->quantity,
+                        'unit_price' => $item->unit_price,
                         'discount_percentage' => $item->discount_percentage ?? 0,
-                        'tax_percentage'      => $item->tax_percentage ?? 0,
-                        'unit'                => $item->unit ?? null,
-                        'description'         => $item->description ?? null,
-                        'creator_id'          => Auth::id(),
-                        'created_by'          => creatorId(),
+                        'tax_percentage' => $item->tax_percentage ?? 0,
+                        'unit' => $item->unit ?? null,
+                        'description' => $item->description ?? null,
+                        'creator_id' => Auth::id(),
+                        'created_by' => creatorId(),
                     ]);
                     foreach ($item->taxes as $tax) {
                         SalesOrderItemTax::create([
-                            'item_id'  => $newItem->id,
+                            'item_id' => $newItem->id,
                             'tax_name' => $tax->tax_name,
                             'tax_rate' => $tax->tax_rate,
                         ]);
@@ -994,7 +1052,7 @@ class SalesOrderController extends Controller
             return back()->with('error', __('Cannot convert to invoice while delivery is partially in progress. Please complete all deliveries or convert before starting delivery.'));
         }
 
-        if (!class_exists(\App\Models\SalesInvoice::class)) {
+        if (!class_exists(SalesInvoice::class)) {
             return back()->with('error', __('Sales Invoice module is not available.'));
         }
 
@@ -1004,20 +1062,20 @@ class SalesOrderController extends Controller
             $invoice = DB::transaction(function () use ($salesOrder) {
                 $customer = $salesOrder->customer;
 
-                $invoice = new \App\Models\SalesInvoice();
+                $invoice = new SalesInvoice();
                 $invoice->invoice_date = now()->toDateString();
                 $invoice->due_date = $salesOrder->expected_delivery_date
                     ? $salesOrder->expected_delivery_date->toDateString()
                     : now()->addDays(30)->toDateString();
                 $invoice->customer_id = $salesOrder->customer_id;
-                $invoice->customer_name = $customer->name ?? null;
-                $invoice->customer_email = $customer->email ?? null;
-                $invoice->customer_phone = $customer->phone ?? null;
+                $invoice->customer_name = $customer->customer_name ?? null;
+                $invoice->customer_email = $customer->customer_email ?? null;
+                $invoice->customer_phone = $customer->customer_phone ?? null;
                 $billingAddress = $salesOrder->billing_address;
                 if (is_array($billingAddress)) {
-                    $invoice->customer_address = $billingAddress['billing_address'] ?? json_encode($billingAddress);
+                    $invoice->customer_address = $billingAddress['address'] ?? ($billingAddress['billing_address'] ?? json_encode($billingAddress));
                 } else {
-                    $invoice->customer_address = $billingAddress ?? (is_array($customer->address ?? null) ? json_encode($customer->address) : ($customer->address ?? null));
+                    $invoice->customer_address = $billingAddress ?? (is_array($customer->billing_address ?? null) ? json_encode($customer->billing_address) : ($customer->billing_address ?? null));
                 }
                 $invoice->warehouse_id = $salesOrder->warehouse_id ?? 1;
                 $invoice->type = 'product';
@@ -1033,8 +1091,8 @@ class SalesOrderController extends Controller
                 $invoice->created_by = creatorId();
                 $invoice->save();
 
-                foreach ($salesOrder->items as $item) {
-                    $invoiceItem = new \App\Models\SalesInvoiceItem();
+                foreach ($salesOrder->items as $item) { 
+                    $invoiceItem = new SalesInvoiceItem();
                     $invoiceItem->invoice_id = $invoice->id;
                     $invoiceItem->product_id = $item->product_id;
                     $invoiceItem->description = $item->description;
@@ -1053,7 +1111,7 @@ class SalesOrderController extends Controller
 
                     if (!empty($item->taxes)) {
                         foreach ($item->taxes as $tax) {
-                            $invoiceTax = new \App\Models\SalesInvoiceItemTax();
+                            $invoiceTax = new SalesInvoiceItemTax();
                             $invoiceTax->item_id = $invoiceItem->id;
                             $invoiceTax->tax_name = $tax->tax_name;
                             $invoiceTax->tax_rate = $tax->tax_rate ?? 0;
@@ -1089,31 +1147,22 @@ class SalesOrderController extends Controller
             return response()->json(['error' => 'Permission denied'], 403);
         }
 
-        $customer = User::where('id', $customerId)
+        $customer = Customer::where('id', $customerId)
             ->where(fn($q) => $q->where('created_by', creatorId())->orWhere('id', $customerId))
-            ->where('type', 'client')
             ->first();
 
         if (!$customer) {
             return response()->json(['error' => 'Customer not found'], 404);
         }
 
-        // Try Account addon customer details
-        $details = null;
-        if (class_exists(\Automas\Account\Models\Customer::class)) {
-            $details = \Automas\Account\Models\Customer::where('user_id', $customerId)
-                ->where('created_by', creatorId())
-                ->first();
-        }
-
         return response()->json([
             'customer' => [
                 'id' => $customer->id,
-                'name' => $customer->name,
-                'email' => $customer->email,
-                'mobile_no' => $customer->mobile_no ?? ($details?->contact_person_mobile),
-                'billing_address' => $details?->billing_address ?? null,
-                'shipping_address' => $details?->shipping_address ?? null,
+                'name' => $customer->customer_name,
+                'email' => $customer->customer_email,
+                'mobile_no' => $customer->customer_phone,
+                'billing_address' => $customer->billing_address ?? null,
+                'shipping_address' => $customer->shipping_address ?? $customer->billing_address ?? null,
             ],
         ]);
     }
@@ -1126,16 +1175,16 @@ class SalesOrderController extends Controller
 
         $warehouseId = $request->warehouse_id ? (int) $request->warehouse_id : null;
 
-        if (class_exists(\App\Services\WarehouseService::class)) {
-            $products = app(\App\Services\WarehouseService::class)->getWarehouseProducts($warehouseId);
+        if (class_exists(WarehouseService::class)) {
+            $products = app(WarehouseService::class)->getWarehouseProducts($warehouseId);
             return response()->json($products);
         }
 
-        if (!class_exists(\Automas\ProductService\Models\ProductServiceItem::class)) {
+        if (!class_exists(ProductServiceItem::class)) {
             return response()->json([]);
         }
 
-        $query = \Automas\ProductService\Models\ProductServiceItem::with('unitRelation:id,unit_name')
+        $query = ProductServiceItem::with('unitRelation:id,unit_name')
             ->where('is_active', true)
             ->where('created_by', creatorId());
 
@@ -1144,8 +1193,8 @@ class SalesOrderController extends Controller
                 $q->where('type', 'service')
                     ->orWhereHas('warehouseStocks', fn($sub) => $sub->where('warehouse_id', $warehouseId));
             })->with([
-                'warehouseStocks' => fn($sub) => $sub->where('warehouse_id', $warehouseId),
-            ]);
+                        'warehouseStocks' => fn($sub) => $sub->where('warehouse_id', $warehouseId),
+                    ]);
         }
 
         $products = $query->get();
@@ -1196,19 +1245,23 @@ class SalesOrderController extends Controller
                 'customer_name' => $validated['customer_name'] ?? null,
                 'customer_email' => $validated['customer_email'] ?? null,
                 'customer_phone' => $validated['customer_phone'] ?? null,
-                'billing_address' => $validated['billing_address'] ?? null,
-                'shipping_address' => $validated['shipping_address'] ?? null,
-                'billing_city' => $validated['billing_city'] ?? null,
-                'billing_state' => $validated['billing_state'] ?? null,
-                'billing_country' => $validated['billing_country'] ?? null,
-                'billing_postal_code' => $validated['billing_postal_code'] ?? null,
-                'shipping_city' => $validated['shipping_city'] ?? null,
-                'shipping_state' => $validated['shipping_state'] ?? null,
-                'shipping_country' => $validated['shipping_country'] ?? null,
-                'shipping_postal_code' => $validated['shipping_postal_code'] ?? null,
+                'billing_address' => [
+                    'address_line_1' => $validated['billing_address'] ?? null,
+                    'city' => $validated['billing_city'] ?? null,
+                    'state' => $validated['billing_state'] ?? null,
+                    'country' => $validated['billing_country'] ?? null,
+                    'zip_code' => $validated['billing_postal_code'] ?? null,
+                ],
+                'shipping_address' => [
+                    'address_line_1' => $validated['shipping_address'] ?? null,
+                    'city' => $validated['shipping_city'] ?? null,
+                    'state' => $validated['shipping_state'] ?? null,
+                    'country' => $validated['shipping_country'] ?? null,
+                    'zip_code' => $validated['shipping_postal_code'] ?? null,
+                ],
             ]);
 
-            return $customer->user_id;
+            return $customer->id;
         }
 
         return !empty($validated['customer_id']) ? (int) $validated['customer_id'] : $defaultCustomerId;
@@ -1226,19 +1279,6 @@ class SalesOrderController extends Controller
                     || $salesOrder->assignedUsers()->where('users.id', $user->id)->exists());
         }
         return false;
-    }
-
-    private function getCustomers()
-    {
-        if (class_exists(\App\Services\CustomerService::class)) {
-            return app(\App\Services\CustomerService::class)->getCustomers();
-        }
-
-        return User::where('type', 'client')
-            ->where('created_by', creatorId())
-            ->where('is_disable', 0)
-            ->select('id', 'name', 'email', 'mobile_no')
-            ->get();
     }
 
     private function getWorkspaceUsers(): \Illuminate\Database\Eloquent\Collection

@@ -331,8 +331,8 @@ export default function Index() {
             sortable: false,
             render: (_: any, item: SalesOrder) => (
                 <div className="flex flex-col">
-                    <span className="font-medium text-gray-900">{item.customer?.name || '-'}</span>
-                    {item.customer?.email && <span className="text-xs text-muted-foreground">{item.customer.email}</span>}
+                    <span className="font-medium text-gray-900">{item.customer?.customer_name || item.customer_name || '-'}</span>
+                    {(item.customer?.customer_email || item.customer_email) && <span className="text-xs text-muted-foreground">{item.customer?.customer_email || item.customer_email}</span>}
                 </div>
             )
         },
@@ -537,7 +537,7 @@ export default function Index() {
                         variant={activeTab === 'all' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => handleTabChange('all')}
-                        className="rounded-full text-xs"
+                        className="rounded-md text-xs"
                     >
                         {t('All Orders')}
                     </Button>
@@ -545,7 +545,7 @@ export default function Index() {
                         variant={activeTab === 'available' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => handleTabChange('available')}
-                        className="rounded-full text-xs flex items-center gap-1.5"
+                        className="rounded-md text-xs flex items-center gap-1.5"
                     >
                         <Users className="h-3.5 w-3.5" />
                         {t('Available to Claim')}
@@ -554,7 +554,7 @@ export default function Index() {
                         variant={activeTab === 'my' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => handleTabChange('my')}
-                        className="rounded-full text-xs flex items-center gap-1.5"
+                        className="rounded-md text-xs flex items-center gap-1.5"
                     >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         {t('My Acquired')}
@@ -803,7 +803,7 @@ export default function Index() {
                                                         </div>
                                                         <div className="text-xs min-w-0">
                                                             <p className="text-muted-foreground mb-1 text-[11px] uppercase tracking-wide">{t('Customer')}</p>
-                                                            <p className="font-medium text-xs text-gray-800 truncate">{order.customer?.name || '-'}</p>
+                                                            <p className="font-medium text-xs text-gray-800 truncate">{order.customer?.customer_name || order.customer_name || '-'}</p>
                                                         </div>
                                                     </div>
 

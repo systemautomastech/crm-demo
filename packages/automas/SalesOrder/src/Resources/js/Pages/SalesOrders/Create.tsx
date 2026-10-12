@@ -16,7 +16,7 @@ import { InputError } from '@/components/ui/input-error';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Separator } from '@/components/ui/separator';
-import { Package, Users, User, X } from 'lucide-react';
+import { Package, Users, User, X, Loader } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useFormFields } from '@/hooks/useFormFields';
 import { MultiSelectEnhanced } from '@/components/ui/multi-select-enhanced';
@@ -24,9 +24,12 @@ import { MultiSelectEnhanced } from '@/components/ui/multi-select-enhanced';
 interface CreateProps {
     customers: Array<{
         id: number;
-        name: string;
-        email: string;
+        name?: string;
+        customer_name?: string;
+        email?: string;
+        customer_email?: string;
         mobile_no?: string;
+        customer_phone?: string;
         billing_address?: any;
         shipping_address?: any;
     }>;
@@ -500,11 +503,15 @@ export default function Create() {
                                             </SelectTrigger>
                                             <SelectContent searchable>
                                                 {customers && customers.length > 0 ? (
-                                                    customers.map((customer) => (
-                                                        <SelectItem key={customer.id} value={customer.id.toString()}>
-                                                            {customer.name} {customer.email ? `- ${customer.email}` : ''}
-                                                        </SelectItem>
-                                                    ))
+                                                    customers.map((customer) => {
+                                                        const custName = customer.customer_name;
+                                                        const custEmail = customer.customer_email;
+                                                        return (
+                                                            <SelectItem key={customer.id} value={customer.id.toString()}>
+                                                                {custName} {custEmail ? `- ${custEmail}` : ''}
+                                                            </SelectItem>
+                                                        );
+                                                    })
                                                 ) : (
                                                     <SelectItem value="no-data" disabled>
                                                         {t('No Customers available')}
@@ -523,7 +530,7 @@ export default function Create() {
                                                             <User className="w-2.5 h-2.5" />
                                                         </div>
                                                         <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">
-                                                            {selectedCustomer.name}
+                                                            {selectedCustomer.customer_name}
                                                         </span>
                                                     </div>
                                                     <Button
@@ -553,9 +560,9 @@ export default function Create() {
                                                     </Button>
                                                 </div>
                                                 <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5 truncate">
-                                                    <div className="truncate">{selectedCustomer.email || '-'}</div>
-                                                    {selectedCustomer.mobile_no && (
-                                                        <div className="truncate">{selectedCustomer.mobile_no}</div>
+                                                    <div className="truncate">{selectedCustomer.customer_email || '-'}</div>
+                                                    {selectedCustomer.customer_phone && (
+                                                        <div className="truncate">{selectedCustomer.customer_phone}</div>
                                                     )}
                                                 </div>
                                             </div>
@@ -952,8 +959,10 @@ export default function Create() {
                                 <Button
                                     type="submit"
                                     disabled={processing || data.items.length === 0}
+                                    className="flex items-center gap-2"
                                 >
-                                    {processing ? t('Creating...') : t('Create')}
+                                    {processing && <Loader className="h-4 w-4 animate-spin shrink-0" />}
+                                    <span>{processing ? t('Creating') : t('Create')}</span>
                                 </Button>
                             </div>
                         </div>

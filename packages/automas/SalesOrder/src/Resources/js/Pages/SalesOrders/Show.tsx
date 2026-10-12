@@ -410,16 +410,16 @@ export default function Show() {
                                 </h4>
                                 <div className="space-y-1">
                                     <div className="font-bold text-slate-900 dark:text-slate-100 text-base">
-                                        {salesOrder.customer?.name || salesOrder.customer_name || '-'}
+                                        {salesOrder.customer?.customer_name || salesOrder.customer_name || '-'}
                                     </div>
-                                    {salesOrder.customer?.email && (
+                                    {(salesOrder.customer?.customer_email || salesOrder.customer_email) && (
                                         <div className="text-slate-600 dark:text-slate-400 text-xs">
-                                            {salesOrder.customer.email}
+                                            {salesOrder.customer?.customer_email || salesOrder.customer_email}
                                         </div>
                                     )}
-                                    {salesOrder.customer?.mobile_no && (
+                                    {(salesOrder.customer?.customer_phone || salesOrder.customer_phone) && (
                                         <div className="text-slate-600 dark:text-slate-400 text-xs">
-                                            {salesOrder.customer.mobile_no}
+                                            {salesOrder.customer?.customer_phone || salesOrder.customer_phone}
                                         </div>
                                     )}
                                     {salesOrder.warehouse?.name && (
@@ -568,8 +568,8 @@ export default function Show() {
                                                         </td>
                                                         <td className="px-3 py-3.5 text-right">
                                                             <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full ${remaining > 0
-                                                                    ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40'
-                                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                                                                ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40'
+                                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
                                                                 }`}>
                                                                 {remaining}
                                                             </span>
@@ -761,11 +761,10 @@ export default function Show() {
                             <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg w-full">
                                 <button
                                     type="button"
-                                    className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${
-                                        reassignType === 'group'
+                                    className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${reassignType === 'group'
                                             ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm font-semibold'
                                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                        }`}
                                     onClick={() => { setReassignType('group'); setSelectedGroupId(''); setSelectedUserIds([]); }}
                                 >
                                     <Users className="w-3.5 h-3.5" />
@@ -773,11 +772,10 @@ export default function Show() {
                                 </button>
                                 <button
                                     type="button"
-                                    className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${
-                                        reassignType === 'user'
+                                    className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${reassignType === 'user'
                                             ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm font-semibold'
                                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                        }`}
                                     onClick={() => { setReassignType('user'); setSelectedGroupId(''); setSelectedUserIds([]); }}
                                 >
                                     <User className="w-3.5 h-3.5" />

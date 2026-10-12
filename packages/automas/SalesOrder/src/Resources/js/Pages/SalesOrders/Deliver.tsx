@@ -123,7 +123,7 @@ export default function Deliver({ salesOrder, items }: DeliverProps) {
                                     {salesOrder.customer && (
                                         <>
                                             <span>&bull;</span>
-                                            <span>{t('Customer')}: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{salesOrder.customer.name}</strong></span>
+                                            <span>{t('Customer')}: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{salesOrder.customer.customer_name}</strong></span>
                                         </>
                                     )}
                                 </p>

@@ -9,6 +9,8 @@ use Automas\SalesOrder\Http\Controllers\SalesOrderDashboardController;
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
 
     Route::get('/sales-orders/dashboard', [SalesOrderDashboardController::class, 'index'])->name('salesorder.dashboard');
+    Route::get('/sales-orders/company-dashboard', [SalesOrderDashboardController::class, 'companyDashboard'])->name('salesorder.company.dashboard');
+    Route::get('/sales-orders/user-dashboard', [SalesOrderDashboardController::class, 'userDashboardView'])->name('salesorder.user.dashboard');
 
     // ─── Sales Orders ──────────────────────────────────────────────────────
     Route::prefix('sales-orders')->name('salesorder.orders.')->group(function () {

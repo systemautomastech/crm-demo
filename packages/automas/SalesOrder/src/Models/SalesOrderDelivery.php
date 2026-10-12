@@ -40,6 +40,28 @@ class SalesOrderDelivery extends Model
 
     // ─── Number Generation ──────────────────────────────────────────────────
 
+    public static function getLastDellivaryChallanId($createdBy = null): int
+    {
+        $createdBy = $createdBy ?? creatorId();
+
+        $deliveryNumbers = static::where('created_by', $createdBy)
+            ->whereNotNull('delivery_number')
+            ->lockForUpdate()
+            ->pluck('delivery_number');
+
+        $max = 0;
+        foreach ($deliveryNumbers as $num) {
+            if (preg_match('/(\d+)/', $num, $matches)) {
+                $val = (int) $matches[1];
+                if ($val > $max) {
+                    $max = $val;
+                }
+            }
+        }
+
+        return $max;
+    }
+
     public static function generateDeliveryNumber($createdBy = null): string
     {
         $createdBy = $createdBy ?? creatorId();
@@ -47,14 +69,26 @@ class SalesOrderDelivery extends Model
         return DB::transaction(function () use ($createdBy) {
             $settings = SalesOrderSetting::getSettings($createdBy);
             $prefix   = $settings['dc_prefix'] ?? 'DC';
-            $next     = (int) ($settings['dc_starting_number'] ?? 1);
+            $settingNumber = (int) ($settings['dc_starting_number'] ?? 1);
+
+            $lastId = static::getLastDellivaryChallanId($createdBy);
+
+            // Never go backwards: take the maximum of setting number and last number + 1
+            $next = max($settingNumber, $lastId + 1);
+
+            // Double check race condition loop to guarantee uniqueness
+            $deliveryNumber = $prefix . str_pad($next, 5, '0', STR_PAD_LEFT);
+            while (static::where('created_by', $createdBy)->where('delivery_number', $deliveryNumber)->exists()) {
+                $next++;
+                $deliveryNumber = $prefix . str_pad($next, 5, '0', STR_PAD_LEFT);
+            }
 
             SalesOrderSetting::setSettings(
                 ['dc_starting_number' => (string) ($next + 1)],
                 $createdBy
             );
 
-            return $prefix . str_pad($next, 5, '0', STR_PAD_LEFT);
+            return $deliveryNumber;
         });
     }
 

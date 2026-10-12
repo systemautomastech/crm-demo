@@ -294,7 +294,7 @@ export default function DeliveryIndex({ deliveries, filters: propsFilters = {} }
                                                         )}
                                                     </td>
                                                     <td className="p-4">
-                                                        {order?.customer?.name || <span className="text-muted-foreground">—</span>}
+                                                        {order?.customer?.customer_name || <span className="text-muted-foreground">—</span>}
                                                     </td>
                                                     <td className="p-4 text-slate-700 dark:text-slate-300">
                                                         {formatDate(delivery.delivery_date)}

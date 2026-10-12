@@ -89,7 +89,7 @@ class SalesOrderApiController extends Controller
             $validator = Validator::make($request->all(), [
                 'name'                        => 'required|string|max:255',
                 'quotation_id'                    => 'nullable|integer',
-                'customer_id'                 => 'required|exists:users,id',
+                'customer_id'                 => 'required|exists:customers,id',
                 'warehouse_id'                => 'nullable|exists:warehouses,id',
                 'status'                      => 'nullable|string|in:draft,confirmed',
                 'order_date'                  => 'required|date',
@@ -183,7 +183,7 @@ class SalesOrderApiController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'name'                        => 'required|string|max:255',
-                'customer_id'                 => 'required|exists:users,id',
+                'customer_id'                 => 'required|exists:customers,id',
                 'warehouse_id'                => 'nullable|exists:warehouses,id',
                 'status'                      => 'nullable|string|in:draft,confirmed,cancelled',
                 'order_date'                  => 'required|date',

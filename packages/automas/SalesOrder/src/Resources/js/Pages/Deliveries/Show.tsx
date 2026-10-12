@@ -64,8 +64,8 @@ export default function DeliveryShow({
 
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [releaseDialogOpen, setReleaseDialogOpen] = useState(false);
-    const order = delivery.sales_order || {};
-    const customer = order.customer || {};
+    const order = delivery.sales_order || null;
+    const customer = order?.customer || {};
 
     const isCancelled = delivery.status === 'cancelled';
     const isDelivered = delivery.status === 'delivered';
@@ -78,6 +78,7 @@ export default function DeliveryShow({
     };
 
     const handleConfirmRelease = () => {
+        if (!order?.id) return;
         router.post(route('salesorder.orders.release', order.id), {}, {
             onSuccess: () => setReleaseDialogOpen(false)
         });
@@ -108,7 +109,7 @@ export default function DeliveryShow({
         <AuthenticatedLayout
             breadcrumbs={[
                 { label: t('Sales Orders'), url: route('salesorder.orders.index') },
-                { label: order.order_number || `#${order.id}`, url: route('salesorder.orders.show', order.id) },
+                ...(order?.id ? [{ label: order.order_number || `#${order.id}`, url: route('salesorder.orders.show', order.id) }] : []),
                 { label: t('Delivery Challans'), url: route('salesorder.deliveries.index') },
                 { label: delivery.delivery_number || t('Delivery') }
             ]}
@@ -128,9 +129,11 @@ export default function DeliveryShow({
                                     {delivery.delivery_number}
                                 </h1>
                                 {renderStatusBadge(delivery.status)}
-                                <Badge variant="outline" className="text-xs">
-                                    {t('SO Ref:')} {order.order_number}
-                                </Badge>
+                                {order?.order_number && (
+                                    <Badge variant="outline" className="text-xs">
+                                        {t('SO Ref:')} {order.order_number}
+                                    </Badge>
+                                )}
                             </div>
                             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
                                 <Calendar className="h-3.5 w-3.5 text-slate-400" />
@@ -142,16 +145,29 @@ export default function DeliveryShow({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 pt-2 lg:pt-0">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            asChild
-                        >
-                            <Link href={route('salesorder.orders.show', order.id)}>
-                                <ArrowLeft className="h-4 w-4 mr-1.5" />
-                                {t('Back to Order')}
-                            </Link>
-                        </Button>
+                        {order?.id ? (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                            >
+                                <Link href={route('salesorder.orders.show', order.id)}>
+                                    <ArrowLeft className="h-4 w-4 mr-1.5" />
+                                    {t('Back to Order')}
+                                </Link>
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                            >
+                                <Link href={route('salesorder.deliveries.index')}>
+                                    <ArrowLeft className="h-4 w-4 mr-1.5" />
+                                    {t('Back to Deliveries')}
+                                </Link>
+                            </Button>
+                        )}
 
                         {!isFinal && canEdit !== false && (
                             <Button
@@ -290,24 +306,28 @@ export default function DeliveryShow({
                         <CardContent className="pt-4 space-y-3 text-xs">
                             <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">{t('Order Number')}:</span>
-                                <Link
-                                    href={route('salesorder.orders.show', order.id)}
-                                    className="font-bold text-primary hover:underline"
-                                >
-                                    {order.order_number}
-                                </Link>
+                                {order?.id ? (
+                                    <Link
+                                        href={route('salesorder.orders.show', order.id)}
+                                        className="font-bold text-primary hover:underline"
+                                    >
+                                        {order.order_number}
+                                    </Link>
+                                ) : (
+                                    <span className="font-semibold text-muted-foreground">-</span>
+                                )}
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">{t('Order Date')}:</span>
-                                <span>{formatDate(order.order_date)}</span>
+                                <span>{order?.order_date ? formatDate(order.order_date) : '-'}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">{t('Commercial Status')}:</span>
-                                <Badge variant="outline" className="capitalize text-[10px]">{order.status}</Badge>
+                                <Badge variant="outline" className="capitalize text-[10px]">{order?.status || '-'}</Badge>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">{t('Order Fulfillment')}:</span>
-                                <Badge variant="secondary" className="capitalize text-[10px]">{order.delivery_status}</Badge>
+                                <Badge variant="secondary" className="capitalize text-[10px]">{order?.delivery_status || '-'}</Badge>
                             </div>
                         </CardContent>
                     </Card>
@@ -323,18 +343,18 @@ export default function DeliveryShow({
                         <CardContent className="pt-4 space-y-3 text-xs">
                             <div className="flex justify-between items-start">
                                 <span className="text-muted-foreground">{t('Customer')}:</span>
-                                <span className="font-bold text-right">{customer.name || '-'}</span>
+                                <span className="font-bold text-right">{customer.customer_name || customer.name || '-'}</span>
                             </div>
-                            {customer.email && (
+                            {customer.customer_email && (
                                 <div className="flex justify-between items-center">
                                     <span className="text-muted-foreground">{t('Email')}:</span>
-                                    <span>{customer.email}</span>
+                                    <span>{customer.customer_email}</span>
                                 </div>
                             )}
-                            {customer.mobile_no && (
+                            {customer.customer_phone && (
                                 <div className="flex justify-between items-center">
                                     <span className="text-muted-foreground">{t('Phone')}:</span>
-                                    <span>{customer.mobile_no}</span>
+                                    <span>{customer.customer_phone}</span>
                                 </div>
                             )}
                             <div className="flex justify-between items-start pt-1 border-t">
@@ -343,7 +363,7 @@ export default function DeliveryShow({
                                     {t('Shipping Address')}:
                                 </span>
                                 <span className="text-right max-w-[180px] font-medium text-[11px] leading-snug">
-                                    {order.shipping_address || order.billing_address || '-'}
+                                    {order?.shipping_address || order?.billing_address || '-'}
                                 </span>
                             </div>
                         </CardContent>

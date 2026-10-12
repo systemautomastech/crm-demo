@@ -17,7 +17,7 @@ class StoreSalesOrderRequest extends FormRequest
             'name'                   => 'required|string|max:255',
             'quotation_id'               => 'nullable|integer',
             'status'                 => 'nullable|string|in:draft,confirmed',
-            'customer_id'            => 'required|exists:users,id',
+            'customer_id'            => 'required|exists:customers,id',
             'warehouse_id'           => 'nullable|exists:warehouses,id',
             'order_date'             => 'required|date',
             'expected_delivery_date' => 'nullable|date|after_or_equal:order_date',

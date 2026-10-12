@@ -76,6 +76,9 @@ export interface SalesOrderItem {
     description?: string;
     delivered_quantity?: number;
     remaining_quantity?: number;
+    stock_quantity?: number;
+    is_service?: boolean;
+    hasStock?: boolean;
     taxes?: Array<{ tax_name: string; tax_rate: number }>;
 }
 

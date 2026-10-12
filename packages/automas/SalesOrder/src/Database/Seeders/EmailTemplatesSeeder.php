@@ -83,7 +83,7 @@ class EmailTemplatesSeeder extends Seeder
             $template = EmailTemplate::firstOrCreate(
                 ['name' => $templateName],
                 [
-                    'from'        => config('mail.from.name', 'AutomasERP'),
+                    'from'        => config('mail.from.name', 'AutomasCRM'),
                     'module_name' => 'SalesOrder',
                     'created_by'  => $admin?->id ?? 1,
                 ]
