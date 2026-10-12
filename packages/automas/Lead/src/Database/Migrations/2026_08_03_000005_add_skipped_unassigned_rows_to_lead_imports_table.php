@@ -8,11 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('lead_imports', function (Blueprint $table) {
-            $table->unsignedInteger('skipped_unassigned_rows')
-                ->default(0)
-                ->after('skipped_rows');
-        });
+        if (!Schema::hasColumn('lead_imports', 'skipped_unassigned_rows')) {
+            Schema::table('lead_imports', function (Blueprint $table) {
+                $table->unsignedInteger('skipped_unassigned_rows')
+                    ->default(0)
+                    ->after('skipped_rows');
+            });
+        }
     }
 
     public function down(): void

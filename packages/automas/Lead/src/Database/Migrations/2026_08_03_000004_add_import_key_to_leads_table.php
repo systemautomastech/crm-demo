@@ -8,12 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('leads', function (Blueprint $table) {
-            $table->uuid('import_key')
-                ->nullable()
-                ->after('is_converted')
-                ->index();
-        });
+        if (!Schema::hasColumn('leads', 'import_key')) {
+            Schema::table('leads', function (Blueprint $table) {
+                $table->uuid('import_key')
+                    ->nullable()
+                    ->after('is_converted')
+                    ->index();
+            });
+        }
     }
 
     public function down(): void
