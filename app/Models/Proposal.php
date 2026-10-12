@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Automas\Account\Models\Customer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -75,7 +74,7 @@ class Proposal extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function company(): BelongsTo
@@ -91,11 +90,6 @@ class Proposal extends Model
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
-    }
-
-    public function customerDetails(): BelongsTo
-    {
-        return $this->belongsTo(Customer::class, 'customer_id', 'user_id');
     }
 
     public function invoice(): BelongsTo

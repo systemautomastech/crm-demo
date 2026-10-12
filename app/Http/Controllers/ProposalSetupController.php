@@ -63,7 +63,6 @@ class ProposalSetupController extends Controller
         if (!$creatorId)
             return;
 
-        // 1. OTC Page
         $otc = ProposalPage::where('created_by', $creatorId)
             ->where('page_type', 'otc')
             ->first();
@@ -83,7 +82,6 @@ class ProposalSetupController extends Controller
             ]);
         }
 
-        // 2. MRC Page
         $mrc = ProposalPage::where('created_by', $creatorId)
             ->where('page_type', 'mrc')
             ->first();

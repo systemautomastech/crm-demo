@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\AcceptProposal;
-use App\Events\RejectProposal;
-use App\Events\SentProposal;
+use App\Http\Requests\ConvertSalesOrderRequest;
 use App\Http\Requests\StoreProposalRequest;
 use App\Http\Requests\UpdateProposalRequest;
 use App\Models\Proposal;
@@ -44,7 +42,7 @@ class ProposalController extends Controller
 
         $creatorId = creatorId();
 
-        $query = Proposal::with(['customer', 'author']);
+        $query = Proposal::with(['customer', 'author', 'items.product.warehouseStocks', 'items.taxes']);
 
         if (
             $user->type === 'superadmin' ||
@@ -54,14 +52,7 @@ class ProposalController extends Controller
             $query->where('created_by', $creatorId);
         } elseif ($user->can('manage-own-sales-proposals')) {
             $query->where('created_by', $creatorId)
-                ->where(function ($query) use ($user) {
-                    $query->where('creator_id', $user->id)
-                        ->orWhere('customer_id', $user->id);
-                });
-
-            if ($user->type === 'client') {
-                $query->where('status', '!=', 'draft');
-            }
+                ->where('creator_id', $user->id);
         } else {
             $query->whereRaw('1 = 0');
         }
@@ -80,8 +71,8 @@ class ProposalController extends Controller
                     ->orWhere('customer_name', 'like', "%{$search}%")
                     ->orWhere('customer_email', 'like', "%{$search}%")
                     ->orWhereHas('customer', function ($query) use ($search) {
-                        $query->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
+                        $query->where('customer_name', 'like', "%{$search}%")
+                            ->orWhere('customer_email', 'like', "%{$search}%");
                     });
             });
         }
@@ -200,13 +191,13 @@ class ProposalController extends Controller
         $warehouses = $this->warehouseService->getActiveWarehouses();
         $pages = $this->proposalService->getActivePages(Auth::id());
         $proposalSetting = ProposalSetting::getSettings(creatorId());
-        $subjects = ProposalSubject::where('created_by', creatorId())->orderBy('name')->get(['id', 'name']);
+        $subjects = ProposalSubject::where('created_by', creatorId())
+            ->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Proposal/Create', [
             'customers' => $customers,
             'warehouses' => $warehouses,
             'pages' => $pages,
-            'defaultTerms' => $proposalSetting['default_terms'] ?? null,
             'proposalSetting' => $proposalSetting,
             'subjects' => $subjects,
         ]);
@@ -240,7 +231,6 @@ class ProposalController extends Controller
         }
 
         $proposal->load($this->proposalService->getRelations());
-
         $customers = $this->customerService->getCustomers();
         $users = User::where('created_by', creatorId())
             ->emp()
@@ -277,7 +267,6 @@ class ProposalController extends Controller
         }
 
         $proposal->load($this->proposalService->getRelations());
-
         $customers = $this->customerService->getCustomers();
         $warehouses = $this->warehouseService->getActiveWarehouses();
         $proposalSetting = ProposalSetting::getSettings(creatorId());
@@ -291,7 +280,6 @@ class ProposalController extends Controller
             'warehouses' => $warehouses,
             'products' => $products,
             'pages' => $pages,
-            'defaultTerms' => $proposalSetting['default_terms'] ?? null,
             'proposalSetting' => $proposalSetting,
             'subjects' => $subjects,
         ]);
@@ -377,8 +365,6 @@ class ProposalController extends Controller
             return back()->with('error', __('Only draft or sent proposals can be sent.'));
         }
 
-        SentProposal::dispatch($proposal);
-
         $notification = $this->proposalService->notifyCustomerOnStatusChange($proposal, 'Proposal Sent');
 
         if (isset($notification) && $notification['is_success'] === false && !empty($notification['error'])) {
@@ -405,8 +391,6 @@ class ProposalController extends Controller
         if ($proposal->status !== 'sent') {
             return back()->with('error', __('Only sent proposals can be accepted.'));
         }
-
-        AcceptProposal::dispatch($proposal);
 
         $notification = $this->proposalService->notifyCustomerOnStatusChange($proposal, 'Proposal Approved', 'Accepted');
 
@@ -436,8 +420,6 @@ class ProposalController extends Controller
             return back()->with('error', __('Only sent proposals can be rejected.'));
         }
 
-        RejectProposal::dispatch($proposal);
-
         $notification = $this->proposalService->notifyCustomerOnStatusChange($proposal, 'Proposal Approved', 'Rejected');
 
         if (isset($notification) && $notification['is_success'] === false && !empty($notification['error'])) {
@@ -456,7 +438,7 @@ class ProposalController extends Controller
     /**
      * Convert proposal to sales order.
      */
-    public function convertToSalesOrder(Request $request, Proposal $proposal)
+    public function convertToSalesOrder(ConvertSalesOrderRequest $request, Proposal $proposal)
     {
         if (!Auth::user()->can('convert-sales-proposals') || !$this->proposalService->hasProposalAccess($proposal)) {
             return back()->with('error', __('Permission denied'));
@@ -473,8 +455,7 @@ class ProposalController extends Controller
         try {
             $customItems = $request->has('items') ? $request->input('items') : null;
             $warehouseId = $request->input('warehouse_id') ? (int) $request->input('warehouse_id') : null;
-
-            $salesOrder = $this->proposalService->convertProposalToSalesOrder($proposal, $customItems, $warehouseId, $request->all());
+            $salesOrder = $this->proposalService->convertProposalToSalesOrder($proposal, $customItems, $warehouseId, $request->validated());
 
             if (\Route::has('salesorder.orders.show')) {
                 return redirect()->route('salesorder.orders.show', $salesOrder->id)->with('success', __('Proposal successfully converted to sales order.'));

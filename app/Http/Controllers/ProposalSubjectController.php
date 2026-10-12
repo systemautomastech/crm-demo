@@ -5,9 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\ProposalSubject;
 use App\Http\Requests\StoreProposalSubjectRequest;
 use App\Http\Requests\UpdateProposalSubjectRequest;
-use App\Events\CreateProposalSubject;
-use App\Events\UpdateProposalSubject;
-use App\Events\DestroyProposalSubject;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -51,19 +48,12 @@ class ProposalSubjectController extends Controller
             return back()->with('error', __('Permission denied'));
         }
 
-        $validated = $request->validated();
+        $validatedData = $request->validated();
 
-        $subject = new ProposalSubject();
-        $subject->name = $validated['name'];
-        $subject->creator_id = Auth::id();
-        $subject->created_by = creatorId();
-        $subject->save();
-
-        try {
-            CreateProposalSubject::dispatch($request, $subject);
-        } catch (\Throwable $th) {
-            // Silently ignore
-        }
+        $subject = ProposalSubject::create(array_merge($validatedData, [
+            'creator_id' => Auth::id(),
+            'created_by' => creatorId(),
+        ]));
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -100,16 +90,8 @@ class ProposalSubjectController extends Controller
             return back()->with('error', __('Unauthorized access.'));
         }
 
-        $validated = $request->validated();
-
-        $subject->name = $validated['name'];
-        $subject->save();
-
-        try {
-            UpdateProposalSubject::dispatch($request, $subject);
-        } catch (\Throwable $th) {
-            // Silently ignore
-        }
+        $validatedData = $request->validated();
+        $subject->update($validatedData);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -144,12 +126,6 @@ class ProposalSubjectController extends Controller
                 return response()->json(['error' => __('Unauthorized access.')], 403);
             }
             return back()->with('error', __('Unauthorized access.'));
-        }
-
-        try {
-            DestroyProposalSubject::dispatch($subject);
-        } catch (\Throwable $th) {
-            // Silently ignore
         }
 
         $subject->delete();

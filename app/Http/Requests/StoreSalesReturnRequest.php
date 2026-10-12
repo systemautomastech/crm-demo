@@ -15,7 +15,7 @@ class StoreSalesReturnRequest extends FormRequest
     {
         return [
             'return_date' => 'required|date',
-            'customer_id' => 'required|exists:users,id',
+            'customer_id' => 'required|exists:customers,id',
             'warehouse_id' => 'nullable|exists:warehouses,id',
             'original_invoice_id' => 'required|exists:sales_invoices,id',
             'reason' => 'required|in:defective,wrong_item,damaged,excess_quantity,other',

@@ -499,8 +499,8 @@ export default function ProposalPageForm({
 
                                 {/* SAVE BAR */}
                                 <div className="flex justify-end gap-3 border-t pt-4">
-                                    <Button type="submit" disabled={processing} className="min-w-28 gap-2">
-                                        <Save className="h-4 w-4" />
+                                    <Button type="submit" isLoading={processing} className="min-w-28 gap-2">
+                                        {!processing && <Save className="h-4 w-4" />}
                                         {processing
                                             ? t("Saving...")
                                             : mode === "create"

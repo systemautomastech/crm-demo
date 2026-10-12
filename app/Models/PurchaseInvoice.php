@@ -59,16 +59,6 @@ class PurchaseInvoice extends Model
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
 
-    public function vendorDetails(): BelongsTo
-    {
-        return $this->belongsTo(\Automas\Account\Models\Vendor::class, 'vendor_id', 'user_id');
-    }
-
-    public function paymentAllocations(): HasMany
-    {
-        return $this->hasMany(\Automas\Account\Models\VendorPaymentAllocation::class, 'invoice_id');
-    }
-
     public function purchaseReturns(): HasMany
     {
         return $this->hasMany(PurchaseReturn::class, 'original_invoice_id');

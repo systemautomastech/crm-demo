@@ -48,19 +48,9 @@ class PurchaseReturn extends Model
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
 
-    public function vendorDetails(): BelongsTo
-    {
-        return $this->belongsTo(\Automas\Account\Models\Vendor::class, 'vendor_id', 'user_id');
-    }
-
     public function originalInvoice(): BelongsTo
     {
         return $this->belongsTo(PurchaseInvoice::class, 'original_invoice_id');
-    }
-
-    public function debitNote(): HasMany
-    {
-        return $this->hasMany(DebitNote::class, 'return_id');
     }
 
     protected static function boot()

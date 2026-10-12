@@ -18,7 +18,7 @@ class StoreProposalRequest extends FormRequest
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:invoice_date',
             'customer_mode' => 'nullable|in:existing,new',
-            'customer_id' => 'required_unless:customer_mode,new|nullable|integer|exists:users,id',
+            'customer_id' => 'required_unless:customer_mode,new|nullable|integer|exists:customers,id',
             'customer_name' => 'required_if:customer_mode,new|nullable|string|max:255',
             'customer_email' => 'required_if:customer_mode,new|nullable|email|max:255',
             'customer_phone' => 'required_if:customer_mode,new|nullable|string|max:50',
