@@ -18,8 +18,6 @@ use Automas\ProductService\Models\WarehouseStock;
 use Automas\Hrm\Models\Branch;
 use Automas\Hrm\Models\Department;
 use Automas\Hrm\Models\Designation;
-use Automas\Hrm\Models\Employee;
-use Automas\Account\Models\Customer;
 
 class DemoCompaniesSeeder extends Seeder
 {

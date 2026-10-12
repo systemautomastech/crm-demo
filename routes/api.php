@@ -20,9 +20,5 @@ Route::middleware('api.json')->group(function () {
 
         // get staff user
         Route::get('/staff-user', [AuthApiController::class, 'getStaffUser']);
-        // get client user
-        Route::get('/client-user', [AuthApiController::class, 'getClientUser']);
-        // get vendor user
-        Route::get('/vendor-user', [AuthApiController::class, 'getVendorUser']);
     });
 });

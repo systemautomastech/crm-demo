@@ -104,8 +104,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public  $not_emp_type = [
         'superadmin',
         'company',
-        'client',
-        'vendor',
         'doctor',
         'student',
         'parent',
@@ -225,80 +223,6 @@ class User extends Authenticatable implements MustVerifyEmail
             ])->get();
 
             $staffRole->givePermissionTo($permissions);
-        }
-
-        // Create client role
-        $clientRole = Role::where('name','client')->where('created_by',$userId)->where('guard_name','web')->first();
-        if(empty($clientRole))
-        {
-            $clientRole                   = new Role();
-            $clientRole->name             = 'client';
-            $clientRole->guard_name       = 'web';
-            $clientRole->label            = 'Client';
-            $clientRole->editable         = false;
-            $clientRole->created_by       = $userId;
-            $clientRole->save();
-
-            $permissions = ModelsPermission::whereIn('name', [
-                'manage-dashboard',
-                'manage-media',
-                'manage-own-media',
-                'create-media',
-                'download-media',
-                'delete-media',
-                'manage-media-directories',
-                'manage-own-media-directories',
-                'create-media-directories',
-                'edit-media-directories',
-                'delete-media-directories',
-                'manage-profile',
-                'edit-profile',
-                'change-password-profile',
-                'manage-messenger',
-                'send-messages',
-                'view-messages',
-                'toggle-favorite-messages',
-                'toggle-pinned-messages',
-            ])->get();
-
-            $clientRole->givePermissionTo($permissions);
-        }
-
-        // Create vendor role
-        $vendorRole = Role::where('name','vendor')->where('created_by',$userId)->where('guard_name','web')->first();
-        if(empty($vendorRole))
-        {
-            $vendorRole                   = new Role();
-            $vendorRole->name             = 'vendor';
-            $vendorRole->guard_name       = 'web';
-            $vendorRole->label            = 'Vendor';
-            $vendorRole->editable         = false;
-            $vendorRole->created_by       = $userId;
-            $vendorRole->save();
-
-            $permissions = ModelsPermission::whereIn('name', [
-                'manage-dashboard',
-                'manage-media',
-                'manage-own-media',
-                'create-media',
-                'download-media',
-                'delete-media',
-                'manage-media-directories',
-                'manage-own-media-directories',
-                'create-media-directories',
-                'edit-media-directories',
-                'delete-media-directories',
-                'manage-profile',
-                'edit-profile',
-                'change-password-profile',
-                'manage-messenger',
-                'send-messages',
-                'view-messages',
-                'toggle-favorite-messages',
-                'toggle-pinned-messages',
-            ])->get();
-
-            $vendorRole->givePermissionTo($permissions);
         }
     }
 }

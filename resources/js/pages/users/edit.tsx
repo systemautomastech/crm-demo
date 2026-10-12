@@ -120,8 +120,8 @@ export default function Edit({ user, onSuccess, roles = {} }: EditUserProps) {
                     <Button type="button" variant="outline" onClick={onSuccess}>
                         {t('Cancel')}
                     </Button>
-                    <Button type="submit" disabled={processing}>
-                        {processing ? t('Updating...') : t('Update')}
+                    <Button type="submit" isLoading={processing}>
+                        {processing ? t('Updating') : t('Update')}
                     </Button>
                 </div>
             </form>

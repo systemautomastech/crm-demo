@@ -201,8 +201,8 @@ export default function Create({ onSuccess }: CreateCouponProps) {
                     <Button type="button" variant="outline" onClick={onSuccess}>
                         {t('Cancel')}
                     </Button>
-                    <Button type="submit" disabled={processing}>
-                        {processing ? t('Creating...') : t('Create')}
+                    <Button type="submit" isLoading={processing}>
+                        {processing ? t('Creating') : t('Create')}
                     </Button>
                 </div>
             </form>

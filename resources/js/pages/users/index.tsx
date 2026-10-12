@@ -91,7 +91,7 @@ export default function Index() {
 
     const { deleteState, openDeleteDialog, closeDeleteDialog, confirmDelete } = useDeleteHandler({
         routeName: 'users.destroy',
-        defaultMessage: t('Are you sure you want to delete this user? All associated data (employee, client, and vendor) will also be deleted, but financial data will be preserved.')
+        defaultMessage: t('Are you sure you want to delete this user? All associated data will also be deleted, but financial data will be preserved.')
     });
 
     const handleFilter = () => {
@@ -998,6 +998,7 @@ export default function Index() {
                 message={deleteState.message}
                 confirmText={t('Delete')}
                 onConfirm={confirmDelete}
+                isLoading={deleteState.isLoading}
                 variant="destructive"
             />
         </AuthenticatedLayout>

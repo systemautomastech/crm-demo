@@ -320,12 +320,8 @@ if (!function_exists('assignPlan')) {
                     }
                 }
                 DefaultData::dispatch($user->id, $modules);
-                $client_role = Role::where('name', 'client')->where('created_by', $user->id)->first();
                 $staff_role = Role::where('name', 'staff')->where('created_by', $user->id)->first();
 
-                if (!empty($client_role)) {
-                    GivePermissionToRole::dispatch($client_role->id, 'client', $modules);
-                }
                 if (!empty($staff_role)) {
                     GivePermissionToRole::dispatch($staff_role->id, 'staff', $modules);
                 }

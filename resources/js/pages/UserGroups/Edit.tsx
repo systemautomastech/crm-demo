@@ -195,7 +195,7 @@ export default function Edit() {
                                 )}
 
                                 <div className="flex flex-col gap-2 pt-2">
-                                    <Button type="submit" disabled={processing} className="w-full">
+                                    <Button type="submit" isLoading={processing} className="w-full">
                                         {processing ? t('Saving...') : t('Save Changes')}
                                     </Button>
                                     <Button type="button" variant="outline" className="w-full" onClick={() => router.visit(route('user-groups.index'))}>

@@ -232,6 +232,7 @@ export default function Index() {
                 message={deleteState.message}
                 confirmText={t('Delete')}
                 onConfirm={confirmDelete}
+                isLoading={deleteState.isLoading}
                 variant="destructive"
             />
         </AuthenticatedLayout>

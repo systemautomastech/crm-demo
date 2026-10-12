@@ -7,11 +7,9 @@ use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Automas\Hrm\Models\Employee;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
-use Illuminate\Support\Facades\Schema;
 use App\Services\UserDeletionService;
 
 class AuthApiController extends Controller
@@ -203,42 +201,6 @@ class AuthApiController extends Controller
     {
         try {
             $users = User::where('created_by', creatorId())->emp()->get();
-            $users = $users->map(function ($user) {
-                return [
-                    'id'              => $user->id,
-                    'name'            => $user->name,
-                    'email'           => $user->email,
-                    'avatar'          => $user->avatar ? getImageUrlPrefix() . '/' . $user->avatar : getImageUrlPrefix() . '/' . 'avatar.png',
-                    'type'            => $user->type,
-                ];
-            });
-            return $this->successResponse($users, 'Users retrived successfully.');
-        } catch (\Exception $e) {
-            return $this->errorResponse('Something went wrong');
-        }
-    }
-    public function getClientUser()
-    {
-        try {
-            $users = User::where('type', 'client')->where('created_by', creatorId())->orderBy('id', 'desc')->get();
-            $users = $users->map(function ($user) {
-                return [
-                    'id'              => $user->id,
-                    'name'            => $user->name,
-                    'email'           => $user->email,
-                    'avatar'          => $user->avatar ? getImageUrlPrefix() . '/' . $user->avatar : getImageUrlPrefix() . '/' . 'avatar.png',
-                    'type'            => $user->type,
-                ];
-            });
-            return $this->successResponse($users, 'Users retrived successfully.');
-        } catch (\Exception $e) {
-            return $this->errorResponse('Something went wrong');
-        }
-    }
-    public function getVendorUser()
-    {
-        try {
-            $users = User::where('type', 'vendor')->where('created_by', creatorId())->orderBy('id', 'desc')->get();
             $users = $users->map(function ($user) {
                 return [
                     'id'              => $user->id,

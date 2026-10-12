@@ -185,7 +185,7 @@ export default function UpdateProfileInformation({
 
                 {auth.user?.permissions?.includes('edit-profile') && (
                     <div className="flex items-center justify-end gap-4">
-                        <Button disabled={processing}>{t('Save Changes')}</Button>
+                        <Button isLoading={processing}>{t('Save Changes')}</Button>
                     </div>
                 )}
             </form>

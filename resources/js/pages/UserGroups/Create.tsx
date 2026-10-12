@@ -186,8 +186,8 @@ export default function Create() {
                                 )}
 
                                 <div className="flex flex-col gap-2 pt-2">
-                                    <Button type="submit" disabled={processing} className="w-full">
-                                        {processing ? t('Creating...') : t('Create Group')}
+                                    <Button type="submit" isLoading={processing} className="w-full">
+                                        {processing ? t('Creating') : t('Create Group')}
                                     </Button>
                                     <Button type="button" variant="outline" className="w-full" onClick={() => router.visit(route('user-groups.index'))}>
                                         {t('Cancel')}

@@ -184,8 +184,8 @@ export default function Create() {
                             <Button type="button" variant="outline" onClick={() => window.history.back()}>
                                 {t('Cancel')}
                             </Button>
-                            <Button type="submit" disabled={processing}>
-                                {processing ? t('Creating...') : t('Create')}
+                            <Button type="submit" isLoading={processing}>
+                                {processing ? t('Creating') : t('Create')}
                             </Button>
                         </div>
                     </form>

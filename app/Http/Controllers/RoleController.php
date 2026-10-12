@@ -109,9 +109,6 @@ class RoleController extends Controller
     public function destroy(Role $role)
     {
         if(Auth::user()->can('delete-roles')){
-            if($role->editable == 0){
-                return redirect()->route('roles.index')->with('error', __('This role is not editable'));
-            }
             $role->delete();
             return redirect()->route('roles.index')->with('success', __('The role has been deleted.'));
         }

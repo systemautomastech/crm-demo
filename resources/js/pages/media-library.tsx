@@ -44,7 +44,7 @@ export default function MediaLibraryDemo() {
   const [newDirectoryName, setNewDirectoryName] = useState('');
   const [editingDirectory, setEditingDirectory] = useState<number | null>(null);
   const [editDirectoryName, setEditDirectoryName] = useState('');
-  const [deleteDirectoryState, setDeleteDirectoryState] = useState<{isOpen: boolean; id: number | null}>({isOpen: false, id: null});
+  const [deleteDirectoryState, setDeleteDirectoryState] = useState<{isOpen: boolean; id: number | null; isLoading: boolean}>({isOpen: false, id: null, isLoading: false});
 
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [selectedMediaInfo, setSelectedMediaInfo] = useState<MediaItem | null>(null);
@@ -158,6 +158,7 @@ export default function MediaLibraryDemo() {
   };
 
   const deleteDirectory = async (id: number) => {
+    setDeleteDirectoryState(prev => ({ ...prev, isLoading: true }));
     try {
       const response = await fetch(route('media.directories.destroy', id), {
         method: 'DELETE',
@@ -183,8 +184,9 @@ export default function MediaLibraryDemo() {
     } catch (error) {
       console.error('Delete directory error:', error);
       toast.error(t('Failed to delete directory'));
+    } finally {
+      setDeleteDirectoryState({isOpen: false, id: null, isLoading: false});
     }
-    setDeleteDirectoryState({isOpen: false, id: null});
   };
 
 
@@ -1187,10 +1189,11 @@ export default function MediaLibraryDemo() {
 
       <ConfirmationDialog
         open={deleteDirectoryState.isOpen}
-        onOpenChange={(open) => setDeleteDirectoryState({isOpen: open, id: null})}
+        onOpenChange={(open) => setDeleteDirectoryState({isOpen: open, id: null, isLoading: false})}
         title={t('Delete Directory')}
         message={t('Are you sure you want to delete this directory?')}
         confirmText={t('Delete')}
+        isLoading={deleteDirectoryState.isLoading}
         onConfirm={() => deleteDirectoryState.id && deleteDirectory(deleteDirectoryState.id)}
         variant="destructive"
       />

@@ -253,10 +253,10 @@ function PlanForm({ plan, activeModules, isEdit = false, userSubscriptionInfo }:
                             )}
                             <div className="flex gap-2">
                                 <div className="flex-1">
-                                    <Input 
-                                        value={moduleSearch} 
-                                        onChange={(e) => setModuleSearch(e.target.value)} 
-                                        placeholder={t('Search...')} 
+                                    <Input
+                                        value={moduleSearch}
+                                        onChange={(e) => setModuleSearch(e.target.value)}
+                                        placeholder={t('Search...')}
                                     />
                                 </div>
                                 <Button
@@ -280,16 +280,16 @@ function PlanForm({ plan, activeModules, isEdit = false, userSubscriptionInfo }:
                         <CardContent>
                             <ScrollArea className="h-[300px]">
                                 <div className="grid grid-cols-4 gap-3 pr-4">
-                                {filteredModules.map((module) => (
-                                    <div key={module.module} className="flex items-center gap-3 p-4 border rounded hover:bg-muted/50">
-                                        <img src={getPackageFavicon(module.module)} alt="" className="w-8 h-8 border rounded" />
-                                        <span className="text-sm truncate flex-1">{getPackageAlias(module.module)}</span>
-                                        <Checkbox
-                                            checked={data.modules.includes(module.module)}
-                                            onCheckedChange={(checked) => handleModuleChange(module.module, !!checked)}
-                                        />
-                                    </div>
-                                ))}
+                                    {filteredModules.map((module) => (
+                                        <div key={module.module} className="flex items-center gap-3 p-4 border rounded hover:bg-muted/50">
+                                            <img src={getPackageFavicon(module.module)} alt="" className="w-8 h-8 border rounded" />
+                                            <span className="text-sm truncate flex-1">{getPackageAlias(module.module)}</span>
+                                            <Checkbox
+                                                checked={data.modules.includes(module.module)}
+                                                onCheckedChange={(checked) => handleModuleChange(module.module, !!checked)}
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
                             </ScrollArea>
                             <InputError message={errors.modules} />
@@ -302,8 +302,8 @@ function PlanForm({ plan, activeModules, isEdit = false, userSubscriptionInfo }:
                 <Button type="button" variant="outline" onClick={() => window.history.back()}>
                     {t('Cancel')}
                 </Button>
-                <Button type="submit" disabled={processing}>
-                    {processing ? (isEdit ? t('Updating...') : t('Creating...')) : (isEdit ? t('Update') : t('Create'))}
+                <Button type="submit" isLoading={processing}>
+                    {processing ? (isEdit ? t('Updating') : t('Creating')) : (isEdit ? t('Update') : t('Create'))}
                 </Button>
             </div>
         </form>

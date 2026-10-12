@@ -97,14 +97,14 @@ export function AppSidebar({
                       src={displayLogo}
                       alt={
                         settings.titleText ||
-                        "AutomasERP"
+                        "AutomasCRM"
                       }
                       className="w-auto max-w-32 transition-all duration-200"
                     />
                   ) : (
                     <div className="flex items-center text-lg font-semibold tracking-tight text-inherit">
                       {settings.titleText ||
-                        "AutomasERP"}
+                        "AutomasCRM"}
                     </div>
                   )}
                 </div>
@@ -120,7 +120,7 @@ export function AppSidebar({
                   ) : (
                     <div className="flex h-8 w-8 items-center justify-center rounded bg-primary font-bold text-primary-foreground shadow-sm">
                       {(settings.titleText ||
-                        "AutomasERP")
+                        "AutomasCRM")
                         .charAt(0)
                         .toUpperCase()}
                     </div>

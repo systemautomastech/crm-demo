@@ -37,7 +37,6 @@ class UserController extends Controller
                         $q->whereRaw('1 = 0');
                     }
                 })
-                ->whereNotIn('type', ['client', 'vendor'])
                 ->when(request('name'), fn($q) => $q->where('name', 'like', '%' . request('name') . '%'))
                 ->when(request('email'), fn($q) => $q->where('email', 'like', '%' . request('email') . '%'))
                 ->when(request('role'), fn($q) => $q->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
@@ -54,7 +53,7 @@ class UserController extends Controller
                 return $user;
             });
 
-            $roles = Role::where('created_by', creatorId())->whereNotIn('name', ['client', 'vendor'])->pluck('label', 'id');
+            $roles = Role::where('created_by', creatorId())->pluck('label', 'id');
             $plans = Plan::where('status', 1)->get();
             $activeModules = AddOn::where('is_enable', 1)->where('for_admin', false)
                 ->whereNotIn('module', User::$superadmin_activated_module)
@@ -70,111 +69,6 @@ class UserController extends Controller
         } else {
             return back()->with('error', __('Permission denied'));
         }
-    }
-
-    public function clientsVendors(Request $request)
-    {
-        if (!Auth::user()->can('manage-users')) {
-            return back()->with('error', __('Permission denied'));
-        }
-
-        $isAccountActive = module_is_active('Account');
-        $creatorId = creatorId();
-
-        if ($isAccountActive) {
-            $customers = \Automas\Account\Models\Customer::query()
-                ->with('user:id,name,avatar,is_disable,email,mobile_no')
-                ->where('created_by', $creatorId)
-                ->when($request->filled('company_name'), fn($q) => $q->where('company_name', 'like', '%' . $request->company_name . '%'))
-                ->when($request->filled('customer_code'), fn($q) => $q->where('customer_code', 'like', '%' . $request->customer_code . '%'))
-                ->when($request->filled('search'), fn($q) => $q->where(function ($sub) use ($request) {
-                    $s = $request->search;
-                    $sub->where('company_name', 'like', "%{$s}%")
-                        ->orWhere('customer_code', 'like', "%{$s}%")
-                        ->orWhere('contact_person_name', 'like', "%{$s}%")
-                        ->orWhere('contact_person_email', 'like', "%{$s}%");
-                }))
-                ->when($request->filled('sort'), fn($q) => $q->orderBy($request->sort, $request->get('direction', 'asc')), fn($q) => $q->latest())
-                ->paginate($request->get('per_page', 10), ['*'], 'customers_page')
-                ->withQueryString();
-
-            $vendors = \Automas\Account\Models\Vendor::query()
-                ->with('user:id,name,avatar,is_disable,email,mobile_no')
-                ->where('created_by', $creatorId)
-                ->when($request->filled('company_name'), fn($q) => $q->where('company_name', 'like', '%' . $request->company_name . '%'))
-                ->when($request->filled('vendor_code'), fn($q) => $q->where('vendor_code', 'like', '%' . $request->vendor_code . '%'))
-                ->when($request->filled('search'), fn($q) => $q->where(function ($sub) use ($request) {
-                    $s = $request->search;
-                    $sub->where('company_name', 'like', "%{$s}%")
-                        ->orWhere('vendor_code', 'like', "%{$s}%")
-                        ->orWhere('contact_person_name', 'like', "%{$s}%")
-                        ->orWhere('contact_person_email', 'like', "%{$s}%");
-                }))
-                ->when($request->filled('sort'), fn($q) => $q->orderBy($request->sort, $request->get('direction', 'asc')), fn($q) => $q->latest())
-                ->paginate($request->get('per_page', 10), ['*'], 'vendors_page')
-                ->withQueryString();
-
-            $clientUsers = User::where('type', 'client')
-                ->where('created_by', $creatorId)
-                ->whereNotIn('id', \Automas\Account\Models\Customer::pluck('user_id')->filter())
-                ->select('id', 'name', 'email', 'mobile_no')
-                ->get();
-
-            $vendorUsers = User::where('type', 'vendor')
-                ->where('created_by', $creatorId)
-                ->whereNotIn('id', \Automas\Account\Models\Vendor::pluck('user_id')->filter())
-                ->select('id', 'name', 'email', 'mobile_no')
-                ->get();
-
-            return Inertia::render('users/clients-vendors', [
-                'isAccountActive' => true,
-                'customers' => $customers,
-                'vendors' => $vendors,
-                'clientUsers' => $clientUsers,
-                'vendorUsers' => $vendorUsers,
-            ]);
-        }
-
-        $clients = User::query()
-            ->with('roles')
-            ->where('created_by', $creatorId)
-            ->where('type', 'client')
-            ->when($request->filled('name'), fn($q) => $q->where('name', 'like', '%' . $request->name . '%'))
-            ->when($request->filled('email'), fn($q) => $q->where('email', 'like', '%' . $request->email . '%'))
-            ->when($request->filled('search'), fn($q) => $q->where(function ($sub) use ($request) {
-                $s = $request->search;
-                $sub->where('name', 'like', "%{$s}%")
-                    ->orWhere('email', 'like', "%{$s}%");
-            }))
-            ->when($request->filled('sort'), fn($q) => $q->orderBy($request->sort, $request->get('direction', 'asc')), fn($q) => $q->latest())
-            ->paginate($request->get('per_page', 10), ['*'], 'clients_page')
-            ->withQueryString();
-
-        $vendors = User::query()
-            ->with('roles')
-            ->where('created_by', $creatorId)
-            ->where('type', 'vendor')
-            ->when($request->filled('name'), fn($q) => $q->where('name', 'like', '%' . $request->name . '%'))
-            ->when($request->filled('email'), fn($q) => $q->where('email', 'like', '%' . $request->email . '%'))
-            ->when($request->filled('search'), fn($q) => $q->where(function ($sub) use ($request) {
-                $s = $request->search;
-                $sub->where('name', 'like', "%{$s}%")
-                    ->orWhere('email', 'like', "%{$s}%");
-            }))
-            ->when($request->filled('sort'), fn($q) => $q->orderBy($request->sort, $request->get('direction', 'asc')), fn($q) => $q->latest())
-            ->paginate($request->get('per_page', 10), ['*'], 'vendors_page')
-            ->withQueryString();
-
-        $clientRole = Role::where('created_by', $creatorId)->where('name', 'client')->first();
-        $vendorRole = Role::where('created_by', $creatorId)->where('name', 'vendor')->first();
-
-        return Inertia::render('users/clients-vendors', [
-            'isAccountActive' => false,
-            'clients' => $clients,
-            'vendors' => $vendors,
-            'clientRole' => $clientRole,
-            'vendorRole' => $vendorRole,
-        ]);
     }
 
     public function store(StoreUserRequest $request)

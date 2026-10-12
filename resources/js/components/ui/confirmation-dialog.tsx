@@ -1,7 +1,7 @@
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from 'react-i18next';
-import { Loader2 } from 'lucide-react';
+import { Loader } from 'lucide-react';
 
 interface ConfirmationDialogProps {
     open: boolean;
@@ -49,7 +49,7 @@ export function ConfirmationDialog({
                         disabled={isLoading}
                         variant={variant === 'destructive' ? 'destructive' : 'default'}
                     >
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isLoading && <Loader className="mr-2 h-4 w-4 animate-spin shrink-0" />}
                         {confirmText || t('Confirm')}
                     </Button>
                 </AlertDialogFooter>

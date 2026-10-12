@@ -46,24 +46,32 @@ export default function Index() {
         defaultMessage: t('Are you sure you want to delete this role?')
     });
 
-    const [duplicateState, setDuplicateState] = useState<{ isOpen: boolean; roleId: number | null }>({
+    const [duplicateState, setDuplicateState] = useState<{ isOpen: boolean; roleId: number | null; isLoading: boolean }>({
         isOpen: false,
         roleId: null,
+        isLoading: false
     });
 
     const openDuplicateDialog = (roleId: number) => {
-        setDuplicateState({ isOpen: true, roleId });
+        setDuplicateState({ isOpen: true, roleId, isLoading: false });
     };
 
     const closeDuplicateDialog = () => {
-        setDuplicateState({ isOpen: false, roleId: null });
+        setDuplicateState({ isOpen: false, roleId: null, isLoading: false });
     };
 
     const confirmDuplicate = () => {
         if (duplicateState.roleId) {
-            router.post(route('roles.duplicate', duplicateState.roleId));
+            setDuplicateState(prev => ({ ...prev, isLoading: true }));
+            router.post(route('roles.duplicate', duplicateState.roleId), {}, {
+                onSuccess: () => {
+                    closeDuplicateDialog();
+                },
+                onFinish: () => {
+                    setDuplicateState(prev => ({ ...prev, isLoading: false }));
+                }
+            });
         }
-        closeDuplicateDialog();
     };
 
     const handleFilter = () => {
@@ -161,7 +169,7 @@ export default function Index() {
                                 </TooltipContent>
                             </Tooltip>
                         )}
-                        {auth.user?.permissions?.includes('delete-roles') && role.editable == true && (
+                        {auth.user?.permissions?.includes('delete-roles') && (
                             <Tooltip delayDuration={0}>
                                 <TooltipTrigger asChild>
                                     <Button
@@ -314,7 +322,7 @@ export default function Index() {
                                                                     </TooltipContent>
                                                                 </Tooltip>
                                                             )}
-                                                            {auth.user?.permissions?.includes('delete-roles') && role.editable == true && (
+                                                            {auth.user?.permissions?.includes('delete-roles') && (
                                                                 <Tooltip delayDuration={300}>
                                                                     <TooltipTrigger asChild>
                                                                         <Button
@@ -415,6 +423,7 @@ export default function Index() {
                 message={deleteState.message}
                 confirmText={t('Delete')}
                 onConfirm={confirmDelete}
+                isLoading={deleteState.isLoading}
                 variant="destructive"
             />
 
@@ -424,6 +433,7 @@ export default function Index() {
                 title={t('Duplicate Role')}
                 message={t('Are you sure you want to duplicate this role?')}
                 confirmText={t('Duplicate')}
+                isLoading={duplicateState.isLoading}
                 onConfirm={confirmDuplicate}
             />
         </AuthenticatedLayout>

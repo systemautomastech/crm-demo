@@ -134,8 +134,8 @@ export default function Edit({ warehouse, onSuccess }: EditWarehouseProps) {
                     <Button type="button" variant="outline" onClick={onSuccess}>
                         {t('Cancel')}
                     </Button>
-                    <Button type="submit" disabled={processing}>
-                        {processing ? t('Updating...') : t('Update')}
+                    <Button type="submit" isLoading={processing}>
+                        {processing ? t('Updating') : t('Update')}
                     </Button>
                 </div>
             </form>

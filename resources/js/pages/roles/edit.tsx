@@ -65,8 +65,8 @@ export default function Edit() {
     return (
         <AuthenticatedLayout
             breadcrumbs={[
-                {label: t('Roles'), url: route('roles.index')},
-                {label: t('Edit Role')}
+                { label: t('Roles'), url: route('roles.index') },
+                { label: t('Edit Role') }
             ]}
             pageTitle={`${t('Edit Role')}: ${role.label}`}
             className="overflow-hidden"
@@ -134,48 +134,48 @@ export default function Edit() {
                                 {filteredAddOns.map((addOn) => {
                                     const modules = permissions[addOn];
                                     return (
-                                    <TabsContent key={addOn} value={addOn}>
-                                        <div className="space-y-4">
-                                            {Object.entries(modules).map(([module, modulePermissions]) => {
-                                                const moduleState = getModuleCheckState(modulePermissions as any);
-                                                return (
-                                                <div key={module} className="border p-4 rounded">
-                                                    <div className="flex items-center space-x-2 mb-3">
-                                                        <Checkbox
-                                                            id={`module-${module}`}
-                                                            checked={moduleState.checked}
-                                                            ref={(el) => {
-                                                                if (el) (el as any).indeterminate = moduleState.indeterminate;
-                                                            }}
-                                                            onCheckedChange={(checked) =>
-                                                                handleModuleChange(modulePermissions as any, checked as boolean)
-                                                            }
-                                                        />
-                                                        <Label htmlFor={`module-${module}`} className="font-medium capitalize">
-                                                            {module}
-                                                        </Label>
-                                                    </div>
-                                                    <div className="grid grid-cols-3 gap-2">
-                                                        {(modulePermissions as any).map((permission: any) => (
-                                                            <div key={permission.name} className="flex items-center space-x-2">
+                                        <TabsContent key={addOn} value={addOn}>
+                                            <div className="space-y-4">
+                                                {Object.entries(modules).map(([module, modulePermissions]) => {
+                                                    const moduleState = getModuleCheckState(modulePermissions as any);
+                                                    return (
+                                                        <div key={module} className="border p-4 rounded">
+                                                            <div className="flex items-center space-x-2 mb-3">
                                                                 <Checkbox
-                                                                    id={permission.name}
-                                                                    checked={data.permissions.includes(permission.name)}
+                                                                    id={`module-${module}`}
+                                                                    checked={moduleState.checked}
+                                                                    ref={(el) => {
+                                                                        if (el) (el as any).indeterminate = moduleState.indeterminate;
+                                                                    }}
                                                                     onCheckedChange={(checked) =>
-                                                                        handlePermissionChange(permission.name, checked as boolean)
+                                                                        handleModuleChange(modulePermissions as any, checked as boolean)
                                                                     }
                                                                 />
-                                                                <Label htmlFor={permission.name} className="text-sm">
-                                                                    {permission.label}
+                                                                <Label htmlFor={`module-${module}`} className="font-medium capitalize">
+                                                                    {module}
                                                                 </Label>
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </TabsContent>
+                                                            <div className="grid grid-cols-3 gap-2">
+                                                                {(modulePermissions as any).map((permission: any) => (
+                                                                    <div key={permission.name} className="flex items-center space-x-2">
+                                                                        <Checkbox
+                                                                            id={permission.name}
+                                                                            checked={data.permissions.includes(permission.name)}
+                                                                            onCheckedChange={(checked) =>
+                                                                                handlePermissionChange(permission.name, checked as boolean)
+                                                                            }
+                                                                        />
+                                                                        <Label htmlFor={permission.name} className="text-sm">
+                                                                            {permission.label}
+                                                                        </Label>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </TabsContent>
                                     );
                                 })}
                             </Tabs>
@@ -186,8 +186,8 @@ export default function Edit() {
                             <Button type="button" variant="outline" onClick={() => window.history.back()}>
                                 {t('Cancel')}
                             </Button>
-                            <Button type="submit" disabled={processing}>
-                                {processing ? t('Updating...') : t('Update')}
+                            <Button type="submit" isLoading={processing}>
+                                {processing ? t('Updating') : t('Update')}
                             </Button>
                         </div>
                     </form>

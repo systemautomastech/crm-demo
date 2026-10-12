@@ -58,9 +58,11 @@ export default function Index() {
     const [stockWarningTarget, setStockWarningTarget] = useState<Warehouse | null>(null);
     const [targetWarehouseId, setTargetWarehouseId] = useState<string>('');
     const [isTransferring, setIsTransferring] = useState<boolean>(false);
+    const [isReactivating, setIsReactivating] = useState<boolean>(false);
 
     const confirmReactivate = () => {
         if (!reactivateTarget) return;
+        setIsReactivating(true);
         router.put(route('warehouses.update', reactivateTarget.id), {
             name: reactivateTarget.name,
             address: reactivateTarget.address,
@@ -70,7 +72,8 @@ export default function Index() {
             email: reactivateTarget.email,
             is_active: true
         }, {
-            onSuccess: () => setReactivateTarget(null)
+            onSuccess: () => setReactivateTarget(null),
+            onFinish: () => setIsReactivating(false)
         });
     };
 
@@ -410,6 +413,7 @@ export default function Index() {
                 message={deleteState.message}
                 confirmText={t('Delete')}
                 onConfirm={confirmDelete}
+                isLoading={deleteState.isLoading}
                 variant="destructive"
             />
 
@@ -419,6 +423,7 @@ export default function Index() {
                 title={t('Reactivate Warehouse')}
                 message={t('This will mark the warehouse as active again, making its stock visible across transfers and sales. Continue?')}
                 confirmText={t('Reactivate')}
+                isLoading={isReactivating}
                 onConfirm={confirmReactivate}
             />
 

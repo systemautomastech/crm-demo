@@ -19,6 +19,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\MetaController;
 use App\Http\Controllers\UserGroupController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\ProposalSetupController;
 use App\Http\Controllers\ProposalPageController;
@@ -36,7 +37,6 @@ Route::middleware(['auth', 'verified', 'PlanModuleCheck'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Resource management routes
-    Route::get('clients-vendors', [UserController::class, 'clientsVendors'])->name('users.clients-vendors');
     Route::resource('users', UserController::class);
     Route::patch('users/{user}/change-password', [UserController::class, 'changePassword'])->name('users.change-password');
     Route::post('users/{user}/impersonate', [UserController::class, 'impersonate'])->name('users.impersonate');
@@ -51,6 +51,9 @@ Route::middleware(['auth', 'verified', 'PlanModuleCheck'])->group(function () {
     // User Groups
     Route::resource('user-groups', UserGroupController::class);
     Route::get('user-groups-list/active', [UserGroupController::class, 'listActive'])->name('user-groups.list-active');
+
+    // Customer
+    Route::resource('customers', CustomerController::class);
 
     // Warehouses
     Route::post('warehouses/{warehouse}/transfer', [WarehouseController::class, 'transfer'])->name('warehouses.transfer');

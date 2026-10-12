@@ -42,8 +42,8 @@ export default function BrandSettings({ userSettings, auth }: BrandSettingsProps
     logo_dark: userSettings?.logo_dark || '',
     logo_light: userSettings?.logo_light || '',
     favicon: userSettings?.favicon || '',
-    titleText: userSettings?.titleText || 'AutomasERP',
-    footerText: userSettings?.footerText || '© AutomasERP. All rights reserved.',
+    titleText: userSettings?.titleText || 'AutomasCRM',
+    footerText: userSettings?.footerText || '© AutomasCRM. All rights reserved.',
     sidebarVariant: userSettings?.sidebarVariant || 'inset',
     sidebarStyle: userSettings?.sidebarStyle || 'plain',
     sidebarTextColor: userSettings?.sidebarTextColor || '#ffffff',
@@ -59,8 +59,8 @@ export default function BrandSettings({ userSettings, auth }: BrandSettingsProps
         logo_dark: userSettings?.logo_dark || '',
         logo_light: userSettings?.logo_light || '',
         favicon: userSettings?.favicon || '',
-        titleText: userSettings?.titleText || 'AutomasERP',
-        footerText: userSettings?.footerText || '©AutomasERP. All rights reserved.',
+        titleText: userSettings?.titleText || 'AutomasCRM',
+        footerText: userSettings?.footerText || 'AutomasCRM. All rights reserved.',
         sidebarVariant: userSettings?.sidebarVariant || 'inset',
         sidebarStyle: userSettings?.sidebarStyle || 'plain',
         sidebarTextColor: userSettings?.sidebarTextColor || '#ffffff',
@@ -277,7 +277,7 @@ export default function BrandSettings({ userSettings, auth }: BrandSettingsProps
                       name="titleText"
                       value={settings.titleText}
                       onChange={handleInputChange}
-                      placeholder="AutomasERP"
+                      placeholder="AutomasCRM"
                       disabled={!canEdit}
                     />
                     <p className="text-xs text-muted-foreground">
@@ -292,7 +292,7 @@ export default function BrandSettings({ userSettings, auth }: BrandSettingsProps
                       name="footerText"
                       value={settings.footerText}
                       onChange={handleInputChange}
-                      placeholder={t('© AutomasERP. All rights reserved.')}
+                      placeholder={t('© AutomasCRM. All rights reserved.')}
                       disabled={!canEdit}
                     />
                     <p className="text-xs text-muted-foreground">

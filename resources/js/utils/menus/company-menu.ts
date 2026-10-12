@@ -26,9 +26,9 @@ export const getCompanyMenu = (t: (key: string) => string): NavItem[] => [
                 permission: 'manage-users',
             },
             {
-                title: t('Clients & Vendors'),
-                href: route('users.clients-vendors'),
-                permission: 'manage-clients-vendors',
+                title: t('Customers'),
+                href: route('customers.index'),
+                permission: 'manage-customers',
             },
             {
                 title: t('User Groups'),

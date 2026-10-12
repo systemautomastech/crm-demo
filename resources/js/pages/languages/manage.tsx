@@ -90,6 +90,7 @@ export default function LanguageManage({
     const [sourceSearchTerm, setSourceSearchTerm] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeletingLanguage, setIsDeletingLanguage] = useState(false);
     const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
     const [pendingLanguageChange, setPendingLanguageChange] = useState<string | null>(null);
     const [isToggling, setIsToggling] = useState(false);
@@ -270,6 +271,7 @@ export default function LanguageManage({
 
     // Handle delete language
     const handleDeleteLanguage = async () => {
+        setIsDeletingLanguage(true);
         try {
             const response = await fetch(route('languages.delete', selectedLanguage), {
                 method: 'DELETE',
@@ -289,6 +291,8 @@ export default function LanguageManage({
             }
         } catch (error) {
             toast.error(t('Failed to delete language'));
+        } finally {
+            setIsDeletingLanguage(false);
         }
     };
 
@@ -619,6 +623,7 @@ export default function LanguageManage({
                 message={`${t('Are you sure you want to delete the')} ${selectedLanguage} ${t('language? This will remove all translation files and cannot be undone.')}`}
                 confirmText={t('Delete')}
                 onConfirm={handleDeleteLanguage}
+                isLoading={isDeletingLanguage}
                 variant="destructive"
             />
 

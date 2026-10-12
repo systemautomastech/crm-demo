@@ -18,17 +18,20 @@ export const useDeleteHandler = ({
         isOpen: boolean;
         id: number | string | null;
         message: string;
+        isLoading: boolean;
     }>({
         isOpen: false,
         id: null,
-        message: defaultMessage
+        message: defaultMessage,
+        isLoading: false
     });
 
     const openDeleteDialog = (id: number | string, message?: string) => {
         setDeleteState({
             isOpen: true,
             id,
-            message: message || defaultMessage
+            message: message || defaultMessage,
+            isLoading: false
         });
     };
 
@@ -36,18 +39,26 @@ export const useDeleteHandler = ({
         setDeleteState({
             isOpen: false,
             id: null,
-            message: defaultMessage
+            message: defaultMessage,
+            isLoading: false
         });
     };
 
     const confirmDelete = () => {
         if (deleteState.id) {
+            setDeleteState(prev => ({ ...prev, isLoading: true }));
             router.delete(route(routeName, deleteState.id), {
                 onSuccess: (response) => {
                     closeDeleteDialog();
                     onSuccess?.(response);
                 },
-                onError
+                onError: (error) => {
+                    setDeleteState(prev => ({ ...prev, isLoading: false }));
+                    onError?.(error);
+                },
+                onFinish: () => {
+                    setDeleteState(prev => ({ ...prev, isLoading: false }));
+                }
             });
         }
     };
@@ -58,4 +69,4 @@ export const useDeleteHandler = ({
         closeDeleteDialog,
         confirmDelete
     };
-};
+};

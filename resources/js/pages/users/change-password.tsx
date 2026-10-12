@@ -57,8 +57,8 @@ export default function ChangePassword({ user, onSuccess }: ChangePasswordProps)
                     <Button type="button" variant="outline" onClick={onSuccess}>
                         {t('Cancel')}
                     </Button>
-                    <Button type="submit" disabled={processing}>
-                        {processing ? t('Changing...') : t('Change Password')}
+                    <Button type="submit" isLoading={processing}>
+                        {processing ? t('Changing') : t('Change Password')}
                     </Button>
                 </div>
             </form>
