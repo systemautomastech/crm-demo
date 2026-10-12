@@ -5,10 +5,11 @@ import { useFlashMessages } from '@/hooks/useFlashMessages';
 import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import { formatCurrency, formatDate } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { RefreshCw, ArrowLeft, Printer, Edit, Send } from 'lucide-react';
+import { RefreshCw, ArrowLeft, Printer, Edit, Send, Check, X } from 'lucide-react';
 import { useFormFields } from '@/hooks/useFormFields';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import SalesOrderModal from './components/SalesOrderModal';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 interface SalesProposal {
     id: number;
@@ -51,6 +52,8 @@ interface SalesProposal {
             name: string;
             sku?: string;
             description?: string;
+            type?: string;
+            warehouseStocks?: Array<{ id: number; warehouse_id: number; quantity: number }>;
         };
         taxes?: Array<{
             id: number;
@@ -73,6 +76,30 @@ export default function View() {
     const { t } = useTranslation();
     const { proposal, auth, customers, users, userGroups } = usePage<ViewProps>().props;
     const [isConvertOpen, setIsConvertOpen] = useState(false);
+    const [acceptState, setAcceptState] = useState<{ isOpen: boolean; isLoading: boolean }>({
+        isOpen: false,
+        isLoading: false,
+    });
+    const [rejectState, setRejectState] = useState<{ isOpen: boolean; isLoading: boolean }>({
+        isOpen: false,
+        isLoading: false,
+    });
+
+    const confirmAccept = () => {
+        setAcceptState(prev => ({ ...prev, isLoading: true }));
+        router.post(route('sales-proposals.accept', proposal.id), {}, {
+            preserveScroll: true,
+            onFinish: () => setAcceptState({ isOpen: false, isLoading: false }),
+        });
+    };
+
+    const confirmReject = () => {
+        setRejectState(prev => ({ ...prev, isLoading: true }));
+        router.post(route('sales-proposals.reject', proposal.id), {}, {
+            preserveScroll: true,
+            onFinish: () => setRejectState({ isOpen: false, isLoading: false }),
+        });
+    };
 
     useFlashMessages();
 
@@ -131,13 +158,17 @@ export default function View() {
                             <div>
                                 <h3 className="font-semibold mb-2">{t('CUSTOMER')}</h3>
                                 <div className="text-sm space-y-1">
-                                    <div className="font-medium">{proposal.customer?.name ?? proposal.customer_name ?? '-'}</div>
-                                    <div className="text-muted-foreground">{proposal.customer?.email ?? proposal.customer_email ?? ''}</div>
-                                    {(proposal.customer?.phone || proposal.customer_phone) && (
-                                        <div className="text-xs text-muted-foreground">{proposal.customer?.phone ?? proposal.customer_phone}</div>
+                                    <div className="font-medium">{(proposal.customer as any)?.customer_name ?? proposal.customer_name ?? '-'}</div>
+                                    <div className="text-muted-foreground">{(proposal.customer as any)?.customer_email ?? proposal.customer_email ?? ''}</div>
+                                    {((proposal.customer as any)?.customer_phone || proposal.customer_phone) && (
+                                        <div className="text-xs text-muted-foreground">{(proposal.customer as any)?.customer_phone ?? proposal.customer_phone}</div>
                                     )}
-                                    {(proposal.customer?.address || proposal.customer_address) && (
-                                        <div className="text-xs text-muted-foreground">{proposal.customer?.address ?? proposal.customer_address}</div>
+                                    {((proposal.customer as any)?.billing_address?.address || proposal.customer_address) && (
+                                        <div className="text-xs text-muted-foreground">
+                                            {typeof (proposal.customer as any)?.billing_address === 'object'
+                                                ? [(proposal.customer as any)?.billing_address?.address, (proposal.customer as any)?.billing_address?.city, (proposal.customer as any)?.billing_address?.country].filter(Boolean).join(', ')
+                                                : proposal.customer_address}
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -200,6 +231,28 @@ export default function View() {
                                                 >
                                                     <Send className="h-4 w-4 mr-2" />
                                                     {proposal.status === 'sent' ? t('Resend Proposal') : t('Send Proposal')}
+                                                </Button>
+                                            )}
+                                            {auth.user?.permissions?.includes('accept-sales-proposals') && proposal.status === 'sent' && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setAcceptState({ isOpen: true, isLoading: false })}
+                                                    className="border-green-600 text-green-700 hover:bg-green-50"
+                                                >
+                                                    <Check className="h-4 w-4 mr-2" />
+                                                    {t('Accept Proposal')}
+                                                </Button>
+                                            )}
+                                            {auth.user?.permissions?.includes('reject-sales-proposals') && proposal.status === 'sent' && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setRejectState({ isOpen: true, isLoading: false })}
+                                                    className="border-red-600 text-red-700 hover:bg-red-50"
+                                                >
+                                                    <X className="h-4 w-4 mr-2" />
+                                                    {t('Reject Proposal')}
                                                 </Button>
                                             )}
                                             {auth.user?.permissions?.includes('print-sales-proposals') && (
@@ -358,6 +411,28 @@ export default function View() {
                 customers={customers}
                 users={users}
                 userGroups={userGroups}
+            />
+
+            <ConfirmationDialog
+                open={acceptState.isOpen}
+                onOpenChange={(open) => setAcceptState(prev => ({ ...prev, isOpen: open }))}
+                title={t('Accept Proposal')}
+                message={t('Are you sure you to accept the proposal?')}
+                confirmText={t('Accept')}
+                onConfirm={confirmAccept}
+                isLoading={acceptState.isLoading}
+                variant="default"
+            />
+
+            <ConfirmationDialog
+                open={rejectState.isOpen}
+                onOpenChange={(open) => setRejectState(prev => ({ ...prev, isOpen: open }))}
+                title={t('Reject Proposal')}
+                message={t('Are you sure you to reject the proposal?')}
+                confirmText={t('Reject')}
+                onConfirm={confirmReject}
+                isLoading={rejectState.isLoading}
+                variant="destructive"
             />
         </AuthenticatedLayout>
     );

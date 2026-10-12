@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
-import { ShoppingCart, CheckCircle, User, UserPlus, Users, UserCheck } from 'lucide-react';
+import { ShoppingCart, CheckCircle, User, UserPlus, Users, UserCheck, Plus, Minus, Package } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { InputError } from '@/components/ui/input-error';
 import { PhoneInputComponent } from '@/components/ui/phone-input';
 import { MultiSelectEnhanced } from '@/components/ui/multi-select-enhanced';
+import { formatCurrency } from '@/utils/helpers';
 
 interface Address {
     name: string;
@@ -25,6 +26,43 @@ interface Address {
     zip_code: string;
 }
 
+interface Customer {
+    id: number;
+    name?: string;
+    customer_name?: string;
+    email?: string;
+    customer_email?: string;
+    customer_phone?: string;
+    phone?: string;
+    address?: string;
+    customer_address?: string;
+    billing_address?: any;
+    shipping_address?: any;
+}
+
+export interface SalesOrderItemData {
+    id?: number;
+    product_id: number;
+    name: string;
+    sku?: string;
+    description?: string;
+    product_type?: string;
+    quantity: number;
+    available_stock?: number | null;
+    unit_price: number;
+    discount_type?: string;
+    discount_percentage?: number;
+    discount_amount?: number;
+    tax_percentage?: number;
+    tax_amount?: number;
+    total_amount?: number;
+    taxes?: Array<{
+        id?: number;
+        tax_name?: string;
+        tax_rate?: number;
+    }>;
+}
+
 interface SalesProposal {
     id: number;
     proposal_number: string;
@@ -34,15 +72,43 @@ interface SalesProposal {
     customer_email?: string | null;
     customer_phone?: string | null;
     customer_address?: string | null;
-    customer?: { id: number; name: string; email?: string; phone?: string; address?: string } | null;
+    customer?: { id: number; name?: string; customer_name?: string; email?: string; customer_email?: string; phone?: string; address?: string } | null;
     total_amount: number;
     sales_order_id?: number | null;
     status: string;
+    items?: Array<{
+        id: number;
+        product_id: number;
+        description?: string;
+        product_description?: string;
+        product_type?: string;
+        quantity: number;
+        unit_price: number;
+        discount_type?: string;
+        discount_percentage?: number;
+        discount_amount?: number;
+        tax_percentage?: number;
+        tax_amount?: number;
+        total_amount?: number;
+        product?: {
+            id: number;
+            name: string;
+            sku?: string;
+            description?: string;
+            type?: string;
+            warehouseStocks?: Array<{ id: number; warehouse_id?: number; quantity: number }>;
+        };
+        taxes?: Array<{
+            id?: number;
+            tax_name?: string;
+            tax_rate?: number;
+        }>;
+    }>;
 }
 
 interface SalesOrderModalProps {
     proposal: SalesProposal;
-    customers?: Array<{ id: number; name: string; email?: string }>;
+    customers?: Customer[];
     users?: Array<{ id: number; name: string }>;
     userGroups?: Array<{ id: number; name: string }>;
     buttonClassName?: string;
@@ -72,30 +138,57 @@ export default function SalesOrderModal({
     const existingCustomerId = proposal?.customer_id || proposal?.customer?.id;
 
     const availableCustomers = useMemo(() => {
-        const list = [...(customers || [])];
-        if (existingCustomerId) {
-            const found = list.some(c => String(c.id) === String(existingCustomerId));
-            if (!found) {
-                list.unshift({
-                    id: existingCustomerId,
-                    name: proposal.customer?.name || proposal.customer_name || `${t('Customer')} #${existingCustomerId}`,
-                    email: proposal.customer?.email || proposal.customer_email || ''
-                });
-            }
-        }
-        return list;
-    }, [customers, proposal, existingCustomerId, t]);
+        return (customers || []).map(c => ({
+            id: c.id,
+            name: c.customer_name || '',
+            email: c.customer_email || ''
+        }));
+    }, [customers]);
 
-    const initialCustName = proposal?.customer?.name || proposal?.customer_name || '';
-    const initialCustAddress = proposal?.customer?.address || proposal?.customer_address || '';
+    const initialCustName = proposal?.customer?.customer_name || proposal?.customer_name || '';
+    const initialCustAddress = proposal?.customer?.billing_address?.address || proposal?.customer_address || '';
+
+    const initialValidCustomerId = (customers || []).some(c => String(c.id) === String(existingCustomerId)) ? String(existingCustomerId) : '';
+
+    const mapProposalItems = (items?: SalesProposal['items']): SalesOrderItemData[] => {
+        if (!items || !items.length) return [];
+        return items.map((item) => {
+            const pType = item.product_type || item.product?.type || 'product';
+            const isService = pType === 'service';
+
+            const stocks = item.product?.warehouseStocks || [];
+            const totalStock = stocks.length > 0
+                ? stocks.reduce((sum, s) => sum + Number(s.quantity || 0), 0)
+                : 0;
+
+            return {
+                id: item.id,
+                product_id: item.product_id,
+                name: item.product?.name || item.description || item.product_description || `${t('Product')} #${item.product_id}`,
+                sku: item.product?.sku,
+                description: item.description || item.product_description,
+                product_type: pType,
+                available_stock: isService ? null : totalStock,
+                quantity: item.quantity ?? 1,
+                unit_price: item.unit_price ?? 0,
+                discount_type: item.discount_type || 'percentage',
+                discount_percentage: item.discount_percentage ?? 0,
+                discount_amount: item.discount_amount ?? 0,
+                tax_percentage: item.tax_percentage ?? 0,
+                tax_amount: item.tax_amount ?? 0,
+                total_amount: item.total_amount ?? 0,
+                taxes: item.taxes || [],
+            };
+        });
+    };
 
     const [formData, setFormData] = useState({
         order_name: proposal?.proposal_number ? `${t('Order for')} ${proposal.proposal_number}` : '',
-        customer_check: existingCustomerId ? 'exist' : (proposal?.customer_name ? 'new' : 'exist'),
-        customer_id: existingCustomerId ? String(existingCustomerId) : '',
+        customer_check: initialValidCustomerId ? 'exist' : (proposal?.customer_name ? 'new' : 'exist'),
+        customer_id: initialValidCustomerId,
         customer_name: initialCustName,
-        customer_email: proposal?.customer?.email || proposal?.customer_email || '',
-        customer_phone: proposal?.customer?.phone || proposal?.customer_phone || '',
+        customer_email: proposal?.customer?.customer_email || proposal?.customer_email || '',
+        customer_phone: proposal?.customer?.customer_phone || proposal?.customer_phone || '',
         tax_number: '',
         payment_terms: '',
         billing_address: {
@@ -122,21 +215,23 @@ export default function SalesOrderModal({
         assigned_user_id: '',
         assigned_user_ids: [] as string[],
         assigned_group_id: '',
+        items: mapProposalItems(proposal?.items),
     });
 
     useEffect(() => {
         if (isOpen && proposal) {
             const extId = proposal.customer_id || proposal.customer?.id;
-            const custName = proposal.customer?.name || proposal.customer_name || '';
-            const custAddr = proposal.customer?.address || proposal.customer_address || '';
+            const validCustomerId = (customers || []).some(c => String(c.id) === String(extId)) ? String(extId) : '';
+            const custName = proposal.customer?.customer_name || proposal.customer_name || '';
+            const custAddr = proposal.customer?.billing_address?.address || proposal.customer_address || '';
 
             setFormData({
                 order_name: proposal.proposal_number ? `${t('Order for')} ${proposal.proposal_number}` : '',
-                customer_check: extId ? 'exist' : (proposal.customer_name ? 'new' : 'exist'),
-                customer_id: extId ? String(extId) : '',
+                customer_check: validCustomerId ? 'exist' : (proposal.customer_name ? 'new' : 'exist'),
+                customer_id: validCustomerId,
                 customer_name: custName,
-                customer_email: proposal.customer?.email || proposal.customer_email || '',
-                customer_phone: proposal.customer?.phone || proposal.customer_phone || '',
+                customer_email: proposal.customer?.customer_email || proposal.customer_email || '',
+                customer_phone: proposal.customer?.customer_phone || proposal.customer_phone || '',
                 tax_number: '',
                 payment_terms: '',
                 billing_address: {
@@ -163,10 +258,28 @@ export default function SalesOrderModal({
                 assigned_user_id: '',
                 assigned_user_ids: [],
                 assigned_group_id: '',
+                items: mapProposalItems(proposal.items),
             });
             setErrors({});
         }
     }, [isOpen, proposal, t]);
+
+    const handleQuantityChange = (index: number, newQty: number) => {
+        const qty = Math.max(1, newQty);
+        setFormData(prev => {
+            const updatedItems = [...prev.items];
+            const currentItem = updatedItems[index];
+            if (!currentItem) return prev;
+            updatedItems[index] = {
+                ...currentItem,
+                quantity: qty,
+            };
+            return {
+                ...prev,
+                items: updatedItems,
+            };
+        });
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -228,6 +341,23 @@ export default function SalesOrderModal({
             payload.assigned_group_id = formData.assigned_group_id;
         }
 
+        if (formData.items && formData.items.length > 0) {
+            payload.items = formData.items.map(item => ({
+                product_id: item.product_id,
+                product_type: item.product_type || 'product',
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                discount_type: item.discount_type || 'percentage',
+                discount_percentage: item.discount_percentage || 0,
+                discount_amount: item.discount_amount || 0,
+                tax_percentage: item.tax_percentage || 0,
+                tax_amount: item.tax_amount || 0,
+                total_amount: item.total_amount || 0,
+                description: item.description,
+                taxes: item.taxes || [],
+            }));
+        }
+
         router.post(route('sales-proposals.convert-to-sales-order', proposal.id), payload, {
             onSuccess: () => {
                 setIsOpen(false);
@@ -241,25 +371,6 @@ export default function SalesOrderModal({
         });
     };
 
-    if (proposal?.sales_order_id && !externalOpen) {
-        return (
-            <TooltipProvider>
-                <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                        <Link href={route('salesorder.orders.show', proposal.sales_order_id)}>
-                            <Button size="sm" variant={buttonClassName ? 'ghost' : 'default'} className={buttonClassName || "text-blue-600 border-blue-200 hover:bg-blue-50"}>
-                                <CheckCircle className="h-4 w-4" />
-                            </Button>
-                        </Link>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <span className="font-normal">{t('Already Converted To Sales Order')}</span>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        );
-    }
-
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             {trigger && (
@@ -268,7 +379,7 @@ export default function SalesOrderModal({
                 </DialogTrigger>
             )}
 
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto transition-[height,max-height] duration-300 ease-in-out">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <ShoppingCart className="h-5 w-5 text-primary" />
@@ -289,16 +400,130 @@ export default function SalesOrderModal({
                         <InputError message={errors.order_name} />
                     </div>
 
+                    {/* Products / Items List Section */}
+                    {formData.items && formData.items.length > 0 && (
+                        <div className="rounded-lg border border-border bg-card overflow-hidden">
+                            <div className="flex items-center justify-between px-3.5 py-2 bg-muted/40 border-b border-border">
+                                <div className="flex items-center gap-2">
+                                    <Package className="w-4 h-4 text-primary" />
+                                    <span className="font-medium text-xs text-foreground">
+                                        {t('Product/Items')}
+                                    </span>
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                    {formData.items.length} {formData.items.length === 1 ? t('item') : t('items')}
+                                </span>
+                            </div>
+
+                            <div className="divide-y divide-border max-h-56 overflow-y-auto">
+                                {formData.items.map((item, idx) => (
+                                    <div
+                                        key={item.id ?? idx}
+                                        className="px-3.5 py-2.5 flex items-center justify-between gap-3 hover:bg-muted/30 transition-colors"
+                                    >
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-medium text-foreground truncate">
+                                                {item.name}
+                                            </p>
+                                            <div className="flex flex-wrap items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
+                                                {item.sku && (
+                                                    <>
+                                                        <span className="font-mono text-[11px] text-muted-foreground">
+                                                            {item.sku}
+                                                        </span>
+                                                        <span>•</span>
+                                                    </>
+                                                )}
+                                                <span>{formatCurrency(item.unit_price)}</span>
+
+                                                {item.available_stock !== null && item.available_stock !== undefined ? (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span
+                                                            className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${
+                                                                item.available_stock <= 0
+                                                                    ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400'
+                                                                    : item.available_stock < item.quantity
+                                                                    ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400'
+                                                                    : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                                            }`}
+                                                        >
+                                                            {t('Stock')}: {item.available_stock}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                                                            {t('Service')}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            {/* Quantity Controller */}
+                                            <div className="inline-flex items-center h-8 rounded-md border border-input bg-background shadow-xs">
+                                                <button
+                                                    type="button"
+                                                    className="inline-flex items-center justify-center h-7 w-7 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                                                    onClick={() => handleQuantityChange(idx, item.quantity - 1)}
+                                                    disabled={item.quantity <= 1}
+                                                >
+                                                    <Minus className="h-3.5 w-3.5" />
+                                                </button>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    value={item.quantity}
+                                                    onChange={(e) => {
+                                                        const val = parseInt(e.target.value, 10);
+                                                        handleQuantityChange(idx, isNaN(val) ? 1 : val);
+                                                    }}
+                                                    className="w-10 h-7 border-0 bg-transparent text-center text-xs font-semibold text-foreground focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="inline-flex items-center justify-center h-7 w-7 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                                                    onClick={() => handleQuantityChange(idx, item.quantity + 1)}
+                                                >
+                                                    <Plus className="h-3.5 w-3.5" />
+                                                </button>
+                                            </div>
+
+                                            {/* Price Total */}
+                                            <div className="w-24 text-right">
+                                                <span className="text-xs font-semibold text-foreground">
+                                                    {formatCurrency(item.quantity * item.unit_price)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Customer Selection Section */}
-                    <div className="space-y-2">
-                        <Label className="font-semibold text-sm">{t('Customer Options')}</Label>
-                        <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg w-full">
+                    <div className="space-y-1.5 pt-1">
+                        <Label>{t('Customer Options')}</Label>
+                        <div className="relative flex p-1 bg-muted/60 rounded-lg border border-border/50 w-full overflow-hidden">
+                            {/* Sliding active pill background */}
+                            <div
+                                className="absolute top-1 bottom-1 rounded-md bg-background shadow-xs transition-transform duration-200 ease-out pointer-events-none"
+                                style={{
+                                    width: 'calc((100% - 8px) / 2)',
+                                    transform: formData.customer_check === 'exist' ? 'translateX(0%)' : 'translateX(100%)',
+                                }}
+                            />
                             <button
                                 type="button"
-                                className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${formData.customer_check === 'exist'
-                                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm font-semibold'
-                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                className={`relative z-10 flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-colors duration-150 flex items-center justify-center gap-1.5 ${
+                                    formData.customer_check === 'exist'
+                                        ? 'text-foreground font-semibold'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
                                 onClick={() => setFormData(prev => ({ ...prev, customer_check: 'exist' }))}
                             >
                                 <User className="w-3.5 h-3.5" />
@@ -306,10 +531,11 @@ export default function SalesOrderModal({
                             </button>
                             <button
                                 type="button"
-                                className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${formData.customer_check === 'new'
-                                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm font-semibold'
-                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                className={`relative z-10 flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-colors duration-150 flex items-center justify-center gap-1.5 ${
+                                    formData.customer_check === 'new'
+                                        ? 'text-foreground font-semibold'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
                                 onClick={() => setFormData(prev => ({ ...prev, customer_check: 'new' }))}
                             >
                                 <UserPlus className="w-3.5 h-3.5" />
@@ -318,9 +544,12 @@ export default function SalesOrderModal({
                         </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div
+                        key={formData.customer_check}
+                        className="transition-all duration-300 ease-out animate-in fade-in-0 slide-in-from-top-2 fill-mode-both"
+                    >
                         {formData.customer_check === 'exist' ? (
-                            <div>
+                            <div className="space-y-2">
                                 <Label htmlFor="customer_id">{t('Select Customer')}</Label>
                                 <Select
                                     value={formData.customer_id}
@@ -418,8 +647,8 @@ export default function SalesOrderModal({
 
                                 {/* Billing Address Section */}
                                 <div className="space-y-4 border-t pt-4">
-                                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-                                        <span>{t('Billing Address')}</span>
+                                    <h3 className="font-medium text-sm text-foreground">
+                                        {t('Billing Address')}
                                     </h3>
 
                                     <div>
@@ -559,30 +788,31 @@ export default function SalesOrderModal({
                                     </div>
                                 </div>
 
-                                {/* Same as Billing Checkbox */}
-                                <div className="flex items-center space-x-2 pt-2">
-                                    <Checkbox
-                                        id="same_as_billing"
-                                        checked={formData.same_as_billing}
-                                        onCheckedChange={(checked) => {
-                                            const isChecked = !!checked;
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                same_as_billing: isChecked,
-                                                shipping_address: isChecked ? { ...prev.billing_address } : prev.shipping_address
-                                            }));
-                                        }}
-                                    />
-                                    <Label htmlFor="same_as_billing" className="cursor-pointer font-normal">
-                                        {t('Shipping address same as billing')}
-                                    </Label>
+                                {/* Shipping Address Section */}
+                                <div className="space-y-4 border-t pt-4">
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="same_as_billing"
+                                            checked={formData.same_as_billing}
+                                            onCheckedChange={(checked) => {
+                                                const isChecked = checked as boolean;
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    same_as_billing: isChecked,
+                                                    shipping_address: isChecked ? { ...prev.billing_address } : prev.shipping_address
+                                                }));
+                                            }}
+                                        />
+                                        <Label htmlFor="same_as_billing" className="text-sm font-medium">
+                                            {t('Shipping address same as billing')}
+                                        </Label>
+                                    </div>
                                 </div>
 
-                                {/* Shipping Address Section (if not same as billing) */}
                                 {!formData.same_as_billing && (
-                                    <div className="space-y-4 border-t pt-4">
-                                        <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-                                            <span>{t('Shipping Address')}</span>
+                                    <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2 duration-300 ease-out fill-mode-both">
+                                        <h3 className="font-medium text-sm text-foreground">
+                                            {t('Shipping Address')}
                                         </h3>
 
                                         <div>
@@ -591,7 +821,7 @@ export default function SalesOrderModal({
                                                 id="shipping_name"
                                                 value={formData.shipping_address.name}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, shipping_address: { ...prev.shipping_address, name: e.target.value } }))}
-                                                placeholder={t('Enter shipping recipient name')}
+                                                placeholder={t('Enter shipping name')}
                                             />
                                             <InputError message={errors['shipping_name'] || errors['shipping_address.name']} />
                                         </div>
@@ -691,15 +921,29 @@ export default function SalesOrderModal({
                     </div>
 
                     {/* Assignment Options Section */}
-                    <div className="space-y-2 pt-2 border-t">
-                        <Label className="font-semibold text-sm">{t('Order Assignment')}</Label>
-                        <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg w-full">
+                    <div className="space-y-1.5 pt-2 border-t">
+                        <Label>{t('Order Assignment')}</Label>
+                        <div className="relative flex p-1 bg-muted/60 rounded-lg border border-border/50 w-full overflow-hidden">
+                            {/* Sliding active pill background for 3 tabs */}
+                            <div
+                                className="absolute top-1 bottom-1 rounded-md bg-background shadow-xs transition-transform duration-200 ease-out pointer-events-none"
+                                style={{
+                                    width: 'calc((100% - 8px) / 3)',
+                                    transform:
+                                        formData.assignment_check === 'none'
+                                            ? 'translateX(0%)'
+                                            : formData.assignment_check === 'group'
+                                            ? 'translateX(100%)'
+                                            : 'translateX(200%)',
+                                }}
+                            />
                             <button
                                 type="button"
-                                className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${formData.assignment_check === 'none'
-                                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm font-semibold'
-                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                className={`relative z-10 flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-colors duration-150 flex items-center justify-center gap-1.5 ${
+                                    formData.assignment_check === 'none'
+                                        ? 'text-foreground font-semibold'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
                                 onClick={() => setFormData(prev => ({ ...prev, assignment_check: 'none', assigned_group_id: '', assigned_user_ids: [], assigned_user_id: '' }))}
                             >
                                 <UserCheck className="w-3.5 h-3.5" />
@@ -707,10 +951,11 @@ export default function SalesOrderModal({
                             </button>
                             <button
                                 type="button"
-                                className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${formData.assignment_check === 'group'
-                                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm font-semibold'
-                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                className={`relative z-10 flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-colors duration-150 flex items-center justify-center gap-1.5 ${
+                                    formData.assignment_check === 'group'
+                                        ? 'text-foreground font-semibold'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
                                 onClick={() => setFormData(prev => ({ ...prev, assignment_check: 'group', assigned_user_ids: [], assigned_user_id: '' }))}
                             >
                                 <Users className="w-3.5 h-3.5" />
@@ -718,10 +963,11 @@ export default function SalesOrderModal({
                             </button>
                             <button
                                 type="button"
-                                className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${formData.assignment_check === 'user'
-                                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm font-semibold'
-                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                className={`relative z-10 flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-colors duration-150 flex items-center justify-center gap-1.5 ${
+                                    formData.assignment_check === 'user'
+                                        ? 'text-foreground font-semibold'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
                                 onClick={() => setFormData(prev => ({ ...prev, assignment_check: 'user', assigned_group_id: '' }))}
                             >
                                 <User className="w-3.5 h-3.5" />
@@ -730,7 +976,10 @@ export default function SalesOrderModal({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div
+                        key={formData.assignment_check}
+                        className="grid grid-cols-2 gap-4 transition-all duration-300 ease-out animate-in fade-in-0 slide-in-from-top-2 fill-mode-both"
+                    >
                         {formData.assignment_check === 'group' && (
                             <div className="col-span-2">
                                 <Label htmlFor="assigned_group_id">{t('User Group')}</Label>
@@ -773,11 +1022,11 @@ export default function SalesOrderModal({
                     </div>
 
                     <div className="flex justify-end gap-2 pt-4 border-t">
-                        <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                        <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={processing}>
                             {t('Cancel')}
                         </Button>
-                        <Button type="submit" disabled={processing}>
-                            {processing ? t('Converting...') : t('Convert')}
+                        <Button type="submit" isLoading={processing}>
+                            {processing ? t('Converting') : t('Convert')}
                         </Button>
                     </div>
                 </form>

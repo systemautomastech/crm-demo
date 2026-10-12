@@ -468,7 +468,7 @@ export default function Edit() {
                                                 <SelectContent searchable>
                                                     {Array.isArray(customers) && customers.map((customer: any) => customer && customer.id !== undefined && customer.id !== null ? (
                                                         <SelectItem key={customer.id} value={String(customer.id)}>
-                                                            {customer.name || customer.company_name || 'Customer'} - {customer.email || '-'}
+                                                            {customer.customer_name || 'Customer'} - {customer.customer_email || '-'}
                                                         </SelectItem>
                                                     ) : null)}
                                                 </SelectContent>
@@ -483,7 +483,7 @@ export default function Edit() {
                                                                 <User className="w-2.5 h-2.5" />
                                                             </div>
                                                             <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">
-                                                                {selectedCustomer.name}
+                                                                {selectedCustomer.customer_name}
                                                             </span>
                                                         </div>
                                                         <Button
@@ -498,13 +498,13 @@ export default function Edit() {
                                                         </Button>
                                                     </div>
                                                     <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5 truncate">
-                                                        <div className="truncate">{selectedCustomer.email || '-'}</div>
-                                                        {(selectedCustomer.mobile_no || selectedCustomer.phone) && (
-                                                            <div className="truncate">{selectedCustomer.mobile_no || selectedCustomer.phone}</div>
+                                                        <div className="truncate">{selectedCustomer.customer_email || '-'}</div>
+                                                        {selectedCustomer.customer_phone && (
+                                                            <div className="truncate">{selectedCustomer.customer_phone}</div>
                                                         )}
-                                                        {selectedCustomer.address && (
-                                                            <div className="text-slate-600 dark:text-slate-300 truncate" title={selectedCustomer.address}>
-                                                                {selectedCustomer.address}
+                                                        {selectedCustomer.billing_address?.address && (
+                                                            <div className="text-slate-600 dark:text-slate-300 truncate" title={selectedCustomer.billing_address.address}>
+                                                                {selectedCustomer.billing_address.address}
                                                             </div>
                                                         )}
                                                     </div>

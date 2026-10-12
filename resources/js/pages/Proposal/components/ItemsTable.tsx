@@ -20,7 +20,7 @@ interface Props {
     invoiceType?: string;
     warehouseId?: string | number | null;
     onRefresh?: () => void | Promise<void>;
-    isRefreshing?: boolean;    
+    isRefreshing?: boolean;
     isTaxEnabled?: boolean;
     defaultSection?: string;
     discountType?: 'percentage' | 'fixed';
@@ -87,7 +87,7 @@ export default function ItemsTable({
         item.quantity = Math.min(Math.max(Number(item.quantity) || 0, 0), 999999);
         item.unit_price = Number(item.unit_price) || 0;
         item.tax_percentage = isTaxEnabled ? (Number(item.tax_percentage) || 0) : 0;
-        
+
         if (field === 'discount_amount') {
             item.discount_type = 'fixed';
         } else if (field === 'discount_percentage') {
@@ -95,7 +95,7 @@ export default function ItemsTable({
         } else if (!item.discount_type) {
             item.discount_type = discountType || 'percentage';
         }
-        
+
         const effectiveDiscType = item.discount_type;
 
         const lineTotal = item.quantity * item.unit_price;
@@ -233,7 +233,7 @@ export default function ItemsTable({
                                         onChange(updated);
                                     }}
                                 >
-                                    <SelectTrigger className="h-8 text-xs font-semibold border-none shadow-none p-0 focus:ring-0 text-foreground bg-transparent flex items-center gap-1 hover:text-primary transition-colors cursor-pointer w-auto [&>svg]:opacity-70">
+                                    <SelectTrigger className="h-auto p-0 border-0 shadow-none focus:ring-0 text-sm font-semibold text-foreground bg-transparent flex items-center gap-1 hover:text-primary transition-colors cursor-pointer w-auto [&>svg]:opacity-70">
                                         <span>
                                             {t('Discount')} ({discountType === 'percentage' ? '%' : currencyCode})
                                         </span>
@@ -439,21 +439,21 @@ export default function ItemsTable({
                                         <div className="relative w-20">
                                             <Input
                                                 type="number"
-                                                 value={(item.discount_type || discountType) === 'percentage'
-                                                     ? (item.discount_percentage !== undefined && item.discount_percentage !== null ? Number(Number(item.discount_percentage).toFixed(1)) : 0)
-                                                     : (item.discount_amount || 0)}
-                                                 onChange={(e) => {
-                                                     const val = parseFloat(e.target.value) || 0;
-                                                     if ((item.discount_type || discountType) === 'percentage') {
-                                                         updateItem(index, 'discount_percentage', Number(val.toFixed(1)));
-                                                     } else {
-                                                         updateItem(index, 'discount_amount', val);
-                                                     }
-                                                 }}
-                                                 className="w-20 text-sm pr-6 text-right font-medium"
-                                                 min="0"
-                                                 max={(item.discount_type || discountType) === 'percentage' ? 100 : undefined}
-                                                 step={(item.discount_type || discountType) === 'percentage' ? "0.1" : "0.01"}
+                                                value={(item.discount_type || discountType) === 'percentage'
+                                                    ? (item.discount_percentage !== undefined && item.discount_percentage !== null ? Number(Number(item.discount_percentage).toFixed(1)) : 0)
+                                                    : (item.discount_amount || 0)}
+                                                onChange={(e) => {
+                                                    const val = parseFloat(e.target.value) || 0;
+                                                    if ((item.discount_type || discountType) === 'percentage') {
+                                                        updateItem(index, 'discount_percentage', Number(val.toFixed(1)));
+                                                    } else {
+                                                        updateItem(index, 'discount_amount', val);
+                                                    }
+                                                }}
+                                                className="w-20 text-sm pr-6 text-right font-medium"
+                                                min="0"
+                                                max={(item.discount_type || discountType) === 'percentage' ? 100 : undefined}
+                                                step={(item.discount_type || discountType) === 'percentage' ? "0.1" : "0.01"}
                                             />
                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
                                                 {(item.discount_type || discountType) === 'percentage' ? '%' : '৳'}

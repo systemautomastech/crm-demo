@@ -254,7 +254,7 @@ export default function InvoiceModal({ open, onOpenChange, proposal }: InvoiceMo
 
         setIsSubmitting(true);
         router.post(
-            route('sales-proposals.convert-to-sales-order', targetProposal.id),
+            route('sales-proposals.convert-to-invoice', targetProposal.id),
             {
                 warehouse_id: targetProposal.warehouse_id,
                 items: items.map(item => ({
@@ -306,18 +306,18 @@ export default function InvoiceModal({ open, onOpenChange, proposal }: InvoiceMo
                                 </div>
                                 <div className="font-medium text-foreground flex items-center gap-1.5 text-sm">
                                     <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                    <span>{activeProposal?.customer?.name || activeProposal?.customer_name || '-'}</span>
+                                    <span>{activeProposal?.customer?.customer_name || activeProposal?.customer_name || '-'}</span>
                                 </div>
-                                {(activeProposal?.customer?.email || activeProposal?.customer_email) && (
+                                {(activeProposal?.customer?.customer_email || activeProposal?.customer_email) && (
                                     <div className="text-muted-foreground flex items-center gap-1.5">
                                         <Mail className="h-3 w-3 shrink-0" />
-                                        <span>{activeProposal?.customer?.email || activeProposal?.customer_email}</span>
+                                        <span>{activeProposal?.customer?.customer_email || activeProposal?.customer_email}</span>
                                     </div>
                                 )}
-                                {(activeProposal?.customer?.phone || activeProposal?.customer_phone) && (
+                                {(activeProposal?.customer?.customer_phone || activeProposal?.customer_phone) && (
                                     <div className="text-muted-foreground flex items-center gap-1.5">
                                         <Phone className="h-3 w-3 shrink-0" />
-                                        <span>{activeProposal?.customer?.phone || activeProposal?.customer_phone}</span>
+                                        <span>{activeProposal?.customer?.customer_phone || activeProposal?.customer_phone}</span>
                                     </div>
                                 )}
                                 {(activeProposal?.customer?.address || activeProposal?.customer_address) && (
@@ -561,16 +561,10 @@ export default function InvoiceModal({ open, onOpenChange, proposal }: InvoiceMo
                         type="button"
                         size="sm"
                         onClick={handleConfirm}
+                        isLoading={isSubmitting}
                         disabled={isSubmitting || items.length === 0 || hasStockError || isLoading}
                     >
-                        {isSubmitting ? (
-                            <>
-                                <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                                {t('Converting...')}
-                            </>
-                        ) : (
-                            t('Convert to Sales Order')
-                        )}
+                        {isSubmitting ? t('Converting') : t('Convert to Sales Order')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

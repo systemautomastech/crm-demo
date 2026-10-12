@@ -31,11 +31,10 @@ interface Page {
     sort_order: number;
 }
 
-interface CreateProps {
+interface Props {
     customers: Array<{ id: number; name: string; email: string;[key: string]: any }>;
     warehouses: Array<{ id: number; name: string; address: string }>;
     pages?: Page[];
-    defaultTerms?: string | null;
     proposalSetting?: any;
     subjects?: Array<{ id: number; name: string }>;
     [key: string]: any;
@@ -55,18 +54,11 @@ const isOtherDetails = (content?: string) =>
 
 export default function Create() {
     const { t } = useTranslation();
-    const pageProps = usePage<CreateProps>().props;
-    const { customers, warehouses, pages = [], defaultTerms, proposalSetting, subjects = [] } = pageProps;
+    const pageProps = usePage<Props>().props;
+    const { customers, warehouses, pages = [], proposalSetting, subjects = [] } = pageProps;
     const authUser = (pageProps as any)?.auth?.user;
     const [availableProducts, setAvailableProducts] = useState<any[]>([]);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [subjectList, setSubjectList] = useState<Array<{ id: number; name: string }>>(subjects);
-
-    useEffect(() => {
-        if (subjects) {
-            setSubjectList(subjects);
-        }
-    }, [subjects]);
 
     // Helper to build active sections strictly following pages order rule
     const buildSectionsFromPages = (itemsList: ProposalItem[], otherDetailsContent: string) => {
@@ -122,8 +114,6 @@ export default function Create() {
 
     useFlashMessages();
     const { data, setData, post, processing, errors, transform } = useForm({
-        proposal_id: '',
-        reference: '',
         subject: '',
         invoice_date: new Date().toISOString().split('T')[0],
         due_date: '',
@@ -132,20 +122,18 @@ export default function Create() {
         customer_name: '',
         customer_email: '',
         customer_phone: '',
-        customer_type: 'Individual',
         customer_address: '',
         warehouse_id: '',
-        type: 'product',
+        type: 'product' as 'product' | 'service',
         is_tax_enabled: true,
         is_prepaid: false,
         otc_discount_type: 'percentage' as 'percentage' | 'fixed',
         otc_discount_value: 0,
         mrc_discount_type: 'percentage' as 'percentage' | 'fixed',
         mrc_discount_value: 0,
-        payment_terms: defaultTerms || '',
+        payment_terms: '',
         notes: '',
         items: [] as ProposalItem[],
-        proposal_content: [],
         other_details: '',
     });
 
@@ -312,9 +300,10 @@ export default function Create() {
 
         transform((formData) => ({
             ...formData,
+            type: formData.type || 'product',
             items: formData.items.map((item) => ({
                 ...item,
-                product_type: item.product_type || 'product',
+                product_type: item.product_type || formData.type || 'product',
             })),
             proposal_content: sections.map((item, index) => ({
                 title: replaceUserShortcodes(item.title, authUser),
@@ -393,12 +382,22 @@ export default function Create() {
                 mobile_no: data.customer_phone,
                 phone: data.customer_phone,
                 address: data.customer_address,
-                type: data.customer_type,
             };
         }
         if (!data.customer_id || !Array.isArray(customers)) return null;
         return customers.find((c: any) => c && c.id !== undefined && c.id !== null && String(c.id) === String(data.customer_id)) || null;
-    }, [data.customer_mode, data.customer_id, data.customer_name, data.customer_email, data.customer_phone, data.customer_type, data.customer_address, customers]);
+    }, [data.customer_mode, data.customer_id, data.customer_name, data.customer_email, data.customer_phone, data.customer_address, customers]);
+
+    const isFormValid = useMemo(() => {
+        if (!data.subject) return false;
+        if (!data.invoice_date) return false;
+        if (!data.due_date) return false;
+        if (!data.warehouse_id) return false;
+        if (data.customer_mode === 'existing' && !data.customer_id) return false;
+        if (data.customer_mode === 'new' && (!data.customer_name || !data.customer_email || !data.customer_phone)) return false;
+        if (data.items.length === 0) return false;
+        return true;
+    }, [data.subject, data.invoice_date, data.due_date, data.warehouse_id, data.customer_mode, data.customer_id, data.customer_name, data.customer_email, data.customer_phone, data.items]);
 
     return (
         <AuthenticatedLayout
@@ -445,7 +444,7 @@ export default function Create() {
                                             <SelectValue placeholder={t('Select Proposal Subject')} />
                                         </SelectTrigger>
                                         <SelectContent searchable>
-                                            {subjectList.map((subj) => (
+                                            {subjects.map((subj) => (
                                                 <SelectItem key={subj.id} value={subj.name}>
                                                     {subj.name}
                                                 </SelectItem>
@@ -494,7 +493,7 @@ export default function Create() {
                                                 <SelectContent searchable>
                                                     {Array.isArray(customers) && customers.map((customer: any) => customer && customer.id !== undefined && customer.id !== null ? (
                                                         <SelectItem key={customer.id} value={String(customer.id)}>
-                                                            {customer.name || customer.company_name || 'Customer'} - {customer.email || '-'}
+                                                            {customer.customer_name || 'Customer'} - {customer.customer_email || '-'}
                                                         </SelectItem>
                                                     ) : null)}
                                                 </SelectContent>
@@ -510,7 +509,7 @@ export default function Create() {
                                                                 <User className="w-2.5 h-2.5" />
                                                             </div>
                                                             <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">
-                                                                {selectedCustomer.name}
+                                                                {selectedCustomer.customer_name}
                                                             </span>
                                                         </div>
                                                         <Button
@@ -525,13 +524,13 @@ export default function Create() {
                                                         </Button>
                                                     </div>
                                                     <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5 truncate">
-                                                        <div className="truncate">{selectedCustomer.email || '-'}</div>
-                                                        {(selectedCustomer.mobile_no || selectedCustomer.phone) && (
-                                                            <div className="truncate">{selectedCustomer.mobile_no || selectedCustomer.phone}</div>
+                                                        <div className="truncate">{selectedCustomer.customer_email || '-'}</div>
+                                                        {selectedCustomer.customer_phone && (
+                                                            <div className="truncate">{selectedCustomer.customer_phone}</div>
                                                         )}
-                                                        {selectedCustomer.address && (
-                                                            <div className="text-slate-600 dark:text-slate-300 truncate" title={selectedCustomer.address}>
-                                                                {selectedCustomer.address}
+                                                        {selectedCustomer.billing_address?.address && (
+                                                            <div className="text-slate-600 dark:text-slate-300 truncate" title={selectedCustomer.billing_address.address}>
+                                                                {selectedCustomer.billing_address.address}
                                                             </div>
                                                         )}
                                                     </div>
@@ -877,8 +876,8 @@ export default function Create() {
                             <Eye className="h-4 w-4" />
                             {t('Preview')}
                         </Button>
-                        <Button type="submit" disabled={processing}>
-                            {t('Create Proposal')}
+                        <Button type="submit" disabled={processing || !isFormValid}>
+                            {processing ? t('Creating...') : t('Create Proposal')}
                         </Button>
                     </div>
                 </form>

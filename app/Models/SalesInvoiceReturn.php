@@ -40,17 +40,12 @@ class SalesInvoiceReturn extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
-    }
-
-    public function customerDetails(): BelongsTo
-    {
-        return $this->belongsTo(\Automas\Account\Models\Customer::class, 'customer_id', 'user_id');
     }
 
     public function originalInvoice(): BelongsTo

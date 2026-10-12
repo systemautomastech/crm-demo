@@ -151,10 +151,10 @@
             ?? company_setting('company_phone', $creatorId)
             ?? '';
 
-        $custAddr = $customer->address ?? '';
-        if (empty($custAddr) && !empty($customer->billing_address)) {
+        $custAddr = '';
+        if (!empty($customer?->billing_address)) {
             if (is_array($customer->billing_address)) {
-                $custAddr = trim(($customer->billing_address['address_line_1'] ?? '') . ' ' . ($customer->billing_address['city'] ?? '') . ' ' . ($customer->billing_address['state'] ?? '') . ' ' . ($customer->billing_address['zip_code'] ?? ''));
+                $custAddr = trim(($customer->billing_address['address'] ?? $customer->billing_address['address_line_1'] ?? '') . ' ' . ($customer->billing_address['city'] ?? '') . ' ' . ($customer->billing_address['state'] ?? '') . ' ' . ($customer->billing_address['zip_code'] ?? ''));
             } else {
                 $custAddr = (string) $customer->billing_address;
             }
@@ -187,9 +187,9 @@
             'proposal_due_date' => $proposalDueDateFormatted,
             'due_date' => $proposalDueDateFormatted,
             'valid_until' => $proposalDueDateFormatted,
-            'customer_name' => $customer->name ?? $proposal->customer_name ?? '',
-            'customer_email' => $customer->email ?? $proposal->customer_email ?? '',
-            'customer_phone' => $customer->mobile_no ?? $customer->phone ?? $proposal->customer_phone ?? '',
+            'customer_name' => $customer->customer_name ?? $proposal->customer_name ?? '',
+            'customer_email' => $customer->customer_email ?? $proposal->customer_email ?? '',
+            'customer_phone' => $customer->customer_phone ?? $proposal->customer_phone ?? '',
             'customer_address' => !empty($custAddr) ? $custAddr : ($proposal->customer_address ?? ''),
             'user_id' => $authorId,
             'user_name' => $authorName,

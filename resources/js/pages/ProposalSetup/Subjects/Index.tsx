@@ -51,6 +51,7 @@ export default function Subjects({ subjects = [] }: ProposalSubjectsProps) {
 
     const [deletingSubject, setDeletingSubject] = useState<ProposalSubjectItem | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleNavClick = (id: string) => {
         if (id !== 'subjects') {
@@ -134,6 +135,7 @@ export default function Subjects({ subjects = [] }: ProposalSubjectsProps) {
     const handleConfirmDelete = () => {
         if (!deletingSubject) return;
 
+        setIsDeleting(true);
         router.delete(route('proposal-setup.subjects.destroy', deletingSubject.id), {
             preserveScroll: true,
             onSuccess: () => {
@@ -143,6 +145,9 @@ export default function Subjects({ subjects = [] }: ProposalSubjectsProps) {
             },
             onError: () => {
                 toast.error(t('Failed to delete subject.'));
+            },
+            onFinish: () => {
+                setIsDeleting(false);
             }
         });
     };
@@ -284,8 +289,8 @@ export default function Subjects({ subjects = [] }: ProposalSubjectsProps) {
                                 >
                                     {t('Cancel')}
                                 </Button>
-                                <Button type="submit" disabled={isAdding}>
-                                    {isAdding ? t('Creating...') : t('Create')}
+                                <Button type="submit" isLoading={isAdding}>
+                                    {isAdding ? t('Creating') : t('Create')}
                                 </Button>
                             </div>
                         </form>
@@ -326,8 +331,8 @@ export default function Subjects({ subjects = [] }: ProposalSubjectsProps) {
                                 >
                                     {t('Cancel')}
                                 </Button>
-                                <Button type="submit" disabled={isUpdating}>
-                                    {isUpdating ? t('Updating...') : t('Update')}
+                                <Button type="submit" isLoading={isUpdating}>
+                                    {isUpdating ? t('Updating') : t('Update')}
                                 </Button>
                             </div>
                         </form>
@@ -346,6 +351,7 @@ export default function Subjects({ subjects = [] }: ProposalSubjectsProps) {
                     }
                     confirmText={t('Delete')}
                     onConfirm={handleConfirmDelete}
+                    isLoading={isDeleting}
                     variant="destructive"
                 />
             </AuthenticatedLayout>

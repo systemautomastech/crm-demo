@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Automas\Account\Models\CustomerPaymentAllocation;
 use Automas\SalesOrder\Models\SalesOrder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use App\Models\SalesInvoiceSetup;
@@ -54,7 +54,12 @@ class SalesInvoice extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    public function customerDetails(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function warehouse(): BelongsTo
@@ -62,14 +67,9 @@ class SalesInvoice extends Model
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
 
-    public function customerDetails(): BelongsTo
+    public function creator(): BelongsTo
     {
-        return $this->belongsTo(\Automas\Account\Models\Customer::class, 'customer_id', 'user_id');
-    }
-
-    public function paymentAllocations(): HasMany
-    {
-        return $this->hasMany(CustomerPaymentAllocation::class, 'invoice_id');
+        return $this->belongsTo(User::class, 'creator_id');
     }
 
     public function salesReturns(): HasMany
@@ -77,9 +77,9 @@ class SalesInvoice extends Model
         return $this->hasMany(SalesInvoiceReturn::class, 'original_invoice_id');
     }
 
-    public function salesOrder(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function salesOrder(): HasOne
     {
-        return $this->hasOne(\Automas\SalesOrder\Models\SalesOrder::class, 'invoice_id');
+        return $this->hasOne(SalesOrder::class, 'invoice_id');
     }
 
     public function isOverdue(): bool
@@ -122,10 +122,26 @@ class SalesInvoice extends Model
         });
 
         static::deleting(function ($invoice) {
+            // Reset linked Sales Orders
             if (class_exists(SalesOrder::class)) {
                 SalesOrder::where('invoice_id', $invoice->id)->update([
                     'is_invoiced' => false,
                     'invoice_id' => null,
+                ]);
+            }
+
+            // Reset linked Sales Quotations
+            if (class_exists(\Automas\Quotation\Models\SalesQuotation::class)) {
+                \Automas\Quotation\Models\SalesQuotation::where('invoice_id', $invoice->id)->update([
+                    'converted_to_invoice' => false,
+                    'invoice_id' => null,
+                ]);
+            }
+
+            // Reset linked Sales Proposals if any
+            if (class_exists(\App\Models\Proposal::class)) {
+                \App\Models\Proposal::where('converted_to_invoice', $invoice->id)->update([
+                    'converted_to_invoice' => null,
                 ]);
             }
         });

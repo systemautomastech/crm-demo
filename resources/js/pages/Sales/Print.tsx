@@ -181,17 +181,17 @@ export default function Print() {
                     <div className="w-1/2">
                         <h3 className="font-bold mb-3">{t('BILL TO')}</h3>
                         <div className="text-sm space-y-1">
-                            <p className="font-semibold">{invoice.customer?.name || invoice.customer_name || '-'}</p>
-                            {invoice.customer_phone && (
+                            <p className="font-semibold">{invoice.customer?.customer_name || '-'}</p>
+                            {(invoice.customer?.customer_phone) && (
                                 <p className="flex items-center gap-1.5 text-gray-700">
                                     <Phone className="w-3 h-3 text-gray-500 fill-current shrink-0" />
-                                    <span>{invoice.customer_phone}</span>
+                                    <span>{invoice.customer?.customer_phone}</span>
                                 </p>
                             )}
-                            {(invoice.customer?.email || invoice.customer_email) && (
+                            {(invoice.customer?.customer_email) && (
                                 <p className="flex items-center gap-1.5 text-gray-700">
                                     <Mail className="w-3 h-3 text-gray-500 fill-current shrink-0" />
-                                    <span>{invoice.customer?.email || invoice.customer_email}</span>
+                                    <span>{invoice.customer?.customer_email}</span>
                                 </p>
                             )}
                             {invoice.customer_details?.billing_address ? (

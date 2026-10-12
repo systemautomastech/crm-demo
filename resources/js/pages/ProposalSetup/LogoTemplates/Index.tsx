@@ -246,8 +246,8 @@ export default function LogoTemplates({ settings }: LogoTemplatesProps) {
             </div>
 
             <div className="flex justify-end pt-4 border-t">
-                <Button type="submit" size="sm" disabled={processing} className="gap-2">
-                    <Save className="h-4 w-4" />
+                <Button type="submit" size="sm" isLoading={processing} className="gap-2">
+                    {!processing && <Save className="h-4 w-4" />}
                     {t('Save Changes')}
                 </Button>
             </div>

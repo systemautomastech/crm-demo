@@ -210,7 +210,7 @@ export default function Create() {
                                         <SelectContent searchable>
                                             {invoices.map((invoice) => (
                                                 <SelectItem key={invoice.id} value={invoice.id.toString()}>
-                                                    {invoice.invoice_number} - {invoice.customer.name}
+                                                    {invoice.invoice_number} - {invoice.customer?.customer_name || t('Customer')}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

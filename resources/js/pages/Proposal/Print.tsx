@@ -140,11 +140,11 @@ export default function Print() {
             return [
                 {
                     id: customer.id,
-                    name: customer.name || proposal.customer_name || '',
-                    email: customer.email || proposal.customer_email || '',
-                    mobile_no: customer.mobile_no || customer.phone || proposal.customer_phone || '',
-                    phone: customer.mobile_no || customer.phone || proposal.customer_phone || '',
-                    address: customer.address || proposal.customer_address || '',
+                    name: customer.customer_name || proposal.customer_name || '',
+                    email: customer.customer_email || proposal.customer_email || '',
+                    mobile_no: customer.customer_phone || proposal.customer_phone || '',
+                    phone: customer.customer_phone || proposal.customer_phone || '',
+                    address: customer.billing_address?.address || proposal.customer_address || '',
                 },
             ];
         }
@@ -277,7 +277,7 @@ export default function Print() {
             <Head
                 title={(() => {
                     const subject = proposal?.subject || '';
-                    const customerName = proposal?.customer?.name || proposal?.customer_name || formattedCustomers[0]?.name || '';
+                    const customerName = proposal?.customer?.customer_name || proposal?.customer_name || formattedCustomers[0]?.name || '';
                     const parts = [subject, customerName].filter(Boolean);
                     if (parts.length > 0) return parts.join('_');
                     return proposal?.proposal_number || t('Sales Proposal');
@@ -290,7 +290,7 @@ export default function Print() {
                 hideHeaderBar
                 title={(() => {
                     const subject = proposal?.subject || '';
-                    const customerName = proposal?.customer?.name || proposal?.customer_name || formattedCustomers[0]?.name || '';
+                    const customerName = proposal?.customer?.customer_name || proposal?.customer_name || formattedCustomers[0]?.name || '';
                     const parts = [subject, customerName].filter(Boolean);
                     if (parts.length > 0) return parts.join('_');
                     return proposal?.proposal_number || '';

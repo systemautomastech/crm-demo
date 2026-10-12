@@ -169,10 +169,10 @@ export default function View() {
                             <div>
                                 <h3 className="font-semibold mb-2">{t('CUSTOMER')}</h3>
                                 <div className="text-sm space-y-1">
-                                    <div className="font-medium">{invoice.customer?.name || invoice.customer_name || '-'}</div>
-                                    <div className="text-muted-foreground">{invoice.customer?.email || invoice.customer_email || ''}</div>
-                                    {invoice.customer_phone && (
-                                        <div className="text-muted-foreground">{invoice.customer_phone}</div>
+                                    <div className="font-medium">{invoice.customer?.customer_name || invoice.customer_name || '-'}</div>
+                                    <div className="text-muted-foreground">{invoice.customer?.customer_email || invoice.customer_email || ''}</div>
+                                    {(invoice.customer?.customer_phone || invoice.customer_phone) && (
+                                        <div className="text-muted-foreground">{invoice.customer?.customer_phone || invoice.customer_phone}</div>
                                     )}
                                     {invoice.customer_address && (
                                         <div className="text-muted-foreground text-xs whitespace-pre-line mt-1">{invoice.customer_address}</div>

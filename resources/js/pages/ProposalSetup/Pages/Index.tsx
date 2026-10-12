@@ -46,6 +46,7 @@ export default function Index({ settings, pages = [] }: PagesIndexProps) {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [viewingPage, setViewingPage] = useState<ProposalPageItem | null>(null);
     const [deletingPage, setDeletingPage] = useState<ProposalPageItem | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [togglingId, setTogglingId] = useState<number | null>(null);
 
     // Drag-and-drop & Reordering states
@@ -138,6 +139,7 @@ export default function Index({ settings, pages = [] }: PagesIndexProps) {
 
     const handleConfirmDelete = () => {
         if (!deletingPage) return;
+        setIsDeleting(true);
         router.delete(route('proposal-setup.pages.destroy', deletingPage.id), {
             preserveScroll: true,
             onSuccess: () => {
@@ -148,6 +150,9 @@ export default function Index({ settings, pages = [] }: PagesIndexProps) {
             onError: () => {
                 toast.error(t('Failed to delete page.'));
             },
+            onFinish: () => {
+                setIsDeleting(false);
+            }
         });
     };
 
@@ -468,6 +473,7 @@ export default function Index({ settings, pages = [] }: PagesIndexProps) {
                     message={deletingPage ? `${t('Are you sure you want to delete')} "${deletingPage.title}"? ${t('This action cannot be undone.')}` : t('Are you sure you want to delete this page?')}
                     confirmText={t('Delete')}
                     onConfirm={handleConfirmDelete}
+                    isLoading={isDeleting}
                     variant="destructive"
                 />
             </div>

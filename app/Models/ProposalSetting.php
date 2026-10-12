@@ -13,21 +13,8 @@ class ProposalSetting extends Model
         'created_by',
     ];
 
-    public function company()
+    public static function getSettings($creatorId)
     {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'creator_id');
-    }
-
-    public static function getSettings($creatorId = null)
-    {
-        $creatorId = $creatorId ?? (function_exists('creatorId') && auth()->check() ? creatorId() : auth()->id());
-        $authId = auth()->id();
-
         $defaults = [
             'proposal_prefix' => 'PRO',
             'proposal_starting_number' => '1',
@@ -39,30 +26,13 @@ class ProposalSetting extends Model
             'default_terms' => '<h2>Terms & Conditions</h2><p>1. Proposal is valid for 30 days from issuance.<br/>2. Payment terms: 50% deposit upon acceptance, 50% on project completion.</p>',
         ];
 
-        $targetIds = array_filter(array_unique([$creatorId, $authId]));
-        if (empty($targetIds)) {
-            return $defaults;
-        }
+        $dbSettings = static::where('creator_id', $creatorId)->pluck('value', 'option')->toArray();
 
-        $dbSettings = static::where(function ($q) use ($targetIds) {
-            $q->whereIn('creator_id', $targetIds)
-                ->orWhereIn('created_by', $targetIds);
-        })
-            ->pluck('value', 'option')
-            ->toArray();
-
-        return array_merge($defaults, $dbSettings);
+        return [...$defaults, ...$dbSettings];
     }
 
-
-    public static function setSettings(array $settings, $creatorId = null)
+    public static function setSettings(array $settings, $creatorId)
     {
-        $creatorId = $creatorId ?? (function_exists('creatorId') ? creatorId() : auth()->id());
-
-        if (!$creatorId) {
-            return;
-        }
-
         foreach ($settings as $option => $value) {
             static::updateOrCreate(
                 [
@@ -71,7 +41,7 @@ class ProposalSetting extends Model
                 ],
                 [
                     'value' => is_array($value) ? json_encode($value) : (string) ($value ?? ''),
-                    'created_by' => creatorId(),
+                    'created_by' => $creatorId,
                 ]
             );
         }

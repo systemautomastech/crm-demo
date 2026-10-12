@@ -29,8 +29,8 @@ interface SalesReturnIndexProps {
         links: any[];
         meta: any;
     };
-    customers: Array<{id: number; name: string; email: string}>;
-    warehouses: Array<{id: number; name: string}>;
+    customers: Array<{ id: number; customer_name: string; email: string }>;
+    warehouses: Array<{ id: number; name: string }>;
     filters: SalesFilters;
     auth: any;
     [key: string]: any;
@@ -77,7 +77,7 @@ export default function Index() {
     });
 
     const handleFilter = () => {
-        router.get(route('sales-returns.index'), {...filters, per_page: perPage, sort: sortField, direction: sortDirection, view: viewMode}, {
+        router.get(route('sales-returns.index'), { ...filters, per_page: perPage, sort: sortField, direction: sortDirection, view: viewMode }, {
             preserveState: true,
             replace: true
         });
@@ -87,7 +87,7 @@ export default function Index() {
         const direction = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
         setSortField(field);
         setSortDirection(direction);
-        router.get(route('sales-returns.index'), {...filters, per_page: perPage, sort: field, direction, view: viewMode}, {
+        router.get(route('sales-returns.index'), { ...filters, per_page: perPage, sort: field, direction, view: viewMode }, {
             preserveState: true,
             replace: true
         });
@@ -95,7 +95,7 @@ export default function Index() {
 
     const clearFilters = () => {
         setFilters({ search: '', customer_id: '', status: '', date_range: '', warehouse_id: '' });
-        router.get(route('sales-returns.index'), {per_page: perPage, view: viewMode});
+        router.get(route('sales-returns.index'), { per_page: perPage, view: viewMode });
     };
 
     const tableColumns = [
@@ -113,7 +113,7 @@ export default function Index() {
         {
             key: 'customer',
             header: t('Customer'),
-            render: (value: any) => value?.name || '-'
+            render: (value: any) => value?.customer_name || '-'
         },
         {
             key: 'warehouse',
@@ -170,23 +170,23 @@ export default function Index() {
                         <SignatureButtons returnItem={returnItem} />
                         {returnItem.status === 'draft' && (
                             <>
-                            {auth.user?.permissions?.includes('approve-sales-returns-invoices') && (
-                                <Tooltip delayDuration={0}>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => router.post(route('sales-returns.approve', returnItem.id))}
-                                            className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700"
-                                        >
-                                            <CheckCircle className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>{t('Approve Return')}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            )}
+                                {auth.user?.permissions?.includes('approve-sales-returns-invoices') && (
+                                    <Tooltip delayDuration={0}>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => router.post(route('sales-returns.approve', returnItem.id))}
+                                                className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700"
+                                            >
+                                                <CheckCircle className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{t('Approve Return')}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                )}
                             </>
                         )}
                         {returnItem.status === 'approved' && auth.user?.permissions?.includes('complete-sales-returns-invoices') && (
@@ -252,7 +252,7 @@ export default function Index() {
 
     return (
         <AuthenticatedLayout
-            breadcrumbs={[{label: t('Sales Returns')}]}
+            breadcrumbs={[{ label: t('Sales Returns') }]}
             pageTitle={t('Manage Sales Returns')}
             pageActions={
                 <div className="flex gap-2">
@@ -284,7 +284,7 @@ export default function Index() {
                         <div className="flex-1 max-w-md">
                             <SearchInput
                                 value={filters.search || ''}
-                                onChange={(value) => setFilters({...filters, search: value})}
+                                onChange={(value) => setFilters({ ...filters, search: value })}
                                 onSearch={handleFilter}
                                 placeholder={t('Search by return number...')}
                             />
@@ -293,11 +293,11 @@ export default function Index() {
                             <ListGridToggle
                                 currentView={viewMode}
                                 routeName="sales-returns.index"
-                                filters={{...filters, per_page: perPage}}
+                                filters={{ ...filters, per_page: perPage }}
                             />
                             <PerPageSelector
                                 routeName="sales-returns.index"
-                                filters={{...filters, view: viewMode}}
+                                filters={{ ...filters, view: viewMode }}
                             />
                             <div className="relative">
                                 <FilterButton
@@ -320,43 +320,43 @@ export default function Index() {
                 {showFilters && (
                     <CardContent className="p-6 bg-blue-50/30 border-b">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                                {auth.user?.permissions?.includes('manage-users') && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('Customer')}</label>
-                                        <Select value={filters.customer_id} onValueChange={(value) => setFilters({...filters, customer_id: value})}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={t('Filter by customer')} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {customers.map((customer) => (
-                                                    <SelectItem key={customer.id} value={customer.id.toString()}>
-                                                        {customer.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-                                 {auth.user?.permissions?.includes('manage-warehouses') && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('Warehouse')}</label>
-                                        <Select value={filters.warehouse_id} onValueChange={(value) => setFilters({...filters, warehouse_id: value})}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={t('Filter by warehouse')} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {warehouses?.map((warehouse) => (
-                                                    <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
-                                                        {warehouse.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
+                            {auth.user?.permissions?.includes('manage-users') && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('Customer')}</label>
+                                    <Select value={filters.customer_id} onValueChange={(value) => setFilters({ ...filters, customer_id: value })}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('Filter by customer')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {customers.map((customer) => (
+                                                <SelectItem key={customer.id} value={customer.id.toString()}>
+                                                    {customer.customer_name || ''}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
+                            {auth.user?.permissions?.includes('manage-warehouses') && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('Warehouse')}</label>
+                                    <Select value={filters.warehouse_id} onValueChange={(value) => setFilters({ ...filters, warehouse_id: value })}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('Filter by warehouse')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {warehouses?.map((warehouse) => (
+                                                <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
+                                                    {warehouse.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('Status')}</label>
-                                <Select value={filters.status} onValueChange={(value) => setFilters({...filters, status: value})}>
+                                <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
                                     <SelectTrigger>
                                         <SelectValue placeholder={t('Filter by status')} />
                                     </SelectTrigger>
@@ -371,7 +371,7 @@ export default function Index() {
                                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('Date Range')}</label>
                                 <DateRangePicker
                                     value={filters.date_range}
-                                    onChange={(value) => setFilters({...filters, date_range: value})}
+                                    onChange={(value) => setFilters({ ...filters, date_range: value })}
                                     placeholder={t('Select date range')}
                                 />
                             </div>
@@ -432,7 +432,7 @@ export default function Index() {
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <div>
                                                             <p className="text-xs font-medium text-gray-600 mb-1">{t('Customer')}</p>
-                                                            <p className="text-sm text-gray-900 truncate font-medium">{returnItem.customer?.name}</p>
+                                                            <p className="text-sm text-gray-900 truncate font-medium">{returnItem.customer?.customer_name || '-'}</p>
                                                         </div>
                                                         <div>
                                                             <p className="text-xs font-medium text-gray-600 mb-1 text-end">{t('Return Date')}</p>
@@ -545,9 +545,9 @@ export default function Index() {
 
                 <CardContent className="px-4 py-2 border-t bg-gray-50/30">
                     <Pagination
-                        data={{...returns, ...returns.meta}}
+                        data={{ ...returns, ...returns.meta }}
                         routeName="sales-returns.index"
-                        filters={{...filters, per_page: perPage, view: viewMode}}
+                        filters={{ ...filters, per_page: perPage, view: viewMode }}
                     />
                 </CardContent>
             </Card>
@@ -559,6 +559,7 @@ export default function Index() {
                 message={deleteState.message}
                 confirmText={t('Delete')}
                 onConfirm={confirmDelete}
+                isLoading={deleteState.isLoading}
                 variant="destructive"
             />
         </AuthenticatedLayout>

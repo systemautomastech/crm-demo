@@ -58,7 +58,7 @@ interface InvoiceStats {
 }
 
 interface CustomerSummary {
-    customer: { id: number; name: string; email: string; avatar?: string | null } | null;
+    customer: { id: number; name?: string; customer_name?: string; email?: string; customer_email?: string; avatar?: string | null } | null;
     invoice_count: number;
     outstanding: number;
     oldest_overdue_days: number | null;
@@ -70,7 +70,7 @@ interface SalesIndexProps {
         links: any[];
         meta: any;
     };
-    customers: Array<{ id: number; name: string; email: string }>;
+    customers: Array<{ id: number; customer_name?: string; name?: string; email?: string; customer_email?: string }>;
     warehouses: Array<{ id: number; name: string; address: string }>;
     auth: any;
     stats: InvoiceStats;
@@ -88,7 +88,8 @@ function CustomerOutstandingCard({
     onFilterByCustomer: (customerId: number) => void;
 }) {
     const { t } = useTranslation();
-    const initial = (summary.customer?.name || '?').charAt(0).toUpperCase();
+    const custName = summary.customer?.customer_name || '?';
+    const initial = custName.charAt(0).toUpperCase();
     const isOverdue = summary.oldest_overdue_days !== null;
     const critical = isOverdue && summary.oldest_overdue_days! > 30;
     const badgeClass = critical ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700';
@@ -102,7 +103,7 @@ function CustomerOutstandingCard({
                 <div className="flex items-center gap-2.5 min-w-0">
                     <Avatar className="h-9 w-9 shrink-0">
                         {summary.customer?.avatar && (
-                            <AvatarImage src={getImagePath(summary.customer.avatar)} alt={summary.customer.name} />
+                            <AvatarImage src={getImagePath(summary.customer.avatar)} alt={custName} />
                         )}
                         <AvatarFallback className="bg-gray-100 text-gray-600 text-xs font-semibold">
                             {initial}
@@ -114,7 +115,7 @@ function CustomerOutstandingCard({
                             onClick={() => summary.customer && onFilterByCustomer(summary.customer.id)}
                             className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate text-left block"
                         >
-                            {summary.customer?.name || '-'}
+                            {custName}
                         </button>
                         <p className="text-xs text-gray-400">{summary.invoice_count} {summary.invoice_count === 1 ? t('invoice') : t('invoices')}</p>
                     </div>
@@ -166,6 +167,7 @@ export default function Index() {
     const [showFilters, setShowFilters] = useState(false);
     const [showAllCustomers, setShowAllCustomers] = useState(false);
     const [postTargetId, setPostTargetId] = useState<number | null>(null);
+    const [isPosting, setIsPosting] = useState<boolean>(false);
     const postCancelBtnRef = useRef<HTMLButtonElement>(null);
 
     useFlashMessages();
@@ -412,7 +414,7 @@ export default function Index() {
         {
             key: 'customer',
             header: t('Customer'),
-            render: (value: any, invoice: SalesInvoice) => invoice.customer?.name || invoice.customer_name || '-'
+            render: (value: any, invoice: SalesInvoice) => invoice.customer?.customer_name || invoice.customer_name || '-'
         },
         {
             key: 'invoice_date',
@@ -578,7 +580,7 @@ export default function Index() {
                                         const activeCustomer = customers.find((c) => c.id.toString() === filters.customer_id);
                                         return (
                                             <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-blue-50 text-blue-700 pl-2.5 pr-1.5 py-1 rounded-full shrink-0">
-                                                {t('Filtered')}: {activeCustomer?.name || filters.customer_id}
+                                                {t('Filtered')}: {activeCustomer?.customer_name || filters.customer_id}
                                                 <button
                                                     type="button"
                                                     onClick={clearCustomerFilter}
@@ -663,7 +665,7 @@ export default function Index() {
                                             <SelectContent>
                                                 {customers.map((customer) => (
                                                     <SelectItem key={customer.id} value={customer.id.toString()}>
-                                                        {customer.name}
+                                                        {customer.customer_name || ''}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -762,10 +764,14 @@ export default function Index() {
                     message={deleteState.message}
                     confirmText={t('Delete')}
                     onConfirm={confirmDelete}
+                    isLoading={deleteState.isLoading}
                     variant="destructive"
                 />
 
-                <AlertDialog open={postTargetId !== null} onOpenChange={(open) => !open && setPostTargetId(null)}>
+                <AlertDialog open={postTargetId !== null} onOpenChange={(open) => {
+                    if (isPosting) return;
+                    if (!open) setPostTargetId(null);
+                }}>
                     <AlertDialogContent onOpenAutoFocus={(e) => {
                         e.preventDefault();
                         postCancelBtnRef.current?.focus();
@@ -777,17 +783,25 @@ export default function Index() {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel ref={postCancelBtnRef} autoFocus onClick={() => setPostTargetId(null)}>
+                            <AlertDialogCancel ref={postCancelBtnRef} disabled={isPosting} autoFocus onClick={() => setPostTargetId(null)}>
                                 {t('Cancel')}
                             </AlertDialogCancel>
-                            <AlertDialogAction variant="destructive" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => {
-                                if (postTargetId) {
-                                    router.post(route('sales-invoices.post', postTargetId));
-                                    setPostTargetId(null);
-                                }
-                            }}>
+                            <Button
+                                variant="destructive"
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                                isLoading={isPosting}
+                                onClick={() => {
+                                    if (postTargetId) {
+                                        setIsPosting(true);
+                                        router.post(route('sales-invoices.post', postTargetId), {}, {
+                                            onSuccess: () => setPostTargetId(null),
+                                            onFinish: () => setIsPosting(false)
+                                        });
+                                    }
+                                }}
+                            >
                                 {t('Confirm')}
-                            </AlertDialogAction>
+                            </Button>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>

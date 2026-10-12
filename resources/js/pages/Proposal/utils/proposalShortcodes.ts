@@ -77,20 +77,15 @@ export const replaceProposalShortcodes = (
   const formattedDueDate = dueDate ? formatDate(dueDate, pageProps) : '';
 
   const customer = context.customer || context.formData?.customer || context.proposal?.customer || {};
-  const customerName = customer?.name || context.formData?.customer_name || context.proposal?.customer_name || '';
-  const customerEmail = customer?.email || context.formData?.customer_email || context.proposal?.customer_email || '';
+  const customerName = customer?.customer_name || context.formData?.customer_name || context.proposal?.customer_name || '';
+  const customerEmail = customer?.customer_email || context.formData?.customer_email || context.proposal?.customer_email || '';
   const customerPhone =
-    customer?.mobile_no ||
-    customer?.phone ||
-    customer?.mobile ||
+    customer?.customer_phone ||
     customer?.contact_person_mobile ||
     context.formData?.customer_phone ||
-    context.formData?.customer_mobile ||
     context.proposal?.customer_phone ||
-    context.proposal?.customer_mobile ||
     '';
   const customerAddress =
-    (typeof customer?.address === 'string' ? customer.address : '') ||
     (typeof customer?.billing_address === 'string' ? customer.billing_address : '') ||
     (customer?.billing_address && typeof customer.billing_address === 'object'
       ? `${customer.billing_address.address_line_1 || ''} ${customer.billing_address.city || ''} ${customer.billing_address.state || ''} ${customer.billing_address.zip_code || ''}`.trim()
@@ -105,14 +100,10 @@ export const replaceProposalShortcodes = (
     context.author ||
     context.proposal?.creator ||
     context.proposal?.author ||
-    context.employee ||
     pageProps?.auth?.user ||
     (typeof window !== 'undefined' ? (window as any)?.__INITIAL_PAGE__?.props?.auth?.user : null) ||
     {};
 
-  const employeeRecord = authUser?.employee || context.employeeRecord || null;
-
-  // Check if he is an employee: prefer employee info if available, otherwise user info
   const userName =
     authUser?.name ||
     context.formData?.user_name ||
@@ -134,7 +125,7 @@ export const replaceProposalShortcodes = (
     context.formData?.creator_phone ||
     '';
 
-  const userId = employeeRecord?.employee_id || (authUser?.id ? String(authUser.id) : (context.formData?.user_id || ''));
+  const userId = authUser?.id ? String(authUser.id) : (context.formData?.user_id || '');
 
   const subTotal = context.totals?.subtotal ?? context.totals?.sub_total ?? context.formData?.subtotal ?? context.formData?.sub_total ?? context.proposal?.subtotal ?? context.proposal?.sub_total;
   const totalTax = context.totals?.tax_amount ?? context.totals?.taxAmount ?? context.totals?.total_tax ?? context.formData?.tax_amount ?? context.formData?.total_tax ?? context.proposal?.tax_amount ?? context.proposal?.total_tax;
@@ -224,7 +215,6 @@ export const replaceProposalShortcodes = (
 
 export const replaceUserShortcodes = (content: string | undefined | null, authUser: any): string => {
   if (!content) return '';
-  const employeeRecord = authUser?.employee || null;
   const userName = authUser?.name || '';
   const userEmail = authUser?.email || '';
   const userPhone =
@@ -233,8 +223,8 @@ export const replaceUserShortcodes = (content: string | undefined | null, authUs
     authUser?.mobile ||
     authUser?.telephone ||
     '';
-  const userId = employeeRecord?.employee_id || (authUser?.id ? String(authUser.id) : '');
-  const userDesignation = employeeRecord?.designation?.name || authUser?.designation || '';
+  const userId = authUser?.id ? String(authUser.id) : '';
+  const userDesignation = authUser?.designation || '';
 
   const userMap: Record<string, string> = {
     user_name: userName,

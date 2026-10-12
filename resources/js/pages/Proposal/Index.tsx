@@ -35,7 +35,7 @@ interface SalesProposal {
     subject?: string | null;
     proposal_date: string;
     due_date: string;
-    customer?: { id: number; name: string; email: string; avatar?: string | null } | null;
+    customer?: { id: number; name?: string; customer_name?: string; email?: string; customer_email?: string; avatar?: string | null } | null;
     customer_name?: string | null;
     customer_email?: string | null;
     customer_phone?: string | null;
@@ -47,7 +47,32 @@ interface SalesProposal {
     discount_amount: number;
     total_amount: number;
     payment_terms?: string | null;
-    items?: { id: number }[];
+    items?: Array<{
+        id: number;
+        product_id: number;
+        description?: string;
+        product_description?: string;
+        quantity: number;
+        unit_price: number;
+        discount_percentage: number;
+        discount_amount: number;
+        tax_percentage: number;
+        tax_amount: number;
+        total_amount: number;
+        product?: {
+            id: number;
+            name: string;
+            sku?: string;
+            description?: string;
+            type?: string;
+            warehouseStocks?: Array<{ id: number; warehouse_id: number; quantity: number }>;
+        };
+        taxes?: Array<{
+            id: number;
+            tax_name: string;
+            tax_rate: number;
+        }>;
+    }>;
     status: string;
     display_status: string;
     converted_to_sales_order?: boolean;
@@ -132,6 +157,44 @@ export default function Index() {
         defaultMessage: 'Are you sure you want to delete this sales proposal?'
     });
     const [convertProposal, setConvertProposal] = useState<SalesProposal | null>(null);
+
+    const [acceptState, setAcceptState] = useState<{ isOpen: boolean; proposalId: number | null; isLoading: boolean }>({
+        isOpen: false,
+        proposalId: null,
+        isLoading: false,
+    });
+
+    const [rejectState, setRejectState] = useState<{ isOpen: boolean; proposalId: number | null; isLoading: boolean }>({
+        isOpen: false,
+        proposalId: null,
+        isLoading: false,
+    });
+
+    const handleAcceptProposal = (id: number) => {
+        setAcceptState({ isOpen: true, proposalId: id, isLoading: false });
+    };
+
+    const confirmAccept = () => {
+        if (!acceptState.proposalId) return;
+        setAcceptState(prev => ({ ...prev, isLoading: true }));
+        router.post(route('sales-proposals.accept', acceptState.proposalId), {}, {
+            preserveScroll: true,
+            onFinish: () => setAcceptState({ isOpen: false, proposalId: null, isLoading: false }),
+        });
+    };
+
+    const handleRejectProposal = (id: number) => {
+        setRejectState({ isOpen: true, proposalId: id, isLoading: false });
+    };
+
+    const confirmReject = () => {
+        if (!rejectState.proposalId) return;
+        setRejectState(prev => ({ ...prev, isLoading: true }));
+        router.post(route('sales-proposals.reject', rejectState.proposalId), {}, {
+            preserveScroll: true,
+            onFinish: () => setRejectState({ isOpen: false, proposalId: null, isLoading: false }),
+        });
+    };
 
     const getProposalStatusColor = (status: string) => {
         switch (status?.toLowerCase()) {
@@ -264,7 +327,7 @@ export default function Index() {
             {auth.user?.permissions?.includes('accept-sales-proposals') && item.status === 'sent' && (
                 <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="sm" onClick={() => router.post(route('sales-proposals.accept', item.id))} className="h-8 w-8 p-0 text-green-600 hover:text-green-700">
+                        <Button variant="ghost" size="sm" onClick={() => handleAcceptProposal(item.id)} className="h-8 w-8 p-0 text-green-600 hover:text-green-700">
                             <Check className="h-4 w-4" />
                         </Button>
                     </TooltipTrigger>
@@ -275,7 +338,7 @@ export default function Index() {
             {auth.user?.permissions?.includes('reject-sales-proposals') && item.status === 'sent' && (
                 <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="sm" onClick={() => router.post(route('sales-proposals.reject', item.id))} className="h-8 w-8 p-0 text-red-600 hover:text-red-700">
+                        <Button variant="ghost" size="sm" onClick={() => handleRejectProposal(item.id)} className="h-8 w-8 p-0 text-red-600 hover:text-red-700">
                             <X className="h-4 w-4" />
                         </Button>
                     </TooltipTrigger>
@@ -396,13 +459,13 @@ export default function Index() {
                 )
         },
         {
-            key: 'customer.name',
+            key: 'customer.customer_name',
             header: t('Customer'),
             sortable: true,
             className: 'min-w-[180px]',
             render: (_: any, item: SalesProposal) => {
-                const name = item.customer?.name || item.customer_name || '-';
-                const email = item.customer?.email || item.customer_email || '';
+                const name = item.customer?.customer_name || item.customer_name || '-';
+                const email = item.customer?.customer_email || item.customer_email || '';
 
                 return (
                     <div className="flex flex-col">
@@ -708,9 +771,9 @@ export default function Index() {
                                             <SelectValue placeholder={t('All Customers')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {customers?.map((customer) => (
+                                            {customers?.map((customer: any) => (
                                                 <SelectItem key={customer.id} value={customer.id.toString()}>
-                                                    {customer.name}
+                                                    {customer.customer_name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -806,7 +869,8 @@ export default function Index() {
                                                     )}
                                                     <div className="space-y-2 p-2 min-h-[100px] max-h-[calc(100vh-380px)] overflow-y-auto">
                                                         {items.map((proposal) => {
-                                                            const initial = (proposal.customer?.name || '?').charAt(0).toUpperCase();
+                                                            const custName = proposal.customer?.customer_name || proposal.customer_name || '?';
+                                                            const initial = custName.charAt(0).toUpperCase();
                                                             return (
                                                                 <Card key={proposal.id} className="border border-gray-200 rounded-lg bg-white hover:shadow-md hover:border-gray-300 transition-all">
                                                                     <div className="p-3">
@@ -824,13 +888,13 @@ export default function Index() {
                                                                         <div className="flex items-center gap-1.5 mt-2.5">
                                                                             <Avatar className="h-5 w-5 shrink-0">
                                                                                 {proposal.customer?.avatar && (
-                                                                                    <AvatarImage src={getImagePath(proposal.customer.avatar)} alt={proposal.customer.name} />
+                                                                                    <AvatarImage src={getImagePath(proposal.customer.avatar)} alt={custName} />
                                                                                 )}
                                                                                 <AvatarFallback className="bg-gray-100 text-gray-600 text-[10px] font-semibold">
                                                                                     {initial}
                                                                                 </AvatarFallback>
                                                                             </Avatar>
-                                                                            <span className="text-xs text-gray-600 truncate" title={proposal.customer?.email || ''}>{proposal.customer?.name || '-'}</span>
+                                                                            <span className="text-xs text-gray-600 truncate" title={proposal.customer?.customer_email || proposal.customer?.email || proposal.customer_email || ''}>{custName}</span>
                                                                         </div>
 
                                                                         <div className="flex items-center gap-3 flex-wrap mt-2 text-[11px] text-gray-500">
@@ -963,6 +1027,29 @@ export default function Index() {
                     message={deleteState.message}
                     confirmText={t('Delete')}
                     onConfirm={confirmDelete}
+                    isLoading={deleteState.isLoading}
+                    variant="destructive"
+                />
+
+                <ConfirmationDialog
+                    open={acceptState.isOpen}
+                    onOpenChange={(open) => setAcceptState(prev => ({ ...prev, isOpen: open }))}
+                    title={t('Accept Proposal')}
+                    message={t('Are you sure you want to accept this proposal?')}
+                    confirmText={t('Accept')}
+                    onConfirm={confirmAccept}
+                    isLoading={acceptState.isLoading}
+                    variant="default"
+                />
+
+                <ConfirmationDialog
+                    open={rejectState.isOpen}
+                    onOpenChange={(open) => setRejectState(prev => ({ ...prev, isOpen: open }))}
+                    title={t('Reject Proposal')}
+                    message={t('Are you sure you want to reject this proposal?')}
+                    confirmText={t('Reject')}
+                    onConfirm={confirmReject}
+                    isLoading={rejectState.isLoading}
                     variant="destructive"
                 />
 

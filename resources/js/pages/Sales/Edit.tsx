@@ -203,7 +203,7 @@ export default function Edit() {
                                         <SelectContent searchable>
                                             {Array.isArray(customers) && customers.map((customer: any) => customer && customer.id !== undefined && customer.id !== null ? (
                                                 <SelectItem key={customer.id} value={String(customer.id)}>
-                                                    {customer.name || customer.billing_name || 'Customer'} - {customer.email || customer.billing_email || '-'}
+                                                    {customer.customer_name || 'Customer'} - {customer.customer_email || '-'}
                                                 </SelectItem>
                                             ) : null)}
                                         </SelectContent>
@@ -219,7 +219,7 @@ export default function Edit() {
                                                         <User className="w-2.5 h-2.5" />
                                                     </div>
                                                     <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">
-                                                        {selectedCustomer.name}
+                                                        {selectedCustomer.customer_name}
                                                     </span>
                                                 </div>
                                                 <Button
@@ -234,9 +234,9 @@ export default function Edit() {
                                                 </Button>
                                             </div>
                                             <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5 truncate">
-                                                <div className="truncate">{selectedCustomer.email || '-'}</div>
-                                                {selectedCustomer.phone && <div className="truncate">{selectedCustomer.phone}</div>}
-                                                {selectedCustomer.address && <div className="truncate text-muted-foreground">{selectedCustomer.address}</div>}
+                                                <div className="truncate">{selectedCustomer.customer_email || '-'}</div>
+                                                {selectedCustomer.customer_phone && <div className="truncate">{selectedCustomer.customer_phone}</div>}
+                                                {selectedCustomer.billing_address?.address && <div className="truncate text-muted-foreground">{selectedCustomer.billing_address.address}</div>}
                                             </div>
                                         </div>
                                     )}
@@ -464,8 +464,8 @@ export default function Edit() {
                         >
                             {t('Cancel')}
                         </Button>
-                        <Button type="submit" disabled={processing}>
-                            {processing ? t('Saving...') : t('Update Invoice')}
+                        <Button type="submit" isLoading={processing}>
+                            {processing ? t('Saving') : t('Update Invoice')}
                         </Button>
                     </div>
                 </form>

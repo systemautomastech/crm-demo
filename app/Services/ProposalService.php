@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Customer;
 use App\Models\EmailTemplate;
 use App\Models\ProposalPage;
 use App\Models\SalesInvoice;
@@ -31,13 +32,14 @@ class ProposalService
 
     public function getRelations(): array
     {
-        $relations = ['customer', 'items.product.unitRelation', 'items.taxes', 'warehouse'];
-
-        if (Schema::hasTable('proposal_contents')) {
-            $relations[] = 'contents';
-        }
-
-        return $relations;
+        return [
+            'customer',
+            'warehouse',
+            'items.product.unitRelation',
+            'items.product.warehouseStocks',
+            'items.taxes',
+            'contents'
+        ];
     }
 
     public function hasProposalAccess(Proposal $proposal): bool
@@ -53,28 +55,16 @@ class ProposalService
         }
 
         if ($user->can('manage-own-sales-proposals')) {
-            if ($proposal->creator_id != $user->id && $proposal->customer_id != $user->id) {
-                return false;
-            }
-
-            if ($proposal->creator_id != $user->id && $user->type === 'client' && $proposal->status === 'draft') {
-                return false;
-            }
-
-            return true;
+            return $proposal->creator_id == $user->id;
         }
 
         return false;
     }
 
-    public function getActivePages(int $authorId, ?int $creatorId = null)
+    public function getActivePages(int $authorId)
     {
-        $creatorId = $creatorId ?? (Auth::check() ? creatorId() : $authorId);
-        return ProposalPage::where('created_by', $creatorId)
-            ->where(function ($query) use ($authorId, $creatorId) {
-                $query->where('creator_id', $authorId)
-                    ->orWhere('creator_id', $creatorId);
-            })
+        return ProposalPage::where('created_by', creatorId())
+            ->where('creator_id', $authorId)
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->get(['id', 'title', 'content', 'page_type', 'background_image', 'sort_order', 'creator_id', 'created_by']);
@@ -97,7 +87,7 @@ class ProposalService
 
         $data = [
             'proposal_number' => $proposal->proposal_number ?? null,
-            'sales_customer_name' => $proposal->customer?->name ?: $proposal->customer_name ?: 'Customer',
+            'sales_customer_name' => $proposal->customer?->customer_name ?: ($proposal->customer?->name ?: ($proposal->customer_name ?: 'Customer')),
             'total_amount' => $proposal->total_amount ?? null,
             'discount_amount' => $proposal->discount_amount ?? null,
         ];
@@ -401,7 +391,6 @@ class ProposalService
                     $customerService = app(CustomerService::class);
                     $data = [
                         'customer_name' => $options['customer_name'],
-                        'company_name' => $options['customer_name'],
                         'contact_person_name' => $options['customer_name'],
                         'customer_email' => $options['customer_email'] ?? $proposal->customer_email,
                         'contact_person_email' => $options['customer_email'] ?? $proposal->customer_email,
@@ -409,37 +398,45 @@ class ProposalService
                         'contact_person_mobile' => $options['customer_phone'] ?? $proposal->customer_phone,
                         'tax_number' => $options['tax_number'] ?? null,
                         'payment_terms' => $options['payment_terms'] ?? null,
-                        'billing_name' => $options['billing_name'] ?? $options['customer_name'],
-                        'billing_address' => $options['billing_address_line_1'] ?? $options['billing_address'] ?? $options['customer_address'] ?? $proposal->customer_address,
-                        'billing_address_line_2' => $options['billing_address_line_2'] ?? null,
-                        'billing_city' => $options['billing_city'] ?? $options['customer_city'] ?? null,
-                        'billing_state' => $options['billing_state'] ?? $options['customer_state'] ?? null,
-                        'billing_zip_code' => $options['billing_zip_code'] ?? $options['billing_postal_code'] ?? $options['customer_zip_code'] ?? null,
-                        'billing_country' => $options['billing_country'] ?? $options['customer_country'] ?? null,
-                        'shipping_name' => $options['shipping_name'] ?? $options['customer_name'],
-                        'shipping_address' => $options['shipping_address_line_1'] ?? $options['shipping_address'] ?? $options['customer_address'] ?? $proposal->customer_address,
-                        'shipping_address_line_2' => $options['shipping_address_line_2'] ?? null,
-                        'shipping_city' => $options['shipping_city'] ?? $options['customer_city'] ?? null,
-                        'shipping_state' => $options['shipping_state'] ?? $options['customer_state'] ?? null,
-                        'shipping_zip_code' => $options['shipping_zip_code'] ?? $options['shipping_postal_code'] ?? $options['customer_zip_code'] ?? null,
-                        'shipping_country' => $options['shipping_country'] ?? $options['customer_country'] ?? null,
+                        'billing_address' => [
+                            'name' => $options['billing_name'] ?? $options['customer_name'],
+                            'address_line_1' => $options['billing_address_line_1'] ?? $options['billing_address'] ?? $options['customer_address'] ?? $proposal->customer_address,
+                            'address_line_2' => $options['billing_address_line_2'] ?? null,
+                            'city' => $options['billing_city'] ?? $options['customer_city'] ?? null,
+                            'state' => $options['billing_state'] ?? $options['customer_state'] ?? null,
+                            'zip_code' => $options['billing_zip_code'] ?? $options['billing_postal_code'] ?? $options['customer_zip_code'] ?? null,
+                            'country' => $options['billing_country'] ?? $options['customer_country'] ?? null,
+                        ],
+                        'shipping_address' => [
+                            'name' => $options['shipping_name'] ?? $options['customer_name'],
+                            'address_line_1' => $options['shipping_address_line_1'] ?? $options['shipping_address'] ?? $options['customer_address'] ?? $proposal->customer_address,
+                            'address_line_2' => $options['shipping_address_line_2'] ?? null,
+                            'city' => $options['shipping_city'] ?? $options['customer_city'] ?? null,
+                            'state' => $options['shipping_state'] ?? $options['customer_state'] ?? null,
+                            'zip_code' => $options['shipping_zip_code'] ?? $options['shipping_postal_code'] ?? $options['customer_zip_code'] ?? null,
+                            'country' => $options['shipping_country'] ?? $options['customer_country'] ?? null,
+                        ],
+                        'same_as_billing' => !empty($options['same_as_billing']),
+                        'notes' => $options['notes'] ?? null,
                     ];
 
                     $newCustomer = $customerService->createCustomer($data);
-                    $customerId = $newCustomer->user_id ?? $newCustomer->id;
+                    $customerId = $newCustomer->id;
                     $billingAddress = $newCustomer->billing_address ?? $billingAddress;
                     $shippingAddress = $newCustomer->shipping_address ?? $shippingAddress;
                 } elseif ($options['customer_type'] === 'existing' && !empty($options['customer_id'])) {
                     $customerId = (int) $options['customer_id'];
-                    $custUser = User::find($customerId);
-                    if ($custUser) {
-                        $billingAddress = $custUser->address ?? $billingAddress;
-                        $shippingAddress = $custUser->address ?? $shippingAddress;
+                    $customerObj = Customer::find($customerId);
+                    if ($customerObj) {
+                        $billingAddress = $customerObj->billing_address ?? $billingAddress;
+                        $shippingAddress = $customerObj->shipping_address ?? $customerObj->billing_address ?? $shippingAddress;
                     }
                 }
             }
 
-            $productItems = [];
+            if (empty($customerId)) {
+                throw new \Exception(__('Please select or create a new customer.'));
+            }
             if ($customItems !== null) {
                 $productItems = array_values(array_filter($customItems, function ($item) {
                     return !empty($item['product_id']) && (int) $item['product_id'] > 0;
@@ -469,30 +466,7 @@ class ProposalService
             }
 
             if (empty($productItems)) {
-                throw new \Exception(__('Proposal does not have any items to convert to sales order.'));
-            }
-
-            // Validate stock only for physical product items (services have unlimited quantity)
-            foreach ($productItems as $item) {
-                $productId = (int) $item['product_id'];
-                $qty = (int) ($item['quantity'] ?? 1);
-                $product = ProductServiceItem::with('warehouseStocks')->find($productId);
-
-                $isService = ($item['product_type'] ?? '') === 'service' || ($product && $product->type === 'service');
-
-                if ($product && !$isService) {
-                    $availableStock = $targetWarehouseId
-                        ? ($product->warehouseStocks->where('warehouse_id', $targetWarehouseId)->first()?->quantity ?? 0)
-                        : $product->warehouseStocks->sum('quantity');
-
-                    if ($qty > $availableStock) {
-                        throw new \Exception(__("Requested quantity (:qty) exceeds available stock (:stock) for ':name'.", [
-                            'qty' => $qty,
-                            'stock' => $availableStock,
-                            'name' => $product->name,
-                        ]));
-                    }
-                }
+                throw new \Exception(__('No products/items for sales order.'));
             }
 
             $subtotal = 0.0;
@@ -673,7 +647,7 @@ class ProposalService
             foreach ($productItems as $index => $item) {
                 $productId = (int) $item['product_id'];
                 $qty = (int) ($item['quantity'] ?? 1);
-                $product = \Automas\ProductService\Models\ProductServiceItem::with('warehouseStocks')->find($productId);
+                $product = ProductServiceItem::with('warehouseStocks')->find($productId);
 
                 $isService = ($item['product_type'] ?? '') === 'service' || ($product && $product->type === 'service');
 
@@ -888,25 +862,16 @@ class ProposalService
         $authorUserId = $proposal?->creator_id ?? Auth::id();
         $authorUser = $authorUserId ? User::find($authorUserId) : null;
 
-        $employee = null;
-        if (class_exists(\Automas\Hrm\Models\Employee::class)) {
-            try {
-                $employee = \Automas\Hrm\Models\Employee::with('designation')->where('user_id', $authorUserId)->first();
-            } catch (\Throwable $e) {
-                // Ignore if HRM table deleted
-            }
-        }
-
         $userShortcodes = [
             'user_name' => $authorUser?->name ?? '',
             'creator_name' => $authorUser?->name ?? '',
             'user_email' => $authorUser?->email ?? '',
             'creator_email' => $authorUser?->email ?? '',
-            'user_phone' => $employee?->emergency_contact_number ?? $authorUser?->mobile_no ?? $authorUser?->phone ?? '',
-            'creator_phone' => $employee?->emergency_contact_number ?? $authorUser?->mobile_no ?? $authorUser?->phone ?? '',
-            'user_id' => $employee?->employee_id ?? ($authorUser?->id ? (string) $authorUser->id : ''),
-            'creator_designation' => $employee?->designation?->name ?? $authorUser?->designation ?? '',
-            'user_designation' => $employee?->designation?->name ?? $authorUser?->designation ?? '',
+            'user_phone' => $authorUser?->mobile_no ?? $authorUser?->phone ?? '',
+            'creator_phone' => $authorUser?->mobile_no ?? $authorUser?->phone ?? '',
+            'user_id' => $authorUser?->id ? (string) $authorUser->id : '',
+            'creator_designation' => $authorUser?->designation ?? '',
+            'user_designation' => $authorUser?->designation ?? '',
         ];
 
         $replaceUserCodes = function ($text) use ($userShortcodes) {

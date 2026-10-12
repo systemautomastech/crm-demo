@@ -1147,7 +1147,7 @@
 
                 <span>
                     {{ __('Customer') }}:
-                    {{ $invoice->customer->name ?? ($invoice->customer_name ?? '') }}
+                    {{ $invoice->customer->customer_name ?? ($invoice->customer_name ?? '') }}
                 </span>
             </div>
 
