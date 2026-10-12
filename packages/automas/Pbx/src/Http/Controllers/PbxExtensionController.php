@@ -510,7 +510,7 @@ class PbxExtensionController extends Controller
             ->pluck('user_id');
 
         return User::query()
-            ->select(['id', 'name', 'email'])->emp(['vendor', 'client'])
+            ->select(['id', 'name', 'email'])->emp()
             ->where('created_by', $creatorId)
             ->where(function ($query) use ($assignedUserIds, $currentUserId) {
                 $query->whereNotIn('id', $assignedUserIds);

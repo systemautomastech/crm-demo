@@ -3,7 +3,6 @@
 namespace Automas\Pbx\Http\Controllers;
 
 use App\Models\User;
-use Automas\Hrm\Models\Employee;
 use Automas\Lead\Models\Deal;
 use Automas\Lead\Models\Lead;
 use Automas\Pbx\Models\PbxExtension;
@@ -219,7 +218,7 @@ class CallerLookupController extends Controller
             ->where('is_active', true)
             ->first();
 
-        if (! $pbxExtension?->user) {
+        if (!$pbxExtension?->user) {
             return null;
         }
 
@@ -294,10 +293,7 @@ class CallerLookupController extends Controller
             ])
             ->where('created_by', $creatorId)
             ->whereNotIn('type', $this->excludedUserTypes())
-            ->where(function (Builder $query) use (
-                $phoneVariants,
-                $last10
-            ): void {
+            ->where(function (Builder $query) use ($phoneVariants, $last10): void {
                 $this->applyNormalizedPhoneSearch(
                     query: $query,
                     column: 'mobile_no',
@@ -316,12 +312,7 @@ class CallerLookupController extends Controller
         int $creatorId,
         string $source,
         ?string $extension = null,
-    ): JsonResponse {
-        $employee = $this->findEmployeeForUser(
-            userId: (int) $user->id,
-            creatorId: $creatorId,
-        );
-
+    ) {
         $resolvedExtension = $extension
             ?? $user->getAttribute('pbx_extension');
 
@@ -338,43 +329,12 @@ class CallerLookupController extends Controller
                 'lookup_source' => $source,
                 'extension' => $resolvedExtension,
                 'caller_id' => $user->getAttribute('pbx_caller_id'),
-                'employee_id' => $employee?->employee_id,
-                'department' => $employee?->department?->department_name,
-                'designation' => $employee?->designation?->designation_name,
-                'branch' => $employee?->branch?->branch_name,
+                'employee_id' => null,
+                'department' => null,
+                'designation' => $user->designation ?? null,
+                'branch' => null,
             ],
         ]);
-    }
-
-    /**
-     * Find employee information for a user.
-     */
-    private function findEmployeeForUser(
-        int $userId,
-        int $creatorId,
-    ): ?Employee {
-        if (! class_exists(Employee::class)) {
-            return null;
-        }
-
-        return Employee::query()
-            ->select([
-                'id',
-                'employee_id',
-                'user_id',
-                'branch_id',
-                'department_id',
-                'designation_id',
-                'created_by',
-            ])
-            ->with([
-                'branch:id,branch_name',
-                'department:id,department_name',
-                'designation:id,designation_name',
-            ])
-            ->where('user_id', $userId)
-            ->where('created_by', $creatorId)
-            ->first();
     }
 
     /**
@@ -413,10 +373,7 @@ class CallerLookupController extends Controller
             ->select($columns)
             ->with('stage:id,name')
             ->where('created_by', $creatorId)
-            ->where(function (Builder $query) use (
-                $phoneVariants,
-                $last10
-            ): void {
+            ->where(function (Builder $query) use ($phoneVariants, $last10): void {
                 $this->applyNormalizedPhoneSearch(
                     query: $query,
                     column: 'phone',
@@ -460,10 +417,7 @@ class CallerLookupController extends Controller
             ->select($columns)
             ->with('stage:id,name')
             ->where('created_by', $creatorId)
-            ->where(function (Builder $query) use (
-                $phoneVariants,
-                $last10
-            ): void {
+            ->where(function (Builder $query) use ($phoneVariants, $last10): void {
                 $this->applyNormalizedPhoneSearch(
                     query: $query,
                     column: 'phone',
@@ -489,7 +443,7 @@ class CallerLookupController extends Controller
             array_unique(
                 array_filter(
                     array_map(
-                        fn ($number): string => $this->normalizeNumber(
+                        fn($number): string => $this->normalizeNumber(
                             (string) $number,
                         ),
                         $phoneVariants,
@@ -498,11 +452,7 @@ class CallerLookupController extends Controller
             ),
         );
 
-        $query->where(function (Builder $phoneQuery) use (
-            $normalizedColumn,
-            $normalizedVariants,
-            $last10
-        ): void {
+        $query->where(function (Builder $phoneQuery) use ($normalizedColumn, $normalizedVariants, $last10): void {
             foreach ($normalizedVariants as $variant) {
                 $phoneQuery->orWhereRaw(
                     "{$normalizedColumn} = ?",
@@ -610,7 +560,7 @@ class CallerLookupController extends Controller
      */
     private function normalizedSqlColumn(string $column): string
     {
-        if (! in_array($column, ['mobile_no', 'phone'], true)) {
+        if (!in_array($column, ['mobile_no', 'phone'], true)) {
             throw new \InvalidArgumentException(
                 'Invalid phone lookup column.',
             );

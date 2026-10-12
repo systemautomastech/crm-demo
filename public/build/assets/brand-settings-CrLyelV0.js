@@ -1,1 +1,1359 @@
-import{b as j,j as e}from"./ui-Bjt2ZI42.js";import{B as c}from"./button-BwagC4xJ.js";import{I as h}from"./input-BhkK921K.js";import{L as t}from"./label-DBCG1vnl.js";import{C as F,a as V,b as R,c as z}from"./card-BZFbdxpg.js";import{A,t as u}from"./app-BQWHrDCw.js";import{M as y}from"./MediaPicker-DI4iixNs.js";import{b as g}from"./helpers-B746JRjZ.js";import{ThemePreview as I}from"./theme-preview-BT7ixQtZ.js";import{S as T}from"./separator-BSFH7Ww8.js";import{u as B}from"./useTranslation-kJp4QRC7.js";import{a as k,P as D,M as U}from"./panel-left-DTvRhMrQ.js";import{S as G}from"./save-iSvoBxFW.js";import{U as O}from"./upload-fe9E3VoM.js";import{F as H}from"./file-text-B5R6nMUb.js";import{S as W}from"./settings-BqNb5oKz.js";import{C as f}from"./check-kEbDzy9i.js";import"./index-DnPxjgVG.js";import"./utils-BMVe_KuB.js";import"./utils-DqweA7RH.js";import"./MediaLibraryModal-DRbbyOP9.js";import"./dialog-BBq_yj-r.js";import"./badge-C3sTfTgo.js";import"./image-BQUfcuyy.js";import"./plus-CtmPp_8n.js";import"./user-round-DYl2blgS.js";import"./users-DR_QE9pE.js";function ve({userSettings:a,auth:b}){var P,L;const{t:s}=B(),[w,v]=j.useState(!1),m=(L=(P=b==null?void 0:b.user)==null?void 0:P.permissions)==null?void 0:L.includes("edit-brand-settings"),[n,N]=j.useState("logos"),[o,p]=j.useState({logo_dark:(a==null?void 0:a.logo_dark)||"",logo_light:(a==null?void 0:a.logo_light)||"",favicon:(a==null?void 0:a.favicon)||"",titleText:(a==null?void 0:a.titleText)||"AutomasERP",footerText:(a==null?void 0:a.footerText)||"© AutomasERP. All rights reserved.",sidebarVariant:(a==null?void 0:a.sidebarVariant)||"inset",sidebarStyle:(a==null?void 0:a.sidebarStyle)||"plain",sidebarTextColor:(a==null?void 0:a.sidebarTextColor)||"#ffffff",themeMode:(a==null?void 0:a.themeMode)||"light",themeColor:(a==null?void 0:a.themeColor)||"green",customColor:(a==null?void 0:a.customColor)||"#10b981"});j.useEffect(()=>{a&&p({logo_dark:(a==null?void 0:a.logo_dark)||"",logo_light:(a==null?void 0:a.logo_light)||"",favicon:(a==null?void 0:a.favicon)||"",titleText:(a==null?void 0:a.titleText)||"AutomasERP",footerText:(a==null?void 0:a.footerText)||"©AutomasERP. All rights reserved.",sidebarVariant:(a==null?void 0:a.sidebarVariant)||"inset",sidebarStyle:(a==null?void 0:a.sidebarStyle)||"plain",sidebarTextColor:(a==null?void 0:a.sidebarTextColor)||"#ffffff",themeMode:(a==null?void 0:a.themeMode)||"light",themeColor:(a==null?void 0:a.themeColor)||"green",customColor:(a==null?void 0:a.customColor)||"#10b981"})},[a]);const M=l=>{const{name:r,value:i}=l.target;p(x=>({...x,[r]:i}))},C=(l,r)=>{const i=Array.isArray(r)?r[0]||"":r;p(x=>({...x,[l]:i}))},d=(l,r)=>{p(i=>({...i,[l]:r}))},E=()=>{v(!0),A.post(route("settings.brand.update"),{settings:o},{preserveScroll:!0,onSuccess:l=>{var x,_;v(!1);const r=(x=l.props.flash)==null?void 0:x.success,i=(_=l.props.flash)==null?void 0:_.error;r?(u.success(r),A.reload({only:["globalSettings"]})):i&&u.error(i)},onError:l=>{v(!1);const r=l.error||Object.values(l).join(", ")||s("Failed to save brand settings");u.error(r)}})};return e.jsxs(F,{children:[e.jsxs(V,{className:"flex flex-row items-center justify-between",children:[e.jsxs("div",{className:"order-1 rtl:order-2",children:[e.jsxs(R,{className:"flex items-center gap-2 text-lg",children:[e.jsx(k,{className:"h-5 w-5"}),s("Brand Settings")]}),e.jsx("p",{className:"text-sm text-muted-foreground mt-1",children:s("Customize your application's branding and appearance")})]}),m&&e.jsxs(c,{className:"order-2 rtl:order-1",onClick:E,disabled:w,size:"sm",children:[e.jsx(G,{className:"h-4 w-4 mr-2"}),s(w?"Saving...":"Save Changes")]})]}),e.jsx(z,{children:e.jsxs("div",{className:"grid grid-cols-1 lg:grid-cols-3 gap-6",children:[e.jsxs("div",{className:"lg:col-span-2",children:[e.jsxs("div",{className:"flex space-x-2 mb-6",children:[e.jsxs(c,{variant:n==="logos"?"default":"outline",size:"sm",onClick:()=>N("logos"),className:"flex-1",children:[e.jsx(O,{className:"h-4 w-4 mr-2"}),s("Logos")]}),e.jsxs(c,{variant:n==="text"?"default":"outline",size:"sm",onClick:()=>N("text"),className:"flex-1",children:[e.jsx(H,{className:"h-4 w-4 mr-2"}),s("Text")]}),e.jsxs(c,{variant:n==="theme"?"default":"outline",size:"sm",onClick:()=>N("theme"),className:"flex-1",children:[e.jsx(W,{className:"h-4 w-4 mr-2"}),s("Theme")]})]}),n==="logos"&&e.jsx("div",{className:"space-y-6",children:e.jsxs("div",{className:"grid grid-cols-1 md:grid-cols-2 gap-6",children:[e.jsxs("div",{className:"space-y-3",children:[e.jsx(t,{children:s("Logo (Light Mode)")}),e.jsx("p",{className:"text-xs text-muted-foreground",children:s("Recommended: 100px × 30px")}),e.jsxs("div",{className:"flex flex-col gap-3",children:[e.jsx("div",{className:"border rounded-md p-4 flex items-center justify-center bg-muted/30 h-32",children:o.logo_dark?e.jsx("img",{src:g(o.logo_dark),alt:s("Dark Logo"),className:"max-h-full max-w-full object-contain"}):e.jsxs("div",{className:"text-muted-foreground flex flex-col items-center gap-2",children:[e.jsx("div",{className:"h-12 w-24 bg-muted flex items-center justify-center rounded border border-dashed",children:e.jsx("span",{className:"font-semibold text-muted-foreground",children:s("Logo")})}),e.jsx("span",{className:"text-xs",children:s("No logo selected")})]})}),e.jsx(y,{value:o.logo_dark,onChange:l=>C("logo_dark",l),placeholder:s("Select dark mode logo..."),showPreview:!1,disabled:!m})]})]}),e.jsxs("div",{className:"space-y-3",children:[e.jsx(t,{children:s("Logo (Dark Mode)")}),e.jsx("p",{className:"text-xs text-muted-foreground",children:s("Recommended: 100px × 30px")}),e.jsxs("div",{className:"flex flex-col gap-3",children:[e.jsx("div",{className:"border rounded-md p-4 flex items-center justify-center bg-gray-800 h-32",children:o.logo_light?e.jsx("img",{src:g(o.logo_light),alt:s("Light Logo"),className:"max-h-full max-w-full object-contain"}):e.jsxs("div",{className:"text-muted-foreground flex flex-col items-center gap-2",children:[e.jsx("div",{className:"h-12 w-24 bg-muted flex items-center justify-center rounded border border-dashed",children:e.jsx("span",{className:"font-semibold text-muted-foreground",children:s("Logo")})}),e.jsx("span",{className:"text-xs",children:s("No logo selected")})]})}),e.jsx(y,{value:o.logo_light,onChange:l=>C("logo_light",l),placeholder:s("Select light mode logo..."),showPreview:!1,disabled:!m})]})]}),e.jsxs("div",{className:"space-y-3",children:[e.jsx(t,{children:s("Favicon")}),e.jsxs("div",{className:"flex flex-col gap-3",children:[e.jsx("div",{className:"border rounded-md p-4 flex items-center justify-center bg-muted/30 h-20",children:o.favicon?e.jsx("img",{src:g(o.favicon),alt:s("Favicon"),className:"h-16 w-16 object-contain"}):e.jsxs("div",{className:"text-muted-foreground flex flex-col items-center gap-1",children:[e.jsx("div",{className:"h-10 w-10 bg-muted flex items-center justify-center rounded border border-dashed",children:e.jsx("span",{className:"font-semibold text-xs text-muted-foreground",children:s("Icon")})}),e.jsx("span",{className:"text-xs",children:s("No favicon selected")})]})}),e.jsx(y,{value:o.favicon,onChange:l=>C("favicon",l),placeholder:s("Select favicon..."),showPreview:!1,disabled:!m})]})]})]})}),n==="text"&&e.jsx("div",{className:"space-y-6",children:e.jsxs("div",{className:"grid grid-cols-1 gap-6",children:[e.jsxs("div",{className:"space-y-3",children:[e.jsx(t,{htmlFor:"titleText",children:s("Title Text")}),e.jsx(h,{id:"titleText",name:"titleText",value:o.titleText,onChange:M,placeholder:"AutomasERP",disabled:!m}),e.jsx("p",{className:"text-xs text-muted-foreground",children:s("Application title displayed in the browser tab")})]}),e.jsxs("div",{className:"space-y-3",children:[e.jsx(t,{htmlFor:"footerText",children:s("Footer Text")}),e.jsx(h,{id:"footerText",name:"footerText",value:o.footerText,onChange:M,placeholder:s("© AutomasERP. All rights reserved."),disabled:!m}),e.jsx("p",{className:"text-xs text-muted-foreground",children:s("Text displayed in the footer")})]})]})}),n==="theme"&&e.jsx("div",{className:"space-y-6",children:e.jsxs("div",{className:`flex flex-col space-y-8 ${m?"":"pointer-events-none opacity-60"}`,children:[e.jsxs("div",{className:"space-y-4",children:[e.jsxs("div",{className:"flex items-center",children:[e.jsx(k,{className:"h-5 w-5 mr-2 text-muted-foreground"}),e.jsx("h3",{className:"text-base font-medium",children:s("Theme Color")})]}),e.jsx(T,{className:"my-2"}),e.jsxs("div",{className:"grid grid-cols-6 gap-2",children:[Object.entries({blue:"#3b82f6",green:"#10b981",purple:"#8b5cf6",orange:"#f97316",red:"#ef4444"}).map(([l,r])=>e.jsx(c,{type:"button",variant:o.themeColor===l?"default":"outline",className:"h-8 w-full p-0 relative",style:{backgroundColor:o.themeColor===l?r:"transparent"},onClick:()=>d("themeColor",l),children:e.jsx("span",{className:"absolute inset-1 rounded-sm",style:{backgroundColor:r}})},l)),e.jsx(c,{type:"button",variant:o.themeColor==="custom"?"default":"outline",className:"h-8 w-full p-0 relative",style:{backgroundColor:o.themeColor==="custom"?o.customColor:"transparent"},onClick:()=>d("themeColor","custom"),children:e.jsx("span",{className:"absolute inset-1 rounded-sm",style:{backgroundColor:o.customColor}})})]}),o.themeColor==="custom"&&e.jsxs("div",{className:"space-y-2 mt-4",children:[e.jsx(t,{htmlFor:"customColor",children:s("Custom Color")}),e.jsxs("div",{className:"flex gap-2",children:[e.jsxs("div",{className:"relative",children:[e.jsx(h,{id:"colorPicker",type:"color",value:o.customColor,onChange:l=>d("customColor",l.target.value),className:"absolute inset-0 opacity-0 cursor-pointer"}),e.jsx("div",{className:"w-10 h-10 rounded border cursor-pointer",style:{backgroundColor:o.customColor}})]}),e.jsx(h,{id:"customColor",name:"customColor",type:"text",value:o.customColor,onChange:l=>d("customColor",l.target.value),placeholder:"#10b981"})]})]})]}),e.jsxs("div",{className:"space-y-4",children:[e.jsxs("div",{className:"flex items-center",children:[e.jsx(D,{className:"h-5 w-5 mr-2 text-muted-foreground"}),e.jsx("h3",{className:"text-base font-medium",children:s("Sidebar")})]}),e.jsx(T,{className:"my-2"}),e.jsxs("div",{className:"space-y-6",children:[e.jsxs("div",{children:[e.jsx(t,{className:"mb-2 block",children:s("Sidebar Variant")}),e.jsx("div",{className:"grid grid-cols-3 gap-3",children:["inset","floating","minimal"].map(l=>e.jsxs(c,{type:"button",variant:o.sidebarVariant===l?"default":"outline",className:"h-10 justify-start",onClick:()=>d("sidebarVariant",l),children:[l.charAt(0).toUpperCase()+l.slice(1),o.sidebarVariant===l&&e.jsx(f,{className:"h-4 w-4 ml-2"})]},l))})]}),e.jsxs("div",{children:[e.jsx(t,{className:"mb-2 block",children:s("Sidebar Style")}),e.jsx("div",{className:"grid grid-cols-3 gap-3",children:[{id:"plain",name:"Plain"},{id:"colored",name:"Colored"},{id:"gradient",name:"Gradient"}].map(l=>e.jsxs(c,{type:"button",variant:o.sidebarStyle===l.id?"default":"outline",className:"h-10 justify-start",onClick:()=>d("sidebarStyle",l.id),children:[l.name,o.sidebarStyle===l.id&&e.jsx(f,{className:"h-4 w-4 ml-2"})]},l.id))})]}),o.sidebarStyle!=="plain"&&e.jsxs("div",{className:"space-y-2",children:[e.jsx(t,{htmlFor:"sidebarTextColor",children:s("Sidebar Text Color")}),e.jsxs("div",{className:"flex gap-2",children:[e.jsxs("div",{className:"relative shrink-0",children:[e.jsx(h,{id:"sidebarTextColorPicker",type:"color",value:o.sidebarTextColor,onChange:l=>d("sidebarTextColor",l.target.value),className:"absolute inset-0 cursor-pointer opacity-0"}),e.jsx("div",{className:"h-10 w-10 cursor-pointer rounded-md border",style:{backgroundColor:o.sidebarTextColor}})]}),e.jsx(h,{id:"sidebarTextColor",name:"sidebarTextColor",type:"text",value:o.sidebarTextColor,onChange:l=>d("sidebarTextColor",l.target.value),placeholder:"#ffffff"})]}),e.jsx("div",{className:"flex gap-2",children:[{name:"White",value:"#ffffff"},{name:"Black",value:"#111827"},{name:"Light Gray",value:"#e5e7eb"}].map(l=>e.jsxs(c,{type:"button",variant:o.sidebarTextColor===l.value?"default":"outline",size:"sm",onClick:()=>d("sidebarTextColor",l.value),children:[e.jsx("span",{className:"mr-2 h-3 w-3 rounded-full border",style:{backgroundColor:l.value}}),s(l.name)]},l.value))}),e.jsx("p",{className:"text-xs text-muted-foreground",children:s("Select a readable color for sidebar labels, menu items and icons.")})]})]})]}),e.jsxs("div",{className:"space-y-4",children:[e.jsxs("div",{className:"flex items-center",children:[e.jsx(U,{className:"h-5 w-5 mr-2 text-muted-foreground"}),e.jsx("h3",{className:"text-base font-medium",children:s("Theme Mode")})]}),e.jsx(T,{className:"my-2"}),e.jsx("div",{className:"space-y-2",children:e.jsxs("div",{className:"grid grid-cols-3 gap-2",children:[e.jsxs(c,{type:"button",variant:o.themeMode==="light"?"default":"outline",className:"h-10 justify-start",onClick:()=>d("themeMode","light"),children:[s("Light"),o.themeMode==="light"&&e.jsx(f,{className:"h-4 w-4 ml-2"})]}),e.jsxs(c,{type:"button",variant:o.themeMode==="dark"?"default":"outline",className:"h-10 justify-start",onClick:()=>d("themeMode","dark"),children:[s("Dark"),o.themeMode==="dark"&&e.jsx(f,{className:"h-4 w-4 ml-2"})]}),e.jsxs(c,{type:"button",variant:o.themeMode==="system"?"default":"outline",className:"h-10 justify-start",onClick:()=>d("themeMode","system"),children:[s("System"),o.themeMode==="system"&&e.jsx(f,{className:"h-4 w-4 ml-2"})]})]})})]})]})})]}),e.jsx("div",{className:"lg:col-span-1",children:e.jsx("div",{className:"sticky top-20 space-y-6",children:e.jsxs("div",{className:"border rounded-md p-4",children:[e.jsxs("div",{className:"flex items-center gap-2 mb-4",children:[e.jsx(k,{className:"h-4 w-4"}),e.jsx("h3",{className:"font-medium",children:s("Live Preview")})]}),e.jsx(I,{logoDark:o.logo_dark,logoLight:o.logo_light,themeColor:o.themeColor,customColor:o.customColor,sidebarVariant:o.sidebarVariant,sidebarStyle:o.sidebarStyle,sidebarTextColor:o.sidebarTextColor,themeMode:o.themeMode}),e.jsxs("div",{className:"mt-4 pt-4 border-t",children:[e.jsxs("div",{className:"text-xs mb-2 text-muted-foreground",children:[s("Title:")," ",e.jsx("span",{className:"font-medium text-foreground",children:o.titleText})]}),e.jsxs("div",{className:"text-xs text-muted-foreground",children:[s("Footer:")," ",e.jsx("span",{className:"font-medium text-foreground",children:o.footerText})]})]})]})})})]})})]})}export{ve as default};
+import { b as j, j as e } from "./ui-Bjt2ZI42.js";
+import { B as c } from "./button-BwagC4xJ.js";
+import { I as h } from "./input-BhkK921K.js";
+import { L as t } from "./label-DBCG1vnl.js";
+import { C as F, a as V, b as R, c as z } from "./card-BZFbdxpg.js";
+import { A, t as u } from "./app-BQWHrDCw.js";
+import { M as y } from "./MediaPicker-DI4iixNs.js";
+import { b as g } from "./helpers-B746JRjZ.js";
+import { ThemePreview as I } from "./theme-preview-BT7ixQtZ.js";
+import { S as T } from "./separator-BSFH7Ww8.js";
+import { u as B } from "./useTranslation-kJp4QRC7.js";
+import { a as k, P as D, M as U } from "./panel-left-DTvRhMrQ.js";
+import { S as G } from "./save-iSvoBxFW.js";
+import { U as O } from "./upload-fe9E3VoM.js";
+import { F as H } from "./file-text-B5R6nMUb.js";
+import { S as W } from "./settings-BqNb5oKz.js";
+import { C as f } from "./check-kEbDzy9i.js";
+import "./index-DnPxjgVG.js";
+import "./utils-BMVe_KuB.js";
+import "./utils-DqweA7RH.js";
+import "./MediaLibraryModal-DRbbyOP9.js";
+import "./dialog-BBq_yj-r.js";
+import "./badge-C3sTfTgo.js";
+import "./image-BQUfcuyy.js";
+import "./plus-CtmPp_8n.js";
+import "./user-round-DYl2blgS.js";
+import "./users-DR_QE9pE.js";
+function ve({ userSettings: a, auth: b }) {
+    var P, L;
+    const { t: s } = B(),
+        [w, v] = j.useState(!1),
+        m =
+            (L =
+                (P = b == null ? void 0 : b.user) == null
+                    ? void 0
+                    : P.permissions) == null
+                ? void 0
+                : L.includes("edit-brand-settings"),
+        [n, N] = j.useState("logos"),
+        [o, p] = j.useState({
+            logo_dark: (a == null ? void 0 : a.logo_dark) || "",
+            logo_light: (a == null ? void 0 : a.logo_light) || "",
+            favicon: (a == null ? void 0 : a.favicon) || "",
+            titleText: (a == null ? void 0 : a.titleText) || "AutomasCRM",
+            footerText:
+                (a == null ? void 0 : a.footerText) ||
+                "© AutomasCRM. All rights reserved.",
+            sidebarVariant: (a == null ? void 0 : a.sidebarVariant) || "inset",
+            sidebarStyle: (a == null ? void 0 : a.sidebarStyle) || "plain",
+            sidebarTextColor:
+                (a == null ? void 0 : a.sidebarTextColor) || "#ffffff",
+            themeMode: (a == null ? void 0 : a.themeMode) || "light",
+            themeColor: (a == null ? void 0 : a.themeColor) || "green",
+            customColor: (a == null ? void 0 : a.customColor) || "#10b981",
+        });
+    j.useEffect(() => {
+        a &&
+            p({
+                logo_dark: (a == null ? void 0 : a.logo_dark) || "",
+                logo_light: (a == null ? void 0 : a.logo_light) || "",
+                favicon: (a == null ? void 0 : a.favicon) || "",
+                titleText: (a == null ? void 0 : a.titleText) || "AutomasCRM",
+                footerText:
+                    (a == null ? void 0 : a.footerText) ||
+                    "©AutomasCRM. All rights reserved.",
+                sidebarVariant:
+                    (a == null ? void 0 : a.sidebarVariant) || "inset",
+                sidebarStyle: (a == null ? void 0 : a.sidebarStyle) || "plain",
+                sidebarTextColor:
+                    (a == null ? void 0 : a.sidebarTextColor) || "#ffffff",
+                themeMode: (a == null ? void 0 : a.themeMode) || "light",
+                themeColor: (a == null ? void 0 : a.themeColor) || "green",
+                customColor: (a == null ? void 0 : a.customColor) || "#10b981",
+            });
+    }, [a]);
+    const M = (l) => {
+            const { name: r, value: i } = l.target;
+            p((x) => ({ ...x, [r]: i }));
+        },
+        C = (l, r) => {
+            const i = Array.isArray(r) ? r[0] || "" : r;
+            p((x) => ({ ...x, [l]: i }));
+        },
+        d = (l, r) => {
+            p((i) => ({ ...i, [l]: r }));
+        },
+        E = () => {
+            (v(!0),
+                A.post(
+                    route("settings.brand.update"),
+                    { settings: o },
+                    {
+                        preserveScroll: !0,
+                        onSuccess: (l) => {
+                            var x, _;
+                            v(!1);
+                            const r =
+                                    (x = l.props.flash) == null
+                                        ? void 0
+                                        : x.success,
+                                i =
+                                    (_ = l.props.flash) == null
+                                        ? void 0
+                                        : _.error;
+                            r
+                                ? (u.success(r),
+                                  A.reload({ only: ["globalSettings"] }))
+                                : i && u.error(i);
+                        },
+                        onError: (l) => {
+                            v(!1);
+                            const r =
+                                l.error ||
+                                Object.values(l).join(", ") ||
+                                s("Failed to save brand settings");
+                            u.error(r);
+                        },
+                    },
+                ));
+        };
+    return e.jsxs(F, {
+        children: [
+            e.jsxs(V, {
+                className: "flex flex-row items-center justify-between",
+                children: [
+                    e.jsxs("div", {
+                        className: "order-1 rtl:order-2",
+                        children: [
+                            e.jsxs(R, {
+                                className: "flex items-center gap-2 text-lg",
+                                children: [
+                                    e.jsx(k, { className: "h-5 w-5" }),
+                                    s("Brand Settings"),
+                                ],
+                            }),
+                            e.jsx("p", {
+                                className: "text-sm text-muted-foreground mt-1",
+                                children: s(
+                                    "Customize your application's branding and appearance",
+                                ),
+                            }),
+                        ],
+                    }),
+                    m &&
+                        e.jsxs(c, {
+                            className: "order-2 rtl:order-1",
+                            onClick: E,
+                            disabled: w,
+                            size: "sm",
+                            children: [
+                                e.jsx(G, { className: "h-4 w-4 mr-2" }),
+                                s(w ? "Saving..." : "Save Changes"),
+                            ],
+                        }),
+                ],
+            }),
+            e.jsx(z, {
+                children: e.jsxs("div", {
+                    className: "grid grid-cols-1 lg:grid-cols-3 gap-6",
+                    children: [
+                        e.jsxs("div", {
+                            className: "lg:col-span-2",
+                            children: [
+                                e.jsxs("div", {
+                                    className: "flex space-x-2 mb-6",
+                                    children: [
+                                        e.jsxs(c, {
+                                            variant:
+                                                n === "logos"
+                                                    ? "default"
+                                                    : "outline",
+                                            size: "sm",
+                                            onClick: () => N("logos"),
+                                            className: "flex-1",
+                                            children: [
+                                                e.jsx(O, {
+                                                    className: "h-4 w-4 mr-2",
+                                                }),
+                                                s("Logos"),
+                                            ],
+                                        }),
+                                        e.jsxs(c, {
+                                            variant:
+                                                n === "text"
+                                                    ? "default"
+                                                    : "outline",
+                                            size: "sm",
+                                            onClick: () => N("text"),
+                                            className: "flex-1",
+                                            children: [
+                                                e.jsx(H, {
+                                                    className: "h-4 w-4 mr-2",
+                                                }),
+                                                s("Text"),
+                                            ],
+                                        }),
+                                        e.jsxs(c, {
+                                            variant:
+                                                n === "theme"
+                                                    ? "default"
+                                                    : "outline",
+                                            size: "sm",
+                                            onClick: () => N("theme"),
+                                            className: "flex-1",
+                                            children: [
+                                                e.jsx(W, {
+                                                    className: "h-4 w-4 mr-2",
+                                                }),
+                                                s("Theme"),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                                n === "logos" &&
+                                    e.jsx("div", {
+                                        className: "space-y-6",
+                                        children: e.jsxs("div", {
+                                            className:
+                                                "grid grid-cols-1 md:grid-cols-2 gap-6",
+                                            children: [
+                                                e.jsxs("div", {
+                                                    className: "space-y-3",
+                                                    children: [
+                                                        e.jsx(t, {
+                                                            children:
+                                                                s(
+                                                                    "Logo (Light Mode)",
+                                                                ),
+                                                        }),
+                                                        e.jsx("p", {
+                                                            className:
+                                                                "text-xs text-muted-foreground",
+                                                            children: s(
+                                                                "Recommended: 100px × 30px",
+                                                            ),
+                                                        }),
+                                                        e.jsxs("div", {
+                                                            className:
+                                                                "flex flex-col gap-3",
+                                                            children: [
+                                                                e.jsx("div", {
+                                                                    className:
+                                                                        "border rounded-md p-4 flex items-center justify-center bg-muted/30 h-32",
+                                                                    children:
+                                                                        o.logo_dark
+                                                                            ? e.jsx(
+                                                                                  "img",
+                                                                                  {
+                                                                                      src: g(
+                                                                                          o.logo_dark,
+                                                                                      ),
+                                                                                      alt: s(
+                                                                                          "Dark Logo",
+                                                                                      ),
+                                                                                      className:
+                                                                                          "max-h-full max-w-full object-contain",
+                                                                                  },
+                                                                              )
+                                                                            : e.jsxs(
+                                                                                  "div",
+                                                                                  {
+                                                                                      className:
+                                                                                          "text-muted-foreground flex flex-col items-center gap-2",
+                                                                                      children:
+                                                                                          [
+                                                                                              e.jsx(
+                                                                                                  "div",
+                                                                                                  {
+                                                                                                      className:
+                                                                                                          "h-12 w-24 bg-muted flex items-center justify-center rounded border border-dashed",
+                                                                                                      children:
+                                                                                                          e.jsx(
+                                                                                                              "span",
+                                                                                                              {
+                                                                                                                  className:
+                                                                                                                      "font-semibold text-muted-foreground",
+                                                                                                                  children:
+                                                                                                                      s(
+                                                                                                                          "Logo",
+                                                                                                                      ),
+                                                                                                              },
+                                                                                                          ),
+                                                                                                  },
+                                                                                              ),
+                                                                                              e.jsx(
+                                                                                                  "span",
+                                                                                                  {
+                                                                                                      className:
+                                                                                                          "text-xs",
+                                                                                                      children:
+                                                                                                          s(
+                                                                                                              "No logo selected",
+                                                                                                          ),
+                                                                                                  },
+                                                                                              ),
+                                                                                          ],
+                                                                                  },
+                                                                              ),
+                                                                }),
+                                                                e.jsx(y, {
+                                                                    value: o.logo_dark,
+                                                                    onChange: (
+                                                                        l,
+                                                                    ) =>
+                                                                        C(
+                                                                            "logo_dark",
+                                                                            l,
+                                                                        ),
+                                                                    placeholder:
+                                                                        s(
+                                                                            "Select dark mode logo...",
+                                                                        ),
+                                                                    showPreview:
+                                                                        !1,
+                                                                    disabled:
+                                                                        !m,
+                                                                }),
+                                                            ],
+                                                        }),
+                                                    ],
+                                                }),
+                                                e.jsxs("div", {
+                                                    className: "space-y-3",
+                                                    children: [
+                                                        e.jsx(t, {
+                                                            children:
+                                                                s(
+                                                                    "Logo (Dark Mode)",
+                                                                ),
+                                                        }),
+                                                        e.jsx("p", {
+                                                            className:
+                                                                "text-xs text-muted-foreground",
+                                                            children: s(
+                                                                "Recommended: 100px × 30px",
+                                                            ),
+                                                        }),
+                                                        e.jsxs("div", {
+                                                            className:
+                                                                "flex flex-col gap-3",
+                                                            children: [
+                                                                e.jsx("div", {
+                                                                    className:
+                                                                        "border rounded-md p-4 flex items-center justify-center bg-gray-800 h-32",
+                                                                    children:
+                                                                        o.logo_light
+                                                                            ? e.jsx(
+                                                                                  "img",
+                                                                                  {
+                                                                                      src: g(
+                                                                                          o.logo_light,
+                                                                                      ),
+                                                                                      alt: s(
+                                                                                          "Light Logo",
+                                                                                      ),
+                                                                                      className:
+                                                                                          "max-h-full max-w-full object-contain",
+                                                                                  },
+                                                                              )
+                                                                            : e.jsxs(
+                                                                                  "div",
+                                                                                  {
+                                                                                      className:
+                                                                                          "text-muted-foreground flex flex-col items-center gap-2",
+                                                                                      children:
+                                                                                          [
+                                                                                              e.jsx(
+                                                                                                  "div",
+                                                                                                  {
+                                                                                                      className:
+                                                                                                          "h-12 w-24 bg-muted flex items-center justify-center rounded border border-dashed",
+                                                                                                      children:
+                                                                                                          e.jsx(
+                                                                                                              "span",
+                                                                                                              {
+                                                                                                                  className:
+                                                                                                                      "font-semibold text-muted-foreground",
+                                                                                                                  children:
+                                                                                                                      s(
+                                                                                                                          "Logo",
+                                                                                                                      ),
+                                                                                                              },
+                                                                                                          ),
+                                                                                                  },
+                                                                                              ),
+                                                                                              e.jsx(
+                                                                                                  "span",
+                                                                                                  {
+                                                                                                      className:
+                                                                                                          "text-xs",
+                                                                                                      children:
+                                                                                                          s(
+                                                                                                              "No logo selected",
+                                                                                                          ),
+                                                                                                  },
+                                                                                              ),
+                                                                                          ],
+                                                                                  },
+                                                                              ),
+                                                                }),
+                                                                e.jsx(y, {
+                                                                    value: o.logo_light,
+                                                                    onChange: (
+                                                                        l,
+                                                                    ) =>
+                                                                        C(
+                                                                            "logo_light",
+                                                                            l,
+                                                                        ),
+                                                                    placeholder:
+                                                                        s(
+                                                                            "Select light mode logo...",
+                                                                        ),
+                                                                    showPreview:
+                                                                        !1,
+                                                                    disabled:
+                                                                        !m,
+                                                                }),
+                                                            ],
+                                                        }),
+                                                    ],
+                                                }),
+                                                e.jsxs("div", {
+                                                    className: "space-y-3",
+                                                    children: [
+                                                        e.jsx(t, {
+                                                            children:
+                                                                s("Favicon"),
+                                                        }),
+                                                        e.jsxs("div", {
+                                                            className:
+                                                                "flex flex-col gap-3",
+                                                            children: [
+                                                                e.jsx("div", {
+                                                                    className:
+                                                                        "border rounded-md p-4 flex items-center justify-center bg-muted/30 h-20",
+                                                                    children:
+                                                                        o.favicon
+                                                                            ? e.jsx(
+                                                                                  "img",
+                                                                                  {
+                                                                                      src: g(
+                                                                                          o.favicon,
+                                                                                      ),
+                                                                                      alt: s(
+                                                                                          "Favicon",
+                                                                                      ),
+                                                                                      className:
+                                                                                          "h-16 w-16 object-contain",
+                                                                                  },
+                                                                              )
+                                                                            : e.jsxs(
+                                                                                  "div",
+                                                                                  {
+                                                                                      className:
+                                                                                          "text-muted-foreground flex flex-col items-center gap-1",
+                                                                                      children:
+                                                                                          [
+                                                                                              e.jsx(
+                                                                                                  "div",
+                                                                                                  {
+                                                                                                      className:
+                                                                                                          "h-10 w-10 bg-muted flex items-center justify-center rounded border border-dashed",
+                                                                                                      children:
+                                                                                                          e.jsx(
+                                                                                                              "span",
+                                                                                                              {
+                                                                                                                  className:
+                                                                                                                      "font-semibold text-xs text-muted-foreground",
+                                                                                                                  children:
+                                                                                                                      s(
+                                                                                                                          "Icon",
+                                                                                                                      ),
+                                                                                                              },
+                                                                                                          ),
+                                                                                                  },
+                                                                                              ),
+                                                                                              e.jsx(
+                                                                                                  "span",
+                                                                                                  {
+                                                                                                      className:
+                                                                                                          "text-xs",
+                                                                                                      children:
+                                                                                                          s(
+                                                                                                              "No favicon selected",
+                                                                                                          ),
+                                                                                                  },
+                                                                                              ),
+                                                                                          ],
+                                                                                  },
+                                                                              ),
+                                                                }),
+                                                                e.jsx(y, {
+                                                                    value: o.favicon,
+                                                                    onChange: (
+                                                                        l,
+                                                                    ) =>
+                                                                        C(
+                                                                            "favicon",
+                                                                            l,
+                                                                        ),
+                                                                    placeholder:
+                                                                        s(
+                                                                            "Select favicon...",
+                                                                        ),
+                                                                    showPreview:
+                                                                        !1,
+                                                                    disabled:
+                                                                        !m,
+                                                                }),
+                                                            ],
+                                                        }),
+                                                    ],
+                                                }),
+                                            ],
+                                        }),
+                                    }),
+                                n === "text" &&
+                                    e.jsx("div", {
+                                        className: "space-y-6",
+                                        children: e.jsxs("div", {
+                                            className: "grid grid-cols-1 gap-6",
+                                            children: [
+                                                e.jsxs("div", {
+                                                    className: "space-y-3",
+                                                    children: [
+                                                        e.jsx(t, {
+                                                            htmlFor:
+                                                                "titleText",
+                                                            children:
+                                                                s("Title Text"),
+                                                        }),
+                                                        e.jsx(h, {
+                                                            id: "titleText",
+                                                            name: "titleText",
+                                                            value: o.titleText,
+                                                            onChange: M,
+                                                            placeholder:
+                                                                "AutomasCRM",
+                                                            disabled: !m,
+                                                        }),
+                                                        e.jsx("p", {
+                                                            className:
+                                                                "text-xs text-muted-foreground",
+                                                            children: s(
+                                                                "Application title displayed in the browser tab",
+                                                            ),
+                                                        }),
+                                                    ],
+                                                }),
+                                                e.jsxs("div", {
+                                                    className: "space-y-3",
+                                                    children: [
+                                                        e.jsx(t, {
+                                                            htmlFor:
+                                                                "footerText",
+                                                            children:
+                                                                s(
+                                                                    "Footer Text",
+                                                                ),
+                                                        }),
+                                                        e.jsx(h, {
+                                                            id: "footerText",
+                                                            name: "footerText",
+                                                            value: o.footerText,
+                                                            onChange: M,
+                                                            placeholder: s(
+                                                                "© AutomasCRM. All rights reserved.",
+                                                            ),
+                                                            disabled: !m,
+                                                        }),
+                                                        e.jsx("p", {
+                                                            className:
+                                                                "text-xs text-muted-foreground",
+                                                            children: s(
+                                                                "Text displayed in the footer",
+                                                            ),
+                                                        }),
+                                                    ],
+                                                }),
+                                            ],
+                                        }),
+                                    }),
+                                n === "theme" &&
+                                    e.jsx("div", {
+                                        className: "space-y-6",
+                                        children: e.jsxs("div", {
+                                            className: `flex flex-col space-y-8 ${m ? "" : "pointer-events-none opacity-60"}`,
+                                            children: [
+                                                e.jsxs("div", {
+                                                    className: "space-y-4",
+                                                    children: [
+                                                        e.jsxs("div", {
+                                                            className:
+                                                                "flex items-center",
+                                                            children: [
+                                                                e.jsx(k, {
+                                                                    className:
+                                                                        "h-5 w-5 mr-2 text-muted-foreground",
+                                                                }),
+                                                                e.jsx("h3", {
+                                                                    className:
+                                                                        "text-base font-medium",
+                                                                    children:
+                                                                        s(
+                                                                            "Theme Color",
+                                                                        ),
+                                                                }),
+                                                            ],
+                                                        }),
+                                                        e.jsx(T, {
+                                                            className: "my-2",
+                                                        }),
+                                                        e.jsxs("div", {
+                                                            className:
+                                                                "grid grid-cols-6 gap-2",
+                                                            children: [
+                                                                Object.entries({
+                                                                    blue: "#3b82f6",
+                                                                    green: "#10b981",
+                                                                    purple: "#8b5cf6",
+                                                                    orange: "#f97316",
+                                                                    red: "#ef4444",
+                                                                }).map(
+                                                                    ([l, r]) =>
+                                                                        e.jsx(
+                                                                            c,
+                                                                            {
+                                                                                type: "button",
+                                                                                variant:
+                                                                                    o.themeColor ===
+                                                                                    l
+                                                                                        ? "default"
+                                                                                        : "outline",
+                                                                                className:
+                                                                                    "h-8 w-full p-0 relative",
+                                                                                style: {
+                                                                                    backgroundColor:
+                                                                                        o.themeColor ===
+                                                                                        l
+                                                                                            ? r
+                                                                                            : "transparent",
+                                                                                },
+                                                                                onClick:
+                                                                                    () =>
+                                                                                        d(
+                                                                                            "themeColor",
+                                                                                            l,
+                                                                                        ),
+                                                                                children:
+                                                                                    e.jsx(
+                                                                                        "span",
+                                                                                        {
+                                                                                            className:
+                                                                                                "absolute inset-1 rounded-sm",
+                                                                                            style: {
+                                                                                                backgroundColor:
+                                                                                                    r,
+                                                                                            },
+                                                                                        },
+                                                                                    ),
+                                                                            },
+                                                                            l,
+                                                                        ),
+                                                                ),
+                                                                e.jsx(c, {
+                                                                    type: "button",
+                                                                    variant:
+                                                                        o.themeColor ===
+                                                                        "custom"
+                                                                            ? "default"
+                                                                            : "outline",
+                                                                    className:
+                                                                        "h-8 w-full p-0 relative",
+                                                                    style: {
+                                                                        backgroundColor:
+                                                                            o.themeColor ===
+                                                                            "custom"
+                                                                                ? o.customColor
+                                                                                : "transparent",
+                                                                    },
+                                                                    onClick:
+                                                                        () =>
+                                                                            d(
+                                                                                "themeColor",
+                                                                                "custom",
+                                                                            ),
+                                                                    children:
+                                                                        e.jsx(
+                                                                            "span",
+                                                                            {
+                                                                                className:
+                                                                                    "absolute inset-1 rounded-sm",
+                                                                                style: {
+                                                                                    backgroundColor:
+                                                                                        o.customColor,
+                                                                                },
+                                                                            },
+                                                                        ),
+                                                                }),
+                                                            ],
+                                                        }),
+                                                        o.themeColor ===
+                                                            "custom" &&
+                                                            e.jsxs("div", {
+                                                                className:
+                                                                    "space-y-2 mt-4",
+                                                                children: [
+                                                                    e.jsx(t, {
+                                                                        htmlFor:
+                                                                            "customColor",
+                                                                        children:
+                                                                            s(
+                                                                                "Custom Color",
+                                                                            ),
+                                                                    }),
+                                                                    e.jsxs(
+                                                                        "div",
+                                                                        {
+                                                                            className:
+                                                                                "flex gap-2",
+                                                                            children:
+                                                                                [
+                                                                                    e.jsxs(
+                                                                                        "div",
+                                                                                        {
+                                                                                            className:
+                                                                                                "relative",
+                                                                                            children:
+                                                                                                [
+                                                                                                    e.jsx(
+                                                                                                        h,
+                                                                                                        {
+                                                                                                            id: "colorPicker",
+                                                                                                            type: "color",
+                                                                                                            value: o.customColor,
+                                                                                                            onChange:
+                                                                                                                (
+                                                                                                                    l,
+                                                                                                                ) =>
+                                                                                                                    d(
+                                                                                                                        "customColor",
+                                                                                                                        l
+                                                                                                                            .target
+                                                                                                                            .value,
+                                                                                                                    ),
+                                                                                                            className:
+                                                                                                                "absolute inset-0 opacity-0 cursor-pointer",
+                                                                                                        },
+                                                                                                    ),
+                                                                                                    e.jsx(
+                                                                                                        "div",
+                                                                                                        {
+                                                                                                            className:
+                                                                                                                "w-10 h-10 rounded border cursor-pointer",
+                                                                                                            style: {
+                                                                                                                backgroundColor:
+                                                                                                                    o.customColor,
+                                                                                                            },
+                                                                                                        },
+                                                                                                    ),
+                                                                                                ],
+                                                                                        },
+                                                                                    ),
+                                                                                    e.jsx(
+                                                                                        h,
+                                                                                        {
+                                                                                            id: "customColor",
+                                                                                            name: "customColor",
+                                                                                            type: "text",
+                                                                                            value: o.customColor,
+                                                                                            onChange:
+                                                                                                (
+                                                                                                    l,
+                                                                                                ) =>
+                                                                                                    d(
+                                                                                                        "customColor",
+                                                                                                        l
+                                                                                                            .target
+                                                                                                            .value,
+                                                                                                    ),
+                                                                                            placeholder:
+                                                                                                "#10b981",
+                                                                                        },
+                                                                                    ),
+                                                                                ],
+                                                                        },
+                                                                    ),
+                                                                ],
+                                                            }),
+                                                    ],
+                                                }),
+                                                e.jsxs("div", {
+                                                    className: "space-y-4",
+                                                    children: [
+                                                        e.jsxs("div", {
+                                                            className:
+                                                                "flex items-center",
+                                                            children: [
+                                                                e.jsx(D, {
+                                                                    className:
+                                                                        "h-5 w-5 mr-2 text-muted-foreground",
+                                                                }),
+                                                                e.jsx("h3", {
+                                                                    className:
+                                                                        "text-base font-medium",
+                                                                    children:
+                                                                        s(
+                                                                            "Sidebar",
+                                                                        ),
+                                                                }),
+                                                            ],
+                                                        }),
+                                                        e.jsx(T, {
+                                                            className: "my-2",
+                                                        }),
+                                                        e.jsxs("div", {
+                                                            className:
+                                                                "space-y-6",
+                                                            children: [
+                                                                e.jsxs("div", {
+                                                                    children: [
+                                                                        e.jsx(
+                                                                            t,
+                                                                            {
+                                                                                className:
+                                                                                    "mb-2 block",
+                                                                                children:
+                                                                                    s(
+                                                                                        "Sidebar Variant",
+                                                                                    ),
+                                                                            },
+                                                                        ),
+                                                                        e.jsx(
+                                                                            "div",
+                                                                            {
+                                                                                className:
+                                                                                    "grid grid-cols-3 gap-3",
+                                                                                children:
+                                                                                    [
+                                                                                        "inset",
+                                                                                        "floating",
+                                                                                        "minimal",
+                                                                                    ].map(
+                                                                                        (
+                                                                                            l,
+                                                                                        ) =>
+                                                                                            e.jsxs(
+                                                                                                c,
+                                                                                                {
+                                                                                                    type: "button",
+                                                                                                    variant:
+                                                                                                        o.sidebarVariant ===
+                                                                                                        l
+                                                                                                            ? "default"
+                                                                                                            : "outline",
+                                                                                                    className:
+                                                                                                        "h-10 justify-start",
+                                                                                                    onClick:
+                                                                                                        () =>
+                                                                                                            d(
+                                                                                                                "sidebarVariant",
+                                                                                                                l,
+                                                                                                            ),
+                                                                                                    children:
+                                                                                                        [
+                                                                                                            l
+                                                                                                                .charAt(
+                                                                                                                    0,
+                                                                                                                )
+                                                                                                                .toUpperCase() +
+                                                                                                                l.slice(
+                                                                                                                    1,
+                                                                                                                ),
+                                                                                                            o.sidebarVariant ===
+                                                                                                                l &&
+                                                                                                                e.jsx(
+                                                                                                                    f,
+                                                                                                                    {
+                                                                                                                        className:
+                                                                                                                            "h-4 w-4 ml-2",
+                                                                                                                    },
+                                                                                                                ),
+                                                                                                        ],
+                                                                                                },
+                                                                                                l,
+                                                                                            ),
+                                                                                    ),
+                                                                            },
+                                                                        ),
+                                                                    ],
+                                                                }),
+                                                                e.jsxs("div", {
+                                                                    children: [
+                                                                        e.jsx(
+                                                                            t,
+                                                                            {
+                                                                                className:
+                                                                                    "mb-2 block",
+                                                                                children:
+                                                                                    s(
+                                                                                        "Sidebar Style",
+                                                                                    ),
+                                                                            },
+                                                                        ),
+                                                                        e.jsx(
+                                                                            "div",
+                                                                            {
+                                                                                className:
+                                                                                    "grid grid-cols-3 gap-3",
+                                                                                children:
+                                                                                    [
+                                                                                        {
+                                                                                            id: "plain",
+                                                                                            name: "Plain",
+                                                                                        },
+                                                                                        {
+                                                                                            id: "colored",
+                                                                                            name: "Colored",
+                                                                                        },
+                                                                                        {
+                                                                                            id: "gradient",
+                                                                                            name: "Gradient",
+                                                                                        },
+                                                                                    ].map(
+                                                                                        (
+                                                                                            l,
+                                                                                        ) =>
+                                                                                            e.jsxs(
+                                                                                                c,
+                                                                                                {
+                                                                                                    type: "button",
+                                                                                                    variant:
+                                                                                                        o.sidebarStyle ===
+                                                                                                        l.id
+                                                                                                            ? "default"
+                                                                                                            : "outline",
+                                                                                                    className:
+                                                                                                        "h-10 justify-start",
+                                                                                                    onClick:
+                                                                                                        () =>
+                                                                                                            d(
+                                                                                                                "sidebarStyle",
+                                                                                                                l.id,
+                                                                                                            ),
+                                                                                                    children:
+                                                                                                        [
+                                                                                                            l.name,
+                                                                                                            o.sidebarStyle ===
+                                                                                                                l.id &&
+                                                                                                                e.jsx(
+                                                                                                                    f,
+                                                                                                                    {
+                                                                                                                        className:
+                                                                                                                            "h-4 w-4 ml-2",
+                                                                                                                    },
+                                                                                                                ),
+                                                                                                        ],
+                                                                                                },
+                                                                                                l.id,
+                                                                                            ),
+                                                                                    ),
+                                                                            },
+                                                                        ),
+                                                                    ],
+                                                                }),
+                                                                o.sidebarStyle !==
+                                                                    "plain" &&
+                                                                    e.jsxs(
+                                                                        "div",
+                                                                        {
+                                                                            className:
+                                                                                "space-y-2",
+                                                                            children:
+                                                                                [
+                                                                                    e.jsx(
+                                                                                        t,
+                                                                                        {
+                                                                                            htmlFor:
+                                                                                                "sidebarTextColor",
+                                                                                            children:
+                                                                                                s(
+                                                                                                    "Sidebar Text Color",
+                                                                                                ),
+                                                                                        },
+                                                                                    ),
+                                                                                    e.jsxs(
+                                                                                        "div",
+                                                                                        {
+                                                                                            className:
+                                                                                                "flex gap-2",
+                                                                                            children:
+                                                                                                [
+                                                                                                    e.jsxs(
+                                                                                                        "div",
+                                                                                                        {
+                                                                                                            className:
+                                                                                                                "relative shrink-0",
+                                                                                                            children:
+                                                                                                                [
+                                                                                                                    e.jsx(
+                                                                                                                        h,
+                                                                                                                        {
+                                                                                                                            id: "sidebarTextColorPicker",
+                                                                                                                            type: "color",
+                                                                                                                            value: o.sidebarTextColor,
+                                                                                                                            onChange:
+                                                                                                                                (
+                                                                                                                                    l,
+                                                                                                                                ) =>
+                                                                                                                                    d(
+                                                                                                                                        "sidebarTextColor",
+                                                                                                                                        l
+                                                                                                                                            .target
+                                                                                                                                            .value,
+                                                                                                                                    ),
+                                                                                                                            className:
+                                                                                                                                "absolute inset-0 cursor-pointer opacity-0",
+                                                                                                                        },
+                                                                                                                    ),
+                                                                                                                    e.jsx(
+                                                                                                                        "div",
+                                                                                                                        {
+                                                                                                                            className:
+                                                                                                                                "h-10 w-10 cursor-pointer rounded-md border",
+                                                                                                                            style: {
+                                                                                                                                backgroundColor:
+                                                                                                                                    o.sidebarTextColor,
+                                                                                                                            },
+                                                                                                                        },
+                                                                                                                    ),
+                                                                                                                ],
+                                                                                                        },
+                                                                                                    ),
+                                                                                                    e.jsx(
+                                                                                                        h,
+                                                                                                        {
+                                                                                                            id: "sidebarTextColor",
+                                                                                                            name: "sidebarTextColor",
+                                                                                                            type: "text",
+                                                                                                            value: o.sidebarTextColor,
+                                                                                                            onChange:
+                                                                                                                (
+                                                                                                                    l,
+                                                                                                                ) =>
+                                                                                                                    d(
+                                                                                                                        "sidebarTextColor",
+                                                                                                                        l
+                                                                                                                            .target
+                                                                                                                            .value,
+                                                                                                                    ),
+                                                                                                            placeholder:
+                                                                                                                "#ffffff",
+                                                                                                        },
+                                                                                                    ),
+                                                                                                ],
+                                                                                        },
+                                                                                    ),
+                                                                                    e.jsx(
+                                                                                        "div",
+                                                                                        {
+                                                                                            className:
+                                                                                                "flex gap-2",
+                                                                                            children:
+                                                                                                [
+                                                                                                    {
+                                                                                                        name: "White",
+                                                                                                        value: "#ffffff",
+                                                                                                    },
+                                                                                                    {
+                                                                                                        name: "Black",
+                                                                                                        value: "#111827",
+                                                                                                    },
+                                                                                                    {
+                                                                                                        name: "Light Gray",
+                                                                                                        value: "#e5e7eb",
+                                                                                                    },
+                                                                                                ].map(
+                                                                                                    (
+                                                                                                        l,
+                                                                                                    ) =>
+                                                                                                        e.jsxs(
+                                                                                                            c,
+                                                                                                            {
+                                                                                                                type: "button",
+                                                                                                                variant:
+                                                                                                                    o.sidebarTextColor ===
+                                                                                                                    l.value
+                                                                                                                        ? "default"
+                                                                                                                        : "outline",
+                                                                                                                size: "sm",
+                                                                                                                onClick:
+                                                                                                                    () =>
+                                                                                                                        d(
+                                                                                                                            "sidebarTextColor",
+                                                                                                                            l.value,
+                                                                                                                        ),
+                                                                                                                children:
+                                                                                                                    [
+                                                                                                                        e.jsx(
+                                                                                                                            "span",
+                                                                                                                            {
+                                                                                                                                className:
+                                                                                                                                    "mr-2 h-3 w-3 rounded-full border",
+                                                                                                                                style: {
+                                                                                                                                    backgroundColor:
+                                                                                                                                        l.value,
+                                                                                                                                },
+                                                                                                                            },
+                                                                                                                        ),
+                                                                                                                        s(
+                                                                                                                            l.name,
+                                                                                                                        ),
+                                                                                                                    ],
+                                                                                                            },
+                                                                                                            l.value,
+                                                                                                        ),
+                                                                                                ),
+                                                                                        },
+                                                                                    ),
+                                                                                    e.jsx(
+                                                                                        "p",
+                                                                                        {
+                                                                                            className:
+                                                                                                "text-xs text-muted-foreground",
+                                                                                            children:
+                                                                                                s(
+                                                                                                    "Select a readable color for sidebar labels, menu items and icons.",
+                                                                                                ),
+                                                                                        },
+                                                                                    ),
+                                                                                ],
+                                                                        },
+                                                                    ),
+                                                            ],
+                                                        }),
+                                                    ],
+                                                }),
+                                                e.jsxs("div", {
+                                                    className: "space-y-4",
+                                                    children: [
+                                                        e.jsxs("div", {
+                                                            className:
+                                                                "flex items-center",
+                                                            children: [
+                                                                e.jsx(U, {
+                                                                    className:
+                                                                        "h-5 w-5 mr-2 text-muted-foreground",
+                                                                }),
+                                                                e.jsx("h3", {
+                                                                    className:
+                                                                        "text-base font-medium",
+                                                                    children:
+                                                                        s(
+                                                                            "Theme Mode",
+                                                                        ),
+                                                                }),
+                                                            ],
+                                                        }),
+                                                        e.jsx(T, {
+                                                            className: "my-2",
+                                                        }),
+                                                        e.jsx("div", {
+                                                            className:
+                                                                "space-y-2",
+                                                            children: e.jsxs(
+                                                                "div",
+                                                                {
+                                                                    className:
+                                                                        "grid grid-cols-3 gap-2",
+                                                                    children: [
+                                                                        e.jsxs(
+                                                                            c,
+                                                                            {
+                                                                                type: "button",
+                                                                                variant:
+                                                                                    o.themeMode ===
+                                                                                    "light"
+                                                                                        ? "default"
+                                                                                        : "outline",
+                                                                                className:
+                                                                                    "h-10 justify-start",
+                                                                                onClick:
+                                                                                    () =>
+                                                                                        d(
+                                                                                            "themeMode",
+                                                                                            "light",
+                                                                                        ),
+                                                                                children:
+                                                                                    [
+                                                                                        s(
+                                                                                            "Light",
+                                                                                        ),
+                                                                                        o.themeMode ===
+                                                                                            "light" &&
+                                                                                            e.jsx(
+                                                                                                f,
+                                                                                                {
+                                                                                                    className:
+                                                                                                        "h-4 w-4 ml-2",
+                                                                                                },
+                                                                                            ),
+                                                                                    ],
+                                                                            },
+                                                                        ),
+                                                                        e.jsxs(
+                                                                            c,
+                                                                            {
+                                                                                type: "button",
+                                                                                variant:
+                                                                                    o.themeMode ===
+                                                                                    "dark"
+                                                                                        ? "default"
+                                                                                        : "outline",
+                                                                                className:
+                                                                                    "h-10 justify-start",
+                                                                                onClick:
+                                                                                    () =>
+                                                                                        d(
+                                                                                            "themeMode",
+                                                                                            "dark",
+                                                                                        ),
+                                                                                children:
+                                                                                    [
+                                                                                        s(
+                                                                                            "Dark",
+                                                                                        ),
+                                                                                        o.themeMode ===
+                                                                                            "dark" &&
+                                                                                            e.jsx(
+                                                                                                f,
+                                                                                                {
+                                                                                                    className:
+                                                                                                        "h-4 w-4 ml-2",
+                                                                                                },
+                                                                                            ),
+                                                                                    ],
+                                                                            },
+                                                                        ),
+                                                                        e.jsxs(
+                                                                            c,
+                                                                            {
+                                                                                type: "button",
+                                                                                variant:
+                                                                                    o.themeMode ===
+                                                                                    "system"
+                                                                                        ? "default"
+                                                                                        : "outline",
+                                                                                className:
+                                                                                    "h-10 justify-start",
+                                                                                onClick:
+                                                                                    () =>
+                                                                                        d(
+                                                                                            "themeMode",
+                                                                                            "system",
+                                                                                        ),
+                                                                                children:
+                                                                                    [
+                                                                                        s(
+                                                                                            "System",
+                                                                                        ),
+                                                                                        o.themeMode ===
+                                                                                            "system" &&
+                                                                                            e.jsx(
+                                                                                                f,
+                                                                                                {
+                                                                                                    className:
+                                                                                                        "h-4 w-4 ml-2",
+                                                                                                },
+                                                                                            ),
+                                                                                    ],
+                                                                            },
+                                                                        ),
+                                                                    ],
+                                                                },
+                                                            ),
+                                                        }),
+                                                    ],
+                                                }),
+                                            ],
+                                        }),
+                                    }),
+                            ],
+                        }),
+                        e.jsx("div", {
+                            className: "lg:col-span-1",
+                            children: e.jsx("div", {
+                                className: "sticky top-20 space-y-6",
+                                children: e.jsxs("div", {
+                                    className: "border rounded-md p-4",
+                                    children: [
+                                        e.jsxs("div", {
+                                            className:
+                                                "flex items-center gap-2 mb-4",
+                                            children: [
+                                                e.jsx(k, {
+                                                    className: "h-4 w-4",
+                                                }),
+                                                e.jsx("h3", {
+                                                    className: "font-medium",
+                                                    children: s("Live Preview"),
+                                                }),
+                                            ],
+                                        }),
+                                        e.jsx(I, {
+                                            logoDark: o.logo_dark,
+                                            logoLight: o.logo_light,
+                                            themeColor: o.themeColor,
+                                            customColor: o.customColor,
+                                            sidebarVariant: o.sidebarVariant,
+                                            sidebarStyle: o.sidebarStyle,
+                                            sidebarTextColor:
+                                                o.sidebarTextColor,
+                                            themeMode: o.themeMode,
+                                        }),
+                                        e.jsxs("div", {
+                                            className: "mt-4 pt-4 border-t",
+                                            children: [
+                                                e.jsxs("div", {
+                                                    className:
+                                                        "text-xs mb-2 text-muted-foreground",
+                                                    children: [
+                                                        s("Title:"),
+                                                        " ",
+                                                        e.jsx("span", {
+                                                            className:
+                                                                "font-medium text-foreground",
+                                                            children:
+                                                                o.titleText,
+                                                        }),
+                                                    ],
+                                                }),
+                                                e.jsxs("div", {
+                                                    className:
+                                                        "text-xs text-muted-foreground",
+                                                    children: [
+                                                        s("Footer:"),
+                                                        " ",
+                                                        e.jsx("span", {
+                                                            className:
+                                                                "font-medium text-foreground",
+                                                            children:
+                                                                o.footerText,
+                                                        }),
+                                                    ],
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            }),
+                        }),
+                    ],
+                }),
+            }),
+        ],
+    });
+}
+export { ve as default };

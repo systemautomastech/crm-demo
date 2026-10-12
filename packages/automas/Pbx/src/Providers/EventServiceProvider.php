@@ -2,11 +2,9 @@
 
 namespace Automas\Pbx\Providers;
 
-use App\Events\CompanyMenuEvent;
 use App\Events\DefaultData;
 use App\Events\GivePermissionToRole;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as Provider;
-use Automas\Pbx\Listeners\CompanyMenuListener;
 use Automas\Pbx\Listeners\DataDefault;
 use Automas\Pbx\Listeners\GiveRoleToPermission;
 

@@ -17,7 +17,6 @@ interface CallerExtra {
 
     extension?: unknown
     caller_id?: unknown
-    employee_id?: unknown
     department?: unknown
     designation?: unknown
     branch?: unknown
@@ -143,10 +142,6 @@ export default function IncomingCallerDetails({
         extra.extension,
     )
 
-    const employeeId = getTextValue(
-        extra.employee_id,
-    )
-
     const department = getTextValue(
         extra.department,
     )
@@ -201,7 +196,6 @@ export default function IncomingCallerDetails({
         (isUser && (
             userType ||
             extension ||
-            employeeId ||
             designation ||
             department ||
             branch
@@ -257,13 +251,6 @@ export default function IncomingCallerDetails({
                     <DetailItem
                         label="Extension"
                         value={extension}
-                    />
-                )}
-
-                {isUser && employeeId && (
-                    <DetailItem
-                        label="Employee ID"
-                        value={employeeId}
                     />
                 )}
 

@@ -25,7 +25,6 @@ export interface CallerExtra {
 
   extension?: string
   caller_id?: string
-  employee_id?: string
   department?: string
   designation?: string
   branch?: string

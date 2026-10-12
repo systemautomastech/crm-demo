@@ -1,7 +1,7 @@
 {
     "name": "Pbx",
     "alias": "Call Center",
-    "description": "This module provides call center functionalities for the AutomasERP system, enabling users to manage and operate their call center operations efficiently.",
+    "description": "This module provides call center functionalities for the AutomasCRM system, enabling users to manage and operate their call center operations efficiently.",
     "keywords": [],
     "priority": 41,
     "version": 1.1,

@@ -1,6 +1,6 @@
 {
     "name": "automas/pbx",
-    "description": "This package provides a call center module for the AutomasERP system, allowing users to manage and operate their call center operations efficiently.",
+    "description": "This package provides a call center module for the AutomasCRM system, allowing users to manage and operate their call center operations efficiently.",
     "type": "library",
     "license": "MIT",
     "require": {},
