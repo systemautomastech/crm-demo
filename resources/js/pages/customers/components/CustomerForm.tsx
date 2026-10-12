@@ -7,10 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import InputError from "@/components/ui/input-error";
 import { PhoneInputComponent } from "@/components/ui/phone-input";
-import { Building2, Store } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 
 interface Address {
     name: string;
@@ -22,68 +21,55 @@ interface Address {
     zip_code: string;
 }
 
-interface ClientVendorModalProps {
-    type: 'client' | 'vendor';
+interface Props {
+    type?: string;
     mode: 'create' | 'edit';
     data?: any;
     roles?: Record<string, string>;
     onSuccess: () => void;
 }
 
-export default function ClientVendorModal({
-    type,
-    mode,
-    data: initialData,
-    roles = {},
-    onSuccess
-}: ClientVendorModalProps) {
+export default function CustomerForm({ mode, data: initialData, onSuccess }: Props) {
     const { t } = useTranslation();
-    const isClient = type === 'client';
     const isEdit = mode === 'edit';
-    const roleKeys = Object.keys(roles || {});
-    const defaultRole = roleKeys.length === 1 ? roleKeys[0] : '';
-
-    const initialRoleId = initialData?.roles && initialData.roles.length > 0
-        ? String(initialData.roles[0].id)
-        : (Object.entries(roles).find(([id, label]) => label.toLowerCase() === initialData?.type?.toLowerCase() || id === initialData?.type)?.[0] || defaultRole);
 
     // Initial billing address resolution
     const initialBilling: Address = {
-        name: initialData?.billing_address?.name || initialData?.name || initialData?.company_name || '',
-        address_line_1: initialData?.billing_address?.address_line_1 || initialData?.billing_address?.address || initialData?.address || '',
+        name: initialData?.billing_address?.name || initialData?.customer_name || initialData?.company_name || '',
+        address_line_1: initialData?.billing_address?.address_line_1 || initialData?.billing_address?.address || '',
         address_line_2: initialData?.billing_address?.address_line_2 || '',
-        city: initialData?.billing_address?.city || initialData?.city || '',
-        state: initialData?.billing_address?.state || initialData?.state || '',
-        country: initialData?.billing_address?.country || initialData?.country || '',
-        zip_code: initialData?.billing_address?.zip_code || initialData?.zip_code || '',
+        city: initialData?.billing_address?.city || '',
+        state: initialData?.billing_address?.state || '',
+        country: initialData?.billing_address?.country || '',
+        zip_code: initialData?.billing_address?.zip_code || '',
     };
 
     // Initial shipping address resolution
     const initialShipping: Address = {
-        name: initialData?.shipping_address?.name || initialData?.name || initialData?.company_name || '',
-        address_line_1: initialData?.shipping_address?.address_line_1 || initialData?.shipping_address?.address || initialData?.address || '',
+        name: initialData?.shipping_address?.name || initialData?.customer_name || initialData?.company_name || '',
+        address_line_1: initialData?.shipping_address?.address_line_1 || initialData?.shipping_address?.address || '',
         address_line_2: initialData?.shipping_address?.address_line_2 || '',
-        city: initialData?.shipping_address?.city || initialData?.city || '',
-        state: initialData?.shipping_address?.state || initialData?.state || '',
-        country: initialData?.shipping_address?.country || initialData?.country || '',
-        zip_code: initialData?.shipping_address?.zip_code || initialData?.zip_code || '',
+        city: initialData?.shipping_address?.city || '',
+        state: initialData?.shipping_address?.state || '',
+        country: initialData?.shipping_address?.country || '',
+        zip_code: initialData?.shipping_address?.zip_code || '',
     };
 
     const { data, setData, post, put, processing, errors } = useForm({
-        name: initialData?.name || initialData?.company_name || '',
-        email: initialData?.email || initialData?.contact_person_email || '',
-        mobile_no: initialData?.mobile_no || initialData?.contact_person_mobile || '',
-        password: '',
-        password_confirmation: '',
-        type: initialRoleId || defaultRole,
-        is_enable_login: initialData ? Boolean(initialData.is_enable_login) : true,
-        // Detailed Address & Business Fields
+        customer_name: initialData?.customer_name || initialData?.company_name || initialData?.name || '',
+        customer_email: initialData?.customer_email || initialData?.email || initialData?.contact_person_email || '',
+        customer_phone: initialData?.customer_phone || initialData?.mobile_no || initialData?.contact_person_mobile || '',
+        contact_person_name: initialData?.contact_person_name || '',
+        contact_person_email: initialData?.contact_person_email || '',
+        contact_person_mobile: initialData?.contact_person_mobile || '',
         tax_number: initialData?.tax_number || '',
         payment_terms: initialData?.payment_terms || '',
         billing_address: initialBilling,
         same_as_billing: initialData ? Boolean(initialData.same_as_billing) : true,
         shipping_address: initialShipping,
+        other_informations: initialData?.other_informations || '',
         notes: initialData?.notes || '',
+        is_active: initialData ? Boolean(initialData.is_active !== false && initialData.is_active !== 0) : true,
     });
 
     const errs = errors as Record<string, string>;
@@ -91,13 +77,13 @@ export default function ClientVendorModal({
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         if (isEdit && initialData?.id) {
-            put(route('users.update', initialData.id), {
+            put(route('customers.update', initialData.id), {
                 onSuccess: () => {
                     onSuccess();
                 }
             });
         } else {
-            post(route('users.store'), {
+            post(route('customers.store'), {
                 onSuccess: () => {
                     onSuccess();
                 }
@@ -105,15 +91,13 @@ export default function ClientVendorModal({
         }
     };
 
-    const title = isEdit
-        ? (isClient ? t('Edit Client') : t('Edit Vendor'))
-        : (isClient ? t('Create Client') : t('Create Vendor'));
+    const title = isEdit ? t('Edit Customer') : t('Create Customer');
 
     return (
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-lg">
-                    {isClient ? <Building2 className="h-5 w-5 text-primary" /> : <Store className="h-5 w-5 text-primary" />}
+                    <Building2 className="h-5 w-5 text-primary" />
                     <span>{title}</span>
                 </DialogTitle>
             </DialogHeader>
@@ -122,17 +106,17 @@ export default function ClientVendorModal({
                 {/* Basic Information */}
                 <div className="space-y-4">
                     <div>
-                        <Label htmlFor="client_vendor_name" required>
-                            {isClient ? t('Client Name') : t('Vendor / Company Name')}
+                        <Label htmlFor="customer_name" required>
+                            {t('Customer / Company Name')}
                         </Label>
                         <Input
-                            id="client_vendor_name"
-                            value={data.name}
+                            id="customer_name"
+                            value={data.customer_name}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 setData(prev => ({
                                     ...prev,
-                                    name: val,
+                                    customer_name: val,
                                     billing_address: {
                                         ...prev.billing_address,
                                         name: prev.billing_address.name || val
@@ -143,38 +127,83 @@ export default function ClientVendorModal({
                                     }
                                 }));
                             }}
-                            placeholder={isClient ? t('Enter client or company name') : t('Enter vendor or company name')}
+                            placeholder={t('Enter customer or company name')}
                             required
                         />
-                        <InputError message={errors.name} />
+                        <InputError message={errors.customer_name} />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <Label htmlFor="client_vendor_email" required>{t('Email Address')}</Label>
+                            <Label htmlFor="customer_email" required>{t('Customer Email')}</Label>
                             <Input
-                                id="client_vendor_email"
+                                id="customer_email"
                                 type="email"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
-                                placeholder={t('Enter email address')}
+                                value={data.customer_email}
+                                onChange={(e) => setData('customer_email', e.target.value)}
+                                placeholder={t('Enter customer email')}
                                 required
                             />
-                            <InputError message={errors.email} />
+                            <InputError message={errors.customer_email} />
                         </div>
 
                         <div>
                             <PhoneInputComponent
-                                label={t('Phone Number')}
-                                value={data.mobile_no}
-                                onChange={(value) => setData('mobile_no', value)}
+                                id="customer_phone"
+                                label={t('Customer Phone')}
+                                value={data.customer_phone}
+                                onChange={(value) => setData('customer_phone', value)}
                                 placeholder="+1234567890"
-                                error={errors.mobile_no}
+                                error={errors.customer_phone}
+                                required
                             />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Contact Person Information */}
+                    <div className="border-t pt-4 space-y-4">
+                        <h3 className="text-base font-semibold text-foreground">
+                            {t('Contact Person Details')}
+                        </h3>
+
+                        <div>
+                            <Label htmlFor="contact_person_name">{t('Contact Person Name')}</Label>
+                            <Input
+                                id="contact_person_name"
+                                value={data.contact_person_name}
+                                onChange={(e) => setData('contact_person_name', e.target.value)}
+                                placeholder={t('Enter contact person name')}
+                            />
+                            <InputError message={errors.contact_person_name} />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="contact_person_email">{t('Contact Person Email')}</Label>
+                                <Input
+                                    id="contact_person_email"
+                                    type="email"
+                                    value={data.contact_person_email}
+                                    onChange={(e) => setData('contact_person_email', e.target.value)}
+                                    placeholder={t('Enter contact person email')}
+                                />
+                                <InputError message={errors.contact_person_email} />
+                            </div>
+
+                            <div>
+                                <PhoneInputComponent
+                                    label={t('Contact Person Mobile')}
+                                    value={data.contact_person_mobile}
+                                    onChange={(value) => setData('contact_person_mobile', value)}
+                                    placeholder="+1234567890"
+                                    error={errors.contact_person_mobile}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Tax & Payment Terms */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
                         <div>
                             <Label htmlFor="tax_number">{t('Tax Number')}</Label>
                             <Input
@@ -199,87 +228,10 @@ export default function ClientVendorModal({
                     </div>
                 </div>
 
-                {/* Password fields only on Create mode */}
-                {!isEdit && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
-                        <div>
-                            <Label htmlFor="client_vendor_password" required>{t('Password')}</Label>
-                            <Input
-                                id="client_vendor_password"
-                                type="password"
-                                value={data.password}
-                                onChange={(e) => setData('password', e.target.value)}
-                                placeholder={t('Enter password')}
-                                required
-                            />
-                            <InputError message={errors.password} />
-                        </div>
-
-                        <div>
-                            <Label htmlFor="client_vendor_password_confirmation" required>{t('Confirm Password')}</Label>
-                            <Input
-                                id="client_vendor_password_confirmation"
-                                type="password"
-                                value={data.password_confirmation}
-                                onChange={(e) => setData('password_confirmation', e.target.value)}
-                                placeholder={t('Confirm password')}
-                                required
-                            />
-                            <InputError message={errors.password_confirmation} />
-                        </div>
-                    </div>
-                )}
-
-                {/* Role & Status */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
-                    <div>
-                        <Label htmlFor="client_vendor_type">{t('Role')}</Label>
-                        {roleKeys.length === 1 ? (
-                            <Input
-                                id="client_vendor_type"
-                                value={roles[roleKeys[0]]}
-                                disabled
-                                className="border-input bg-muted/30 text-foreground opacity-100 disabled:opacity-100 cursor-not-allowed"
-                            />
-                        ) : (
-                            <Select value={data.type} onValueChange={(val) => setData('type', val)}>
-                                <SelectTrigger id="client_vendor_type">
-                                    <SelectValue placeholder={t('Select Role')} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Object.entries(roles).map(([id, label]) => (
-                                        <SelectItem key={id} value={String(id)}>
-                                            {label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        )}
-                        <InputError message={errors.type} />
-                    </div>
-
-                    <div>
-                        <Label htmlFor="client_vendor_is_enable_login">{t('Login Status')}</Label>
-                        <Select
-                            value={data.is_enable_login ? "1" : "0"}
-                            onValueChange={(value) => setData('is_enable_login', value === "1")}
-                        >
-                            <SelectTrigger id="client_vendor_is_enable_login">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="1">{t('Enabled')}</SelectItem>
-                                <SelectItem value="0">{t('Disabled')}</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.is_enable_login} />
-                    </div>
-                </div>
-
                 {/* Billing Address Section */}
                 <div className="space-y-4 border-t pt-4">
-                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-                        <span>{t('Billing Address')}</span>
+                    <h3 className="text-base font-semibold text-foreground">
+                        {t('Billing Address')}
                     </h3>
 
                     <div>
@@ -441,8 +393,8 @@ export default function ClientVendorModal({
                 {/* Shipping Address Section (if not same as billing) */}
                 {!data.same_as_billing && (
                     <div className="space-y-4 border-t pt-4">
-                        <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-                            <span>{t('Shipping Address')}</span>
+                        <h3 className="text-base font-semibold text-foreground">
+                            {t('Shipping Address')}
                         </h3>
 
                         <div>
@@ -451,7 +403,7 @@ export default function ClientVendorModal({
                                 id="shipping_name"
                                 value={data.shipping_address.name}
                                 onChange={(e) => setData('shipping_address', { ...data.shipping_address, name: e.target.value })}
-                                placeholder={t('Enter shipping recipient name')}
+                                placeholder={t('Enter shipping name')}
                             />
                             <InputError message={errs['shipping_address.name']} />
                         </div>
@@ -488,7 +440,7 @@ export default function ClientVendorModal({
                                     value={data.shipping_address.city}
                                     onChange={(e) => setData('shipping_address', { ...data.shipping_address, city: e.target.value })}
                                     placeholder={t('Enter city')}
-                                    required={!data.same_as_billing}
+                                    required
                                 />
                                 <InputError message={errs['shipping_address.city']} />
                             </div>
@@ -500,7 +452,7 @@ export default function ClientVendorModal({
                                     value={data.shipping_address.state}
                                     onChange={(e) => setData('shipping_address', { ...data.shipping_address, state: e.target.value })}
                                     placeholder={t('Enter state / province')}
-                                    required={!data.same_as_billing}
+                                    required
                                 />
                                 <InputError message={errs['shipping_address.state']} />
                             </div>
@@ -514,7 +466,7 @@ export default function ClientVendorModal({
                                     value={data.shipping_address.country}
                                     onChange={(e) => setData('shipping_address', { ...data.shipping_address, country: e.target.value })}
                                     placeholder={t('Enter country')}
-                                    required={!data.same_as_billing}
+                                    required
                                 />
                                 <InputError message={errs['shipping_address.country']} />
                             </div>
@@ -526,7 +478,7 @@ export default function ClientVendorModal({
                                     value={data.shipping_address.zip_code}
                                     onChange={(e) => setData('shipping_address', { ...data.shipping_address, zip_code: e.target.value })}
                                     placeholder={t('Enter zip / postal code')}
-                                    required={!data.same_as_billing}
+                                    required
                                 />
                                 <InputError message={errs['shipping_address.zip_code']} />
                             </div>
@@ -534,25 +486,51 @@ export default function ClientVendorModal({
                     </div>
                 )}
 
-                {/* Notes */}
-                <div className="border-t pt-4">
-                    <Label htmlFor="notes">{t('Notes')}</Label>
-                    <Textarea
-                        id="notes"
-                        value={data.notes}
-                        onChange={(e) => setData('notes', e.target.value)}
-                        placeholder={t('Enter any notes or special instructions...')}
-                        rows={3}
-                    />
-                    <InputError message={errors.notes} />
+                {/* Other Information & Notes */}
+                <div className="border-t pt-4 space-y-4">
+                    <div>
+                        <Label htmlFor="other_informations">{t('Other Information')}</Label>
+                        <Textarea
+                            id="other_informations"
+                            value={data.other_informations}
+                            onChange={(e) => setData('other_informations', e.target.value)}
+                            placeholder={t('Enter any other relevant details...')}
+                            rows={3}
+                        />
+                        <InputError message={errors.other_informations} />
+                    </div>
+
+                    <div>
+                        <Label htmlFor="notes">{t('Notes')}</Label>
+                        <Textarea
+                            id="notes"
+                            value={data.notes}
+                            onChange={(e) => setData('notes', e.target.value)}
+                            placeholder={t('Enter any notes or special instructions...')}
+                            rows={3}
+                        />
+                        <InputError message={errors.notes} />
+                    </div>
+
+                    {/* Customer Status */}
+                    <div className="flex items-center space-x-2 pt-2">
+                        <Checkbox
+                            id="is_active"
+                            checked={data.is_active}
+                            onCheckedChange={(checked) => setData('is_active', !!checked)}
+                        />
+                        <Label htmlFor="is_active" className="cursor-pointer font-normal">
+                            {t('Active')}
+                        </Label>
+                    </div>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-4 border-t">
                     <Button type="button" variant="outline" onClick={onSuccess}>
                         {t('Cancel')}
                     </Button>
-                    <Button type="submit" disabled={processing}>
-                        {processing ? (isEdit ? t('Updating...') : t('Creating...')) : (isEdit ? t('Update') : t('Create'))}
+                    <Button type="submit" isLoading={processing}>
+                        {processing ? (isEdit ? t('Updating') : t('Creating')) : (isEdit ? t('Update') : t('Create'))}
                     </Button>
                 </div>
             </form>
