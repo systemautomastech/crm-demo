@@ -10,6 +10,7 @@ use Automas\Lead\Http\Controllers\LabelController;
 use Automas\Lead\Http\Controllers\DealStageController;
 use Automas\Lead\Http\Controllers\LeadStageController;
 use Automas\Lead\Http\Controllers\PipelineController;
+use Automas\Lead\Http\Controllers\OrganizationTypeController;
 use Illuminate\Support\Facades\Route;
 use Automas\Lead\Http\Controllers\DashboardController;
 use Automas\Lead\Http\Controllers\LeadImportController;
@@ -17,6 +18,7 @@ use Automas\Lead\Http\Controllers\ReportController;
 
 Route::middleware(['web', 'auth', 'verified', 'PlanModuleCheck:Lead'])->group(function () {
     Route::get('/crm/dashboard', [DashboardController::class, 'index'])->name('lead.index');
+    Route::get('/crm/dashboard/category-leaderboard-data', [DashboardController::class, 'getCategoryLeaderboardData'])->name('lead.category-leaderboard-data');
 
     Route::resource('crm/pipelines', PipelineController::class)->names('lead.pipelines');
     Route::post('crm/pipelines/{pipeline}/set-default', [PipelineController::class, 'setDefault'])->name('lead.pipelines.set-default');
@@ -35,6 +37,8 @@ Route::middleware(['web', 'auth', 'verified', 'PlanModuleCheck:Lead'])->group(fu
         Route::get('/', [DealStageController::class, 'index'])->name('index');
         Route::post('/', [DealStageController::class, 'store'])->name('store');
         Route::post('/update-order', [DealStageController::class, 'updateOrder'])->name('update-order');
+        Route::post('/{dealstage}/set-won', [DealStageController::class, 'setWon'])->name('set-won');
+        Route::post('/{dealstage}/set-lost', [DealStageController::class, 'setLost'])->name('set-lost');
         Route::put('/{dealstage}', [DealStageController::class, 'update'])->name('update');
         Route::delete('/{dealstage}', [DealStageController::class, 'destroy'])->name('destroy');
     });
@@ -58,6 +62,13 @@ Route::middleware(['web', 'auth', 'verified', 'PlanModuleCheck:Lead'])->group(fu
         Route::post('/', [LeadSubjectController::class, 'store'])->name('store');
         Route::put('/{subject}', [LeadSubjectController::class, 'update'])->name('update');
         Route::delete('/{subject}', [LeadSubjectController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('crm/organization-types')->name('lead.organization-types.')->group(function () {
+        Route::get('/', [OrganizationTypeController::class, 'index'])->name('index');
+        Route::post('/', [OrganizationTypeController::class, 'store'])->name('store');
+        Route::put('/{organizationType}', [OrganizationTypeController::class, 'update'])->name('update');
+        Route::delete('/{organizationType}', [OrganizationTypeController::class, 'destroy'])->name('destroy');
     });
 
     Route::get('crm/leads/existing-clients', [LeadController::class, 'getExistingClients'])->name('lead.leads.existing-clients');

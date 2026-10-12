@@ -66,6 +66,14 @@ class PermissionTableSeeder extends Seeder
             ['name' => 'edit-subjects', 'module' => 'subjects', 'label' => 'Edit Subjects'],
             ['name' => 'delete-subjects', 'module' => 'subjects', 'label' => 'Delete Subjects'],
 
+            // Organization Type management
+            ['name' => 'manage-organization-types', 'module' => 'organization-types', 'label' => 'Manage Organization Types'],
+            ['name' => 'manage-any-organization-types', 'module' => 'organization-types', 'label' => 'Manage All Organization Types'],
+            ['name' => 'manage-own-organization-types', 'module' => 'organization-types', 'label' => 'Manage Own Organization Types'],
+            ['name' => 'create-organization-types', 'module' => 'organization-types', 'label' => 'Create Organization Types'],
+            ['name' => 'edit-organization-types', 'module' => 'organization-types', 'label' => 'Edit Organization Types'],
+            ['name' => 'delete-organization-types', 'module' => 'organization-types', 'label' => 'Delete Organization Types'],
+
             // Lead management
             ['name' => 'manage-leads', 'module' => 'leads', 'label' => 'Manage Leads'],
             ['name' => 'manage-any-leads', 'module' => 'leads', 'label' => 'Manage All Leads'],

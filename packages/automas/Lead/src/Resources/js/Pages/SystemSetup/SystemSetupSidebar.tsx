@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from '@/lib/utils';
-import { GitBranch, Layers, Target, Tag, Globe, List } from "lucide-react";
+import { GitBranch, Layers, Target, Tag, Globe, List, Building2 } from "lucide-react";
 
 interface SidebarItem {
     key: string;
@@ -65,6 +65,13 @@ export default function SystemSetupSidebar({ activeItem, onSectionChange }: Syst
             icon: List,
             route: 'lead.subjects.index',
             permission: 'manage-subjects'
+        },
+        {
+            key: 'organization-types',
+            label: t('Organization Types'),
+            icon: Building2,
+            route: 'lead.organization-types.index',
+            permission: 'manage-organization-types'
         },
     ];
 

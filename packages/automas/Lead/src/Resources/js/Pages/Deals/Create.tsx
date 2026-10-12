@@ -8,16 +8,19 @@ import { Input } from '@/components/ui/input';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { PhoneInputComponent } from '@/components/ui/phone-input';
 import { MultiSelectEnhanced } from '@/components/ui/multi-select-enhanced';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreateDealProps, CreateDealFormData } from './types';
 import { usePage } from '@inertiajs/react';
 import { useFormFields } from '@/hooks/useFormFields';
 
 export default function Create({ onSuccess }: CreateDealProps) {
-    const { users } = usePage<any>().props;
+    const { users, organizationTypes } = usePage<any>().props;
+    const orgTypes = Array.isArray(organizationTypes) ? organizationTypes : [];
     const { t } = useTranslation();
-    const { data, setData, post, processing, errors } = useForm<CreateDealFormData>({
+    const { data, setData, post, processing, errors } = useForm<any>({
         name: '',
         price: '0',
+        organization_type: '',
         phone: '',
         clients: [],
     });
@@ -64,6 +67,23 @@ export default function Create({ onSuccess }: CreateDealProps) {
                         error={errors.price}
                         required
                     />
+                </div>
+
+                <div>
+                    <Label htmlFor="organization_type" required>{t('Organization Type')}</Label>
+                    <Select value={data.organization_type} onValueChange={(value) => setData('organization_type', value)}>
+                        <SelectTrigger id="organization_type">
+                            <SelectValue placeholder={t('Select Organization Type')} />
+                        </SelectTrigger>
+                        <SelectContent searchable>
+                            {orgTypes.map((item: any) => (
+                                <SelectItem key={item.id ?? item.name ?? item} value={item.name ?? item}>
+                                    {item.name ?? item}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <InputError message={errors.organization_type} />
                 </div>
 
                 <div>

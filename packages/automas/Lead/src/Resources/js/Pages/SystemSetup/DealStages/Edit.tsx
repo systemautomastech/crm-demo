@@ -11,10 +11,15 @@ import { EditDealStageProps, DealStageFormData } from './types';
 
 export default function Edit({ dealstage, onSuccess, pipelines }: EditDealStageProps) {
     const { t } = useTranslation();
+    const initialWinLossType: 'standard' | 'won' | 'lost' = dealstage.is_won
+        ? 'won'
+        : (dealstage.is_lost ? 'lost' : 'standard');
+
     const { data, setData, put, processing, errors } = useForm<DealStageFormData>({
         name: dealstage.name ?? '',
         order: dealstage.order ?? '',
         pipeline_id: dealstage.pipeline_id?.toString() || '',
+        win_loss_type: initialWinLossType,
     });
 
     const submit = (e: React.FormEvent) => {
@@ -60,6 +65,27 @@ export default function Edit({ dealstage, onSuccess, pipelines }: EditDealStageP
                         </SelectContent>
                     </Select>
                     <InputError message={errors.pipeline_id} />
+                </div>
+
+                <div>
+                    <Label htmlFor="win_loss_type">{t('Stage Win/Loss Type')}</Label>
+                    <Select
+                        value={data.win_loss_type || 'standard'}
+                        onValueChange={(value: 'standard' | 'won' | 'lost') => setData('win_loss_type', value)}
+                    >
+                        <SelectTrigger id="win_loss_type">
+                            <SelectValue placeholder={t('Select Win/Loss Status')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="standard">{t('Standard Stage')}</SelectItem>
+                            <SelectItem value="won">{t('Won Stage')}</SelectItem>
+                            <SelectItem value="lost">{t('Lost Stage')}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {t('Each pipeline can have at most one Won and one Lost stage.')}
+                    </p>
+                    <InputError message={errors.win_loss_type} />
                 </div>
 
                 <div className="flex justify-end gap-2">

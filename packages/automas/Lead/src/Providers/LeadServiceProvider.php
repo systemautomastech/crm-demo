@@ -26,6 +26,7 @@ class LeadServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \Automas\Lead\Console\Commands\CleanExpiredLeadImportFiles::class,
+                \Automas\Lead\Console\Commands\ProcessLeadImportQueue::class,
             ]);
         }
 
@@ -40,6 +41,10 @@ class LeadServiceProvider extends ServiceProvider
             $schedule->command('lead-import:clean-expired-files')
                 ->daily()
                 ->withoutOverlapping();
+
+            $schedule->command('lead-import:process-queue')
+                ->everyMinute()
+                ->withoutOverlapping(10);
         });
     }
 

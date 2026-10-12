@@ -6,6 +6,7 @@ use App\Models\EmailTemplate;
 use Automas\Lead\Models\Deal;
 use Automas\Lead\Http\Requests\StoreDealRequest;
 use Automas\Lead\Http\Requests\UpdateDealRequest;
+use Automas\Lead\Models\OrganizationType;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -77,7 +78,25 @@ class DealController extends Controller
                 ->when(request('name'), fn($q) => $q->where('name', 'like', '%' . request('name') . '%'))
                 ->when(request('pipeline_id') && request('pipeline_id') !== '' && request('pipeline_id') !== 'all', fn($q) => $q->where('pipeline_id', request('pipeline_id')))
                 ->when(request('stage_id') && request('stage_id') !== '', fn($q) => $q->where('stage_id', request('stage_id')))
-                ->when(request('status') !== null && request('status') !== '', fn($q) => $q->where('status', request('status')))
+                ->when(request('status') !== null && request('status') !== '', function ($q) {
+                    $st = request('status');
+                    if ($st === 'active' || $st === 'open') {
+                        $q->whereNotIn('status', ['Won', 'Loss']);
+                    } else {
+                        $q->where('status', $st);
+                    }
+                })
+                ->when(request('created_from'), fn($q) => $q->whereDate('created_at', '>=', request('created_from')))
+                ->when(request('created_to'), fn($q) => $q->whereDate('created_at', '<=', request('created_to')))
+                ->when(request('filter') === 'inactive' || request('inactive') === '1', function ($q) {
+                    $q->whereNotIn('status', ['Won', 'Loss'])->where('updated_at', '<', now()->subDays(14));
+                })
+                ->when(request('filter') === 'overdue_followup' || request('overdue') === '1', function ($q) {
+                    $q->whereHas('tasks', fn($taskQ) => $taskQ->where('date', '<', today())->where('status', 0));
+                })
+                ->when(request('filter') === 'followup_today' || request('followup_today') === '1', function ($q) {
+                    $q->whereHas('tasks', fn($taskQ) => $taskQ->whereDate('date', today()));
+                })
                 ->when(request('sort'), fn($q) => $q->orderBy(request('sort'), request('direction', 'asc')), fn($q) => $q->latest())
                 ->paginate(request('per_page', 10))
                 ->withQueryString();
@@ -92,6 +111,7 @@ class DealController extends Controller
             $sources = Source::where('created_by', creatorId())->get(['id', 'name']);
             $products = Module_is_active('ProductService') ? ProductServiceItem::where('created_by', creatorId())->get(['id', 'name']) : [];
             $labels = Label::with('pipeline')->where('created_by', creatorId())->select('id', 'name', 'color', 'pipeline_id')->get();
+            $organizationTypes = OrganizationType::where('created_by', creatorId())->get(['id', 'name']);
 
             return Inertia::render('Lead/Deals/Index', [
                 'deals' => $deals,
@@ -101,6 +121,7 @@ class DealController extends Controller
                 'sources' => $sources,
                 'products' => $products,
                 'labels' => $labels,
+                'organizationTypes' => $organizationTypes,
                 'currentPipelineId' => $activePipelineId,
                 'pbxModuleActive' => module_is_active('Pbx'),
             ]);
@@ -135,7 +156,17 @@ class DealController extends Controller
                 $deal->pipeline_id = $pipeline->id;
                 $deal->stage_id    = $stage->id;
                 $deal->phone       = $validated['phone'];
-                $deal->status      = 'Active';
+                $deal->organization_type = $validated['organization_type'] ?? null;
+                if ($stage->is_won) {
+                    $deal->status = 'Won';
+                    $deal->is_active = false;
+                } elseif ($stage->is_lost) {
+                    $deal->status = 'Loss';
+                    $deal->is_active = false;
+                } else {
+                    $deal->status = 'Active';
+                    $deal->is_active = true;
+                }
                 $deal->creator_id  = Auth::id();
                 $deal->created_by  = creatorId();
                 $deal->save();
@@ -257,7 +288,18 @@ class DealController extends Controller
             $deal->price       = $validated['price'];
             $deal->pipeline_id = $validated['pipeline_id'];
             $deal->stage_id    = $validated['stage_id'];
+            $stage             = DealStage::find($validated['stage_id']);
+            if ($stage) {
+                if ($stage->is_won) {
+                    $deal->status = 'Won';
+                } elseif ($stage->is_lost) {
+                    $deal->status = 'Loss';
+                } else {
+                    $deal->status = 'Active';
+                }
+            }
             $deal->phone       = $validated['phone'];
+            $deal->organization_type = $validated['organization_type'] ?? $deal->organization_type;
             $deal->sources     = isset($validated['sources']) && !empty($validated['sources']) ? array_filter($validated['sources']) : null;
             $deal->products    = isset($validated['products']) && !empty($validated['products']) ? array_filter($validated['products']) : null;
             $deal->notes       = $validated['notes'] ?? '';
@@ -770,11 +812,23 @@ class DealController extends Controller
                         }
                     }
                 }
+                $targetStage = DealStage::find($post['stage_id']);
                 foreach ($post['order'] as $key => $item) {
                     $deal           = Deal::find($item);
-                    $deal->order    = $key;
-                    $deal->stage_id = $post['stage_id'];
-                    $deal->save();
+                    if ($deal) {
+                        $deal->order    = $key;
+                        $deal->stage_id = $post['stage_id'];
+                        if ($targetStage) {
+                            if ($targetStage->is_won) {
+                                $deal->status = 'Won';
+                            } elseif ($targetStage->is_lost) {
+                                $deal->status = 'Loss';
+                            } else {
+                                $deal->status = 'Active';
+                            }
+                        }
+                        $deal->save();
+                    }
                 }
                 DealMoved::dispatch($request, $deal, $oldStage);
                 return back()->with('success', __('The deal moved successfully.'));

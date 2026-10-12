@@ -40,6 +40,7 @@ export interface Deal {
     price: number;
     pipeline_id: number;
     stage_id: number;
+    organization_type?: string;
     group_id?: number;
     sources?: string[];
     products?: string[];
@@ -64,6 +65,7 @@ export interface Deal {
 export interface CreateDealFormData {
     name: string;
     price: string;
+    organization_type: string;
     pipeline_id: string;
     stage_id: string;
     group_id: string;
@@ -77,11 +79,13 @@ export interface CreateDealFormData {
     is_active: boolean;
     creator_id: string;
     client_id: string[];
+    clients?: string[];
 }
 
 export interface EditDealFormData {
     name: string;
     price: string;
+    organization_type: string;
     pipeline_id: string;
     stage_id: string;
     group_id: string;
@@ -94,6 +98,7 @@ export interface EditDealFormData {
     status: string;
     is_active: boolean;
     creator_id: string;
+    clients?: string[];
 }
 
 export interface DealFilters {

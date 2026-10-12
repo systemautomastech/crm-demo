@@ -7,6 +7,7 @@ export interface Lead {
     name: string;
     email: any;
     subject: string;
+    organization_type?: string;
     user_id?: number;
     pipeline_id?: number;
     stage_id?: number;
@@ -34,6 +35,7 @@ export interface Lead {
 
 export interface LeadFormData {
     subject?: string;
+    organization_type?: string;
     user_id?: string;
     name?: string;
     email?: string;
@@ -49,6 +51,7 @@ export interface LeadFormData {
 
 export interface CreateLeadFormData {
     subject: string;
+    organization_type?: string;
     user_id: string;
     name: string;
     email: string;
@@ -57,10 +60,12 @@ export interface CreateLeadFormData {
     pipeline_id?: string;
     stage_id?: string;
     sources?: string[];
+    notes?: string;
 }
 
 export interface EditLeadFormData {
     subject: string;
+    organization_type?: string;
     user_id: string;
     name: string;
     email: string;

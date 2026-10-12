@@ -369,41 +369,58 @@ class DashboardController extends Controller
             $sellerUsersList = $sellerUsersQuery->get(['id', 'name', 'avatar'])->toArray();
             $categorySellers = [];
 
-            // 8. Sales Performance Trend (Filter-wise: <= 30 days -> Day-wise, > 30 days -> Month-wise)
-            $salesPerformance = [];
-            $diffDays = (int) ceil(abs($end->timestamp - $start->timestamp) / 86400);
-            if ($diffDays <= 30) {
-                // Day-wise aggregation
-                $curr = $start->copy();
-                while ($curr->lte($end)) {
-                    $dLabel = $curr->format('d M');
-                    $dVal = Deal::where('created_by', $companyCreatorId)
-                        ->where('status', 'Won')
-                        ->whereDate('updated_at', $curr->format('Y-m-d'))
-                        ->sum('price');
-                    $salesPerformance[] = [
-                        'month' => $dLabel,
-                        'value' => (float) $dVal,
-                    ];
-                    $curr->addDay();
+            // 8. Sales Performance Trend (Filter-wise: <= 60 days -> Day-wise, > 60 days -> Month-wise)
+            $buildSalesPerf = function ($sDate, $eDate) use ($companyCreatorId) {
+                $result = [];
+                $dDays = (int) ceil(abs($eDate->timestamp - $sDate->timestamp) / 86400);
+                if ($dDays <= 60) {
+                    $curr = $sDate->copy();
+                    while ($curr->lte($eDate)) {
+                        $dLabel = $curr->format('d M');
+                        $dVal = Deal::where('created_by', $companyCreatorId)
+                            ->where('status', 'Won')
+                            ->where(function ($q) use ($curr) {
+                                $q->whereDate('updated_at', $curr->format('Y-m-d'))
+                                  ->orWhereDate('created_at', $curr->format('Y-m-d'));
+                            })
+                            ->sum('price');
+                        $result[] = [
+                            'month' => $dLabel,
+                            'value' => (float) $dVal,
+                        ];
+                        $curr->addDay();
+                    }
+                } else {
+                    $curr = $sDate->copy()->startOfMonth();
+                    $endMonth = $eDate->copy()->endOfMonth();
+                    while ($curr->lte($endMonth)) {
+                        $mLabel = $curr->format('M Y');
+                        $mVal = Deal::where('created_by', $companyCreatorId)
+                            ->where('status', 'Won')
+                            ->where(function ($q) use ($curr) {
+                                $q->where(function ($q2) use ($curr) {
+                                    $q2->whereYear('updated_at', $curr->year)->whereMonth('updated_at', $curr->month);
+                                })->orWhere(function ($q2) use ($curr) {
+                                    $q2->whereYear('created_at', $curr->year)->whereMonth('created_at', $curr->month);
+                                });
+                            })
+                            ->sum('price');
+                        $result[] = [
+                            'month' => $mLabel,
+                            'value' => (float) $mVal,
+                        ];
+                        $curr->addMonth();
+                    }
                 }
-            } else {
-                // Month-wise aggregation
-                $curr = $start->copy()->startOfMonth();
-                $endMonth = $end->copy()->endOfMonth();
-                while ($curr->lte($endMonth)) {
-                    $mLabel = $curr->format('M Y');
-                    $mVal = Deal::where('created_by', $companyCreatorId)
-                        ->where('status', 'Won')
-                        ->whereYear('updated_at', $curr->year)
-                        ->whereMonth('updated_at', $curr->month)
-                        ->sum('price');
-                    $salesPerformance[] = [
-                        'month' => $mLabel,
-                        'value' => (float) $mVal,
-                    ];
-                    $curr->addMonth();
-                }
+                return $result;
+            };
+
+            $salesPerformance = $buildSalesPerf($start, $end);
+
+            if (array_sum(array_column($salesPerformance, 'value')) == 0 && !$request->has('period')) {
+                $fallbackStart = now()->subMonths(5)->startOfMonth();
+                $fallbackEnd = now()->endOfMonth();
+                $salesPerformance = $buildSalesPerf($fallbackStart, $fallbackEnd);
             }
 
             $dbSources = Source::where('created_by', $companyCreatorId)->get();
@@ -584,6 +601,7 @@ class DashboardController extends Controller
                 'leadSources' => $leadSources,
                 'winRateStats' => $winRateStats,
                 'needsAttention' => $needsAttention,
+                'organizationTypeConversion' => $this->getOrganizationTypeConversion($companyCreatorId),
                 'pipelines' => $pipelines,
                 'message' => __('Lead Dashboard - Manage your leads and deals efficiently.'),
             ]);
@@ -975,6 +993,7 @@ class DashboardController extends Controller
             'recentLeads' => $recentLeads,
             'calendarEvents' => $calendarEvents,
             'followupEvents' => $followupEvents,
+            'organizationTypeConversion' => $this->getOrganizationTypeConversion($companyCreatorId),
             'message' => __('User Dashboard - View your assigned leads and deals.'),
         ]);
     }
@@ -1227,5 +1246,65 @@ class DashboardController extends Controller
             'categoryLeaderboard' => $categoryLeaderboard,
             'categorySellers' => $categorySellers,
         ]);
+    }
+
+    private function getOrganizationTypeConversion($companyCreatorId)
+    {
+        $definedOrgTypes = \Automas\Lead\Models\OrganizationType::where('created_by', $companyCreatorId)->pluck('name')->toArray();
+        $leadOrgTypes = Lead::where('created_by', $companyCreatorId)->whereNotNull('organization_type')->where('organization_type', '!=', '')->pluck('organization_type')->toArray();
+        $dealOrgTypes = Deal::where('created_by', $companyCreatorId)->whereNotNull('organization_type')->where('organization_type', '!=', '')->pluck('organization_type')->toArray();
+
+        $allOrgTypes = array_values(array_unique(array_merge($definedOrgTypes, $leadOrgTypes, $dealOrgTypes)));
+
+        $result = [];
+        foreach ($allOrgTypes as $orgTypeName) {
+            $totalLeads = Lead::where('created_by', $companyCreatorId)
+                ->where('organization_type', $orgTypeName)
+                ->count();
+
+            $convertedLeadsCount = Lead::where('created_by', $companyCreatorId)
+                ->where('organization_type', $orgTypeName)
+                ->whereNotNull('is_converted')
+                ->where('is_converted', '!=', 0)
+                ->count();
+
+            $totalDeals = Deal::where('created_by', $companyCreatorId)
+                ->where('organization_type', $orgTypeName)
+                ->count();
+
+            $convertedCount = max($convertedLeadsCount, $totalDeals);
+
+            $wonDeals = Deal::where('created_by', $companyCreatorId)
+                ->where('organization_type', $orgTypeName)
+                ->where('status', 'Won')
+                ->count();
+
+            $totalValue = (float) Deal::where('created_by', $companyCreatorId)
+                ->where('organization_type', $orgTypeName)
+                ->sum('price');
+
+            $conversionRate = $totalLeads > 0 ? round(($convertedCount / $totalLeads) * 100, 1) : ($convertedCount > 0 ? 100.0 : 0.0);
+
+            $result[] = [
+                'name' => $orgTypeName,
+                'total_leads' => $totalLeads,
+                'converted_deals' => $convertedCount,
+                'won_deals' => $wonDeals,
+                'conversion_rate' => $conversionRate,
+                'total_value' => $totalValue,
+            ];
+        }
+
+        usort($result, function ($a, $b) {
+            if ($b['converted_deals'] === $a['converted_deals']) {
+                if ($b['conversion_rate'] === $a['conversion_rate']) {
+                    return $b['total_leads'] <=> $a['total_leads'];
+                }
+                return $b['conversion_rate'] <=> $a['conversion_rate'];
+            }
+            return $b['converted_deals'] <=> $a['converted_deals'];
+        });
+
+        return $result;
     }
 }

@@ -28,16 +28,19 @@ interface EditDealFormData {
     clients: string[];
     phone: string;
     notes: string;
+    organization_type: string;
 }
 
 export default function EditDeal({ deal, onSuccess }: EditDealProps) {
-    const { pipelines, stages, sources, products, users } = usePage<any>().props;
+    const { pipelines, stages, sources, products, users, organizationTypes } = usePage<any>().props;
+    const orgTypes = Array.isArray(organizationTypes) ? organizationTypes : [];
     const [filteredStages, setFilteredStages] = useState(stages || []);
     const { t } = useTranslation();
 
     const { data, setData, put, processing, errors } = useForm<EditDealFormData>({
         name: deal.name ?? '',
         price: deal.price?.toString() ?? '0',
+        organization_type: deal.organization_type ?? '',
         pipeline_id: deal.pipeline_id?.toString() ?? '',
         stage_id: deal.stage_id?.toString() ?? '',
         sources: deal.sources ? (Array.isArray(deal.sources) ? deal.sources.map(String) : []) : [],
@@ -106,6 +109,28 @@ export default function EditDeal({ deal, onSuccess }: EditDealProps) {
                             required
                         />
                     </div>
+                </div>
+
+                <div>
+                    <Label htmlFor="organization_type" required>{t('Organization Type')}</Label>
+                    <Select value={data.organization_type} onValueChange={(value) => setData('organization_type', value)}>
+                        <SelectTrigger id="organization_type">
+                            <SelectValue placeholder={t('Select Organization Type')} />
+                        </SelectTrigger>
+                        <SelectContent searchable>
+                            {orgTypes.map((item: any) => (
+                                <SelectItem key={item.id ?? item.name ?? item} value={item.name ?? item}>
+                                    {item.name ?? item}
+                                </SelectItem>
+                            ))}
+                            {data.organization_type && !orgTypes.some((o: any) => (o.name ?? o) === data.organization_type) && (
+                                <SelectItem key="custom_org_type" value={data.organization_type}>
+                                    {data.organization_type}
+                                </SelectItem>
+                            )}
+                        </SelectContent>
+                    </Select>
+                    <InputError message={errors.organization_type} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

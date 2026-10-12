@@ -17,7 +17,7 @@ class EmailTemplatesSeeder extends Seeder
      */
     public function run()
     {
-        $admin = User::where('type', 'company')->first();
+        $admin = User::where('type','company')->first();
 
         $emailTemplate = [
             'Lead Assign',
@@ -25,7 +25,7 @@ class EmailTemplatesSeeder extends Seeder
 
             'Deal Assign',
             'Deal Move',
-
+            
             'Lead Emails',
             'Deal Emails',
         ];
@@ -539,7 +539,7 @@ class EmailTemplatesSeeder extends Seeder
                     </div>
                     </div>
                     </div>',
-                    'pt' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
+                   'pt' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
 
                     <div style="max-width:680px;margin:auto;background:#ffffff;border-radius:16px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);">
 
@@ -1473,7 +1473,7 @@ class EmailTemplatesSeeder extends Seeder
                     </div>
                     </div>
                     </div>',
-                    'pt-BR' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
+                                            'pt-BR' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
 
                         <div style="max-width:680px;margin:auto;background:#ffffff;border-radius:16px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);">
 
@@ -1530,7 +1530,7 @@ class EmailTemplatesSeeder extends Seeder
                         </div>
                         </div>
                         </div>',
-                    'he' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
+                        'he' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
 
                         <div style="max-width:680px;margin:auto;background:#ffffff;border-radius:16px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);">
 
@@ -1588,7 +1588,7 @@ class EmailTemplatesSeeder extends Seeder
                         </div>
                         </div>',
 
-                    'tr' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
+                        'tr' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
 
                         <div style="max-width:680px;margin:auto;background:#ffffff;border-radius:16px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);">
 
@@ -1646,7 +1646,7 @@ class EmailTemplatesSeeder extends Seeder
                         </div>
                         </div>',
 
-                    'zh' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
+                        'zh' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
 
                         <div style="max-width:680px;margin:auto;background:#ffffff;border-radius:16px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);">
 
@@ -2981,7 +2981,7 @@ class EmailTemplatesSeeder extends Seeder
                     </div>
                     </div>',
 
-                    'fr' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
+                   'fr' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
 
                     <div style="max-width:680px;margin:auto;background:#ffffff;border-radius:16px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);">
 
@@ -3703,7 +3703,7 @@ class EmailTemplatesSeeder extends Seeder
                     'en' => '<div style="background:#4f46e5;padding:28px 20px;text-align:center;color:#ffffff;"> <h1 style="margin:0;font-size:22px;font-weight:600;">📩 New Lead Email Received</h1> <p style="margin:6px 0 0 0;font-size:14px;opacity:0.9;">You have received a new message from a lead</p> </div> <div style="padding:30px 28px;color:#374151;font-size:15px;line-height:1.6;"> <p style="margin-top:0;"> Hello 👋, </p> <p> A new email has been created for a lead in <strong>{app_name}</strong>. Please review the message details below. </p> <!-- Lead Info Box --> <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:20px;margin:22px 0;"> <p style="margin:0 0 10px 0;"> <strong>Lead Name:</strong> {lead_name} </p> <p style="margin:0 0 10px 0;"> <strong>Subject:</strong> {lead_email_subject} </p> <p style="margin:0;"> <strong>Message:</strong><br> {lead_email_description} </p> </div> <p> You can view or manage this lead directly from your dashboard. </p> <div style="text-align:center;margin:30px 0;"> <a href="{app_url}" style="background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:8px;font-size:14px;font-weight:500;display:inline-block;"> View in {app_name} </a> </div> <p style="margin-bottom:0;"> Thanks,<br> <strong>{company_name}</strong> </p>',
                     'es' => '<div style="background:#4f46e5;padding:28px 20px;text-align:center;color:#ffffff;"> <h1 style="margin:0;font-size:22px;font-weight:600;">📩 Nuevo correo de lead recibido</h1> <p style="margin:6px 0 0 0;font-size:14px;opacity:0.9;">Has recibido un nuevo mensaje de un lead</p> </div> <div style="padding:30px 28px;color:#374151;font-size:15px;line-height:1.6;"> <p style="margin-top:0;"> Hola 👋, </p> <p> Se ha creado un nuevo correo para un lead en <strong>{app_name}</strong>. Por favor revisa los detalles del mensaje a continuación. </p> <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:20px;margin:22px 0;"> <p style="margin:0 0 10px 0;"> <strong>Nombre del lead:</strong> {lead_name} </p> <p style="margin:0 0 10px 0;"> <strong>Asunto:</strong> {lead_email_subject} </p> <p style="margin:0;"> <strong>Mensaje:</strong><br> {lead_email_description} </p> </div> <p> Puedes ver o gestionar este lead directamente desde tu panel. </p> <div style="text-align:center;margin:30px 0;"> <a href="{app_url}" style="background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:8px;font-size:14px;font-weight:500;display:inline-block;"> Ver en {app_name} </a> </div> <p style="margin-bottom:0;"> Gracias,<br> <strong>{company_name}</strong> </p>',
                     'fr' => '<div style="background:#4f46e5;padding:28px 20px;text-align:center;color:#ffffff;"> <h1 style="margin:0;font-size:22px;font-weight:600;">📩 Nouvel e-mail de prospect reçu</h1> <p style="margin:6px 0 0 0;font-size:14px;opacity:0.9;">Vous avez reçu un nouveau message d’un prospect</p> </div> <div style="padding:30px 28px;color:#374151;font-size:15px;line-height:1.6;"> <p style="margin-top:0;"> Bonjour 👋, </p> <p> Un nouvel e-mail a été créé pour un prospect dans <strong>{app_name}</strong>. Veuillez consulter les détails du message ci-dessous. </p> <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:20px;margin:22px 0;"> <p style="margin:0 0 10px 0;"> <strong>Nom du prospect :</strong> {lead_name} </p> <p style="margin:0 0 10px 0;"> <strong>Sujet :</strong> {lead_email_subject} </p> <p style="margin:0;"> <strong>Message :</strong><br> {lead_email_description} </p> </div> <p> Vous pouvez voir ou gérer ce prospect directement depuis votre tableau de bord. </p> <div style="text-align:center;margin:30px 0;"> <a href="{app_url}" style="background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:8px;font-size:14px;font-weight:500;display:inline-block;"> Voir dans {app_name} </a> </div> <p style="margin-bottom:0;"> Merci,<br> <strong>{company_name}</strong> </p>',
-                    'it' => '<div style="background:#4f46e5;padding:28px 20px;text-align:center;color:#ffffff;"> <h1 style="margin:0;font-size:22px;font-weight:600;">📩 Nuova email di lead ricevuta</h1> <p style="margin:6px 0 0 0;font-size:14px;opacity:0.9;">Hai ricevuto un nuovo messaggio da un lead</p> </div> <div style="padding:30px 28px;color:#374151;font-size:15px;line-height:1.6;"> <p style="margin-top:0;"> Ciao 👋, </p> <p> È stata creata una nuova email per un lead in <strong>{app_name}</strong>. Si prega di controllare i dettagli del messaggio qui sotto. </p> <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:20px;margin:22px 0;"> <p style="margin:0 0 10px 0;"> <strong>Nome Lead:</strong> {lead_name} </p> <p style="margin:0 0 10px 0;"> <strong>Oggetto:</strong> {lead_email_subject} </p> <p style="margin:0;"> <strong>Messaggio:</strong><br> {lead_email_description} </p> </div> <p> Puoi visualizzare o gestire questo lead direttamente dalla tua dashboard. </p> <div style="text-align:center;margin:30px 0;"> <a href="{app_url}" style="background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:8px;font-size:14px;font-weight:500;display:inline-block;"> Visualizza in {app_name} </a> </div> <p style="margin-bottom:0;"> Grazie,<br> <strong>{company_name}</strong> </p>',
+                   'it' => '<div style="background:#4f46e5;padding:28px 20px;text-align:center;color:#ffffff;"> <h1 style="margin:0;font-size:22px;font-weight:600;">📩 Nuova email di lead ricevuta</h1> <p style="margin:6px 0 0 0;font-size:14px;opacity:0.9;">Hai ricevuto un nuovo messaggio da un lead</p> </div> <div style="padding:30px 28px;color:#374151;font-size:15px;line-height:1.6;"> <p style="margin-top:0;"> Ciao 👋, </p> <p> È stata creata una nuova email per un lead in <strong>{app_name}</strong>. Si prega di controllare i dettagli del messaggio qui sotto. </p> <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:20px;margin:22px 0;"> <p style="margin:0 0 10px 0;"> <strong>Nome Lead:</strong> {lead_name} </p> <p style="margin:0 0 10px 0;"> <strong>Oggetto:</strong> {lead_email_subject} </p> <p style="margin:0;"> <strong>Messaggio:</strong><br> {lead_email_description} </p> </div> <p> Puoi visualizzare o gestire questo lead direttamente dalla tua dashboard. </p> <div style="text-align:center;margin:30px 0;"> <a href="{app_url}" style="background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:8px;font-size:14px;font-weight:500;display:inline-block;"> Visualizza in {app_name} </a> </div> <p style="margin-bottom:0;"> Grazie,<br> <strong>{company_name}</strong> </p>',
                     'ja' => '<div style="background:#4f46e5;padding:28px 20px;text-align:center;color:#ffffff;"> <h1 style="margin:0;font-size:22px;font-weight:600;">📩 新しいリードメールを受信しました</h1> <p style="margin:6px 0 0 0;font-size:14px;opacity:0.9;">リードから新しいメッセージを受信しました</p> </div> <div style="padding:30px 28px;color:#374151;font-size:15px;line-height:1.6;"> <p style="margin-top:0;"> こんにちは 👋、 </p> <p> <strong>{app_name}</strong> に新しいリードメールが作成されました。以下のメッセージ内容をご確認ください。 </p> <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:20px;margin:22px 0;"> <p style="margin:0 0 10px 0;"> <strong>リード名:</strong> {lead_name} </p> <p style="margin:0 0 10px 0;"> <strong>件名:</strong> {lead_email_subject} </p> <p style="margin:0;"> <strong>メッセージ:</strong><br> {lead_email_description} </p> </div> <p> ダッシュボードからこのリードを直接確認または管理できます。 </p> <div style="text-align:center;margin:30px 0;"> <a href="{app_url}" style="background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:8px;font-size:14px;font-weight:500;display:inline-block;"> {app_name} で表示 </a> </div> <p style="margin-bottom:0;"> ありがとうございます。<br> <strong>{company_name}</strong> </p>',
                     'nl' => '<div style="background:#4f46e5;padding:28px 20px;text-align:center;color:#ffffff;"> <h1 style="margin:0;font-size:22px;font-weight:600;">📩 Nieuwe lead-e-mail ontvangen</h1> <p style="margin:6px 0 0 0;font-size:14px;opacity:0.9;">Je hebt een nieuw bericht van een lead ontvangen</p> </div> <div style="padding:30px 28px;color:#374151;font-size:15px;line-height:1.6;"> <p style="margin-top:0;"> Hallo 👋, </p> <p> Er is een nieuwe e-mail aangemaakt voor een lead in <strong>{app_name}</strong>. Bekijk hieronder de details van het bericht. </p> <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:20px;margin:22px 0;"> <p style="margin:0 0 10px 0;"> <strong>Leadnaam:</strong> {lead_name} </p> <p style="margin:0 0 10px 0;"> <strong>Onderwerp:</strong> {lead_email_subject} </p> <p style="margin:0;"> <strong>Bericht:</strong><br> {lead_email_description} </p> </div> <p> Je kunt deze lead direct bekijken of beheren vanuit je dashboard. </p> <div style="text-align:center;margin:30px 0;"> <a href="{app_url}" style="background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:8px;font-size:14px;font-weight:500;display:inline-block;"> Bekijken in {app_name} </a> </div> <p style="margin-bottom:0;"> Bedankt,<br> <strong>{company_name}</strong> </p>',
                     'pl' => '<div style="background:#4f46e5;padding:28px 20px;text-align:center;color:#ffffff;"> <h1 style="margin:0;font-size:22px;font-weight:600;">📩 Otrzymano nowy e-mail od leada</h1> <p style="margin:6px 0 0 0;font-size:14px;opacity:0.9;">Otrzymałeś nową wiadomość od leada</p> </div> <div style="padding:30px 28px;color:#374151;font-size:15px;line-height:1.6;"> <p style="margin-top:0;"> Cześć 👋, </p> <p> Nowy e-mail został utworzony dla leada w <strong>{app_name}</strong>. Sprawdź szczegóły wiadomości poniżej. </p> <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:20px;margin:22px 0;"> <p style="margin:0 0 10px 0;"> <strong>Nazwa leada:</strong> {lead_name} </p> <p style="margin:0 0 10px 0;"> <strong>Temat:</strong> {lead_email_subject} </p> <p style="margin:0;"> <strong>Wiadomość:</strong><br> {lead_email_description} </p> </div> <p> Możesz wyświetlić lub zarządzać tym leadem bezpośrednio z panelu. </p> <div style="text-align:center;margin:30px 0;"> <a href="{app_url}" style="background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:8px;font-size:14px;font-weight:500;display:inline-block;"> Zobacz w {app_name} </a> </div> <p style="margin-bottom:0;"> Dziękujemy,<br> <strong>{company_name}</strong> </p>',
@@ -3785,7 +3785,7 @@ class EmailTemplatesSeeder extends Seeder
                     </div>
                     </div>',
 
-                    'da' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
+                   'da' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
 
                     <div style="max-width:680px;margin:auto;background:#ffffff;border-radius:16px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.05);">
 
@@ -4188,7 +4188,7 @@ class EmailTemplatesSeeder extends Seeder
 
                     </div>
                     </div>
-                    </div>',
+                    </div>',   
 
                     'nl' => '<div style="font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f3f5fb;padding:40px 20px;">
 
@@ -4658,19 +4658,22 @@ class EmailTemplatesSeeder extends Seeder
 
 
         ];
-        foreach ($emailTemplate as $eTemp) {
-            $table = EmailTemplate::where('name', $eTemp)->where('module_name', 'Lead')->exists();
-            if (!$table) {
-                $emailtemplate = EmailTemplate::create(
+        foreach($emailTemplate as $eTemp)
+        {
+            $table = EmailTemplate::where('name',$eTemp)->where('module_name','Lead')->exists();
+            if(!$table)
+            {
+                $emailtemplate=  EmailTemplate::create(
                     [
-                        'name' => $eTemp,
-                        'from' => !empty(env('APP_NAME')) ? env('APP_NAME') : 'Automas CRM',
-                        'module_name' => 'Lead',
-                        'created_by' => $admin->id,
-                        'creator_id' => $admin->id,
+                    'name' => $eTemp,
+                    'from' => !empty(env('APP_NAME')) ? env('APP_NAME') : 'Automas ERP',
+                    'module_name' => 'Lead',
+                    'created_by' => $admin->id,
+                    'creator_id' => $admin->id,
                     ]
                 );
-                foreach ($defaultTemplate[$eTemp]['lang'] as $lang => $content) {
+                foreach($defaultTemplate[$eTemp]['lang'] as $lang => $content)
+                {
                     EmailTemplateLang::create(
                         [
                             'parent_id' => $emailtemplate->id,

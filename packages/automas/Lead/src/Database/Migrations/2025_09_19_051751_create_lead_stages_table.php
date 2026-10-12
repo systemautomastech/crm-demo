@@ -14,9 +14,7 @@ return new class extends Migration
                 $table->id();
                 $table->string('name');
                 $table->integer('order')->nullable();
-                $table->foreignId('pipeline_id')->nullable()->constrained('pipelines')->onDelete('cascade');
-                $table->boolean('is_final_accepted')->default(false);
-                $table->boolean('is_final_rejected')->default(false);
+                $table->foreignId('pipeline_id')->nullable()->constrained('pipelines')->onDelete('set null');
                 $table->foreignId('creator_id')->nullable()->index();
                 $table->foreignId('created_by')->nullable()->index();
 

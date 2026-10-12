@@ -16,6 +16,7 @@ class Lead extends Model
         'name',
         'email',
         'subject',
+        'organization_type',
         'user_id',
         'pipeline_id',
         'stage_id',

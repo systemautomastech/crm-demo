@@ -5,6 +5,8 @@ export interface DealStage {
     name: string;
     order: number;
     pipeline_id?: number;
+    is_won?: boolean;
+    is_lost?: boolean;
     pipeline?: Pipeline;
     created_at: string;
 }
@@ -13,6 +15,9 @@ export interface DealStageFormData {
     name: string;
     order: string;
     pipeline_id: string;
+    win_loss_type?: 'standard' | 'won' | 'lost';
+    is_won?: boolean;
+    is_lost?: boolean;
 }
 
 export interface CreateDealStageProps extends CreateProps {

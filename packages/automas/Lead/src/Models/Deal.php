@@ -25,6 +25,7 @@ class Deal extends Model
         'labels',
         'phone',
         'status',
+        'organization_type',
         'is_active',
         'order',
         'creator_id',
@@ -43,8 +44,6 @@ class Deal extends Model
             'is_active' => 'boolean'
         ];
     }
-
-
 
     public function pipeline()
     {

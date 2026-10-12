@@ -15,7 +15,10 @@ class StoreDealStageRequest extends FormRequest
     {
         return [
             'name' => 'required|max:100',
-            'pipeline_id' => 'nullable|integer|exists:pipelines,id'
+            'pipeline_id' => 'nullable|integer|exists:pipelines,id',
+            'is_won' => 'nullable|boolean',
+            'is_lost' => 'nullable|boolean',
+            'win_loss_type' => 'nullable|string|in:none,won,lost',
         ];
     }
 }

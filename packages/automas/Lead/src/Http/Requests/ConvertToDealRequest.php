@@ -16,6 +16,8 @@ class ConvertToDealRequest extends FormRequest
         $rules = [
             'name' => 'required|string|max:255',
             'price' => 'nullable|numeric|min:0',
+            'status' => 'nullable|in:Active,Won,Loss',
+            'organization_type' => 'required|string|max:255',
             'client_check' => 'required|in:none,exist,new',
             'is_transfer' => 'nullable|array',
         ];
@@ -27,8 +29,13 @@ class ConvertToDealRequest extends FormRequest
         if ($this->client_check === 'new') {
             $rules['client_name'] = 'required|string|max:255';
             $rules['client_email'] = 'required|email|unique:users,email';
-            $rules['client_phone'] = 'nullable|string|regex:/^\+?\d{10,16}$/';
-            $rules['client_password'] = 'required|string|min:6';
+            $rules['client_phone'] = 'nullable|string';
+            $rules['client_password'] = 'nullable|string|min:6';
+            $rules['client_address'] = 'nullable|string|max:255';
+            $rules['client_city'] = 'nullable|string|max:255';
+            $rules['client_state'] = 'nullable|string|max:255';
+            $rules['client_country'] = 'nullable|string|max:255';
+            $rules['client_zip_code'] = 'nullable|string|max:50';
         }
 
         return $rules;

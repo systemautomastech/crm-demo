@@ -14,6 +14,8 @@ class DealStage extends Model
         'name',
         'order',
         'pipeline_id',
+        'is_won',
+        'is_lost',
         'creator_id',
         'created_by',
     ];
@@ -21,7 +23,10 @@ class DealStage extends Model
     protected function casts(): array
     {
         return [
-            
+            'is_won' => 'boolean',
+            'is_lost' => 'boolean',
+            'order' => 'integer',
+            'pipeline_id' => 'integer',
         ];
     }
 

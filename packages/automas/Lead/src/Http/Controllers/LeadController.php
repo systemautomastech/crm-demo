@@ -15,6 +15,7 @@ use Automas\Lead\Models\Pipeline;
 use Automas\Lead\Models\UserLead;
 use Automas\Lead\Models\Label;
 use Automas\Lead\Models\LeadSubject;
+use Automas\Lead\Models\OrganizationType;
 use Automas\ProductService\Models\ProductServiceItem;
 use Illuminate\Http\Request;
 use Automas\Lead\Http\Requests\AssignUsersRequest;
@@ -116,6 +117,41 @@ class LeadController extends Controller
                 ->when(request('date_to'), fn($q) => $q->whereDate('date', '<=', request('date_to')))
                 ->when(request('created_from'), fn($q) => $q->whereDate('created_at', '>=', request('created_from')))
                 ->when(request('created_to'), fn($q) => $q->whereDate('created_at', '<=', request('created_to')))
+                ->when(request('filter') === 'uncontacted' || request('uncontacted') === '1', function ($q) {
+                    $q->where(fn($sub) => $sub->whereNull('is_converted')->orWhere('is_converted', 0))
+                      ->whereDoesntHave('calls');
+                })
+                ->when(request('filter') === 'unassigned' || request('unassigned') === '1', function ($q) {
+                    $q->where(fn($sub) => $sub->whereNull('user_id')->orWhere('user_id', 0));
+                })
+                ->when(request('filter') === 'followup_today' || request('followup_today') === '1', function ($q) {
+                    $finalRejectedIds = LeadStage::where('created_by', creatorId())->where('is_final_rejected', 1)->pluck('id')->toArray();
+                    $q->where(function ($sub) use ($finalRejectedIds) {
+                        $sub->where(function ($leadDateQ) use ($finalRejectedIds) {
+                            $leadDateQ->whereNotNull('date')
+                                ->whereDate('date', today())
+                                ->where(fn($c) => $c->whereNull('is_converted')->orWhere('is_converted', 0))
+                                ->whereNotIn('stage_id', $finalRejectedIds);
+                        })->orWhereHas('tasks', function ($taskQ) {
+                            $taskQ->whereDate('date', today());
+                        });
+                    });
+                })
+                ->when(request('filter') === 'overdue_followup' || request('overdue') === '1', function ($q) {
+                    $finalRejectedIds = LeadStage::where('created_by', creatorId())->where('is_final_rejected', 1)->pluck('id')->toArray();
+                    $finalAcceptedIds = LeadStage::where('created_by', creatorId())->where('is_final_accepted', 1)->pluck('id')->toArray();
+                    $q->where(function ($sub) use ($finalRejectedIds, $finalAcceptedIds) {
+                        $sub->where(function ($leadDateQ) use ($finalRejectedIds, $finalAcceptedIds) {
+                            $leadDateQ->whereNotNull('date')
+                                ->whereDate('date', '<', today())
+                                ->where(fn($c) => $c->whereNull('is_converted')->orWhere('is_converted', 0))
+                                ->whereNotIn('stage_id', $finalRejectedIds)
+                                ->whereNotIn('stage_id', $finalAcceptedIds);
+                        })->orWhereHas('tasks', function ($taskQ) {
+                            $taskQ->where('date', '<', today())->where('status', 0);
+                        });
+                    });
+                })
                 ->when(request('sort'), fn($q) => $q->orderBy(request('sort'), request('direction', 'asc')), fn($q) => $q->latest())
                 ->paginate(request('per_page', 10))
                 ->withQueryString();
@@ -135,6 +171,7 @@ class LeadController extends Controller
             $labels = Label::with('pipeline')->where('created_by', creatorId())->select('id', 'name', 'color', 'pipeline_id')->get();
             $sources = Source::where('created_by', creatorId())->get(['id', 'name']);
             $subjects = LeadSubject::where('created_by', creatorId())->get(['id', 'name']);
+            $organizationTypes = OrganizationType::where('created_by', creatorId())->get(['id', 'name']);
             $products = module_is_active('ProductService') ? ProductServiceItem::where('created_by', creatorId())->get(['id', 'name']) : [];
             return Inertia::render('Lead/Leads/Index', [
                 'leads' => $leads,
@@ -144,6 +181,7 @@ class LeadController extends Controller
                 'labels' => $labels,
                 'sources' => $sources,
                 'subjects' => $subjects,
+                'organizationTypes' => $organizationTypes,
                 'products' => $products,
                 'currentPipelineId' => $activePipelineId,
                 'pbxModuleActive' => module_is_active('Pbx'),
@@ -204,12 +242,14 @@ class LeadController extends Controller
                 $lead->name = $request->name;
                 $lead->email = $request->email ?? null;
                 $lead->subject = $request->subject;
+                $lead->organization_type = $request->organization_type;
                 $lead->user_id = $request->user_id;
                 $lead->pipeline_id = $pipeline->id;
                 $lead->stage_id = $stage->id;
                 $lead->sources = $request->sources ? implode(',', $request->sources) : null;
                 $lead->phone = $request->phone;
                 $lead->date = $request->date;
+                $lead->notes = $request->notes ?? '';
                 $lead->creator_id = Auth::id();
                 $lead->created_by = creatorId();
                 $lead->save();
@@ -327,12 +367,14 @@ class LeadController extends Controller
                 $deal = Deal::where('id', '=', $lead->is_converted)->first();
             }
             $subjects = LeadSubject::where('created_by', creatorId())->get(['id', 'name']);
+            $organizationTypes = OrganizationType::where('created_by', creatorId())->get(['id', 'name']);
             return Inertia::render('Lead/Leads/Show/Index', [
                 'lead' => $lead,
                 'labels' => $labels,
                 'productItems' => $productItems,
                 'sourceItems' => $sourceItems,
                 'subjects' => $subjects,
+                'organizationTypes' => $organizationTypes,
                 'deal' => $deal ? [
                     'id' => $deal->id,
                     'is_active' => $deal->status === 'Active'
@@ -355,6 +397,7 @@ class LeadController extends Controller
 
                 $sources = Source::where('created_by', '=', creatorId())->get()->pluck('name', 'id');
                 $subjects = LeadSubject::where('created_by', '=', creatorId())->get()->pluck('name', 'id');
+                $organizationTypes = OrganizationType::where('created_by', '=', creatorId())->get()->pluck('name', 'id');
 
                 if (module_is_active('ProductService')) {
                     $products = ProductServiceItem::where('created_by', '=', creatorId())->get()->pluck('name', 'id');
@@ -371,6 +414,7 @@ class LeadController extends Controller
                     'pipelines' => $pipelines,
                     'sources' => $sources,
                     'subjects' => $subjects,
+                    'organizationTypes' => $organizationTypes,
                     'products' => $products ?? [],
                     'users' => $users
                 ]);
@@ -389,6 +433,7 @@ class LeadController extends Controller
             $lead->name = $validated['name'];
             $lead->email = $validated['email'] ?? null;
             $lead->subject = $validated['subject'];
+            $lead->organization_type = array_key_exists('organization_type', $validated) ? $validated['organization_type'] : $lead->organization_type;
             $lead->user_id = $validated['user_id'];
             $lead->phone = $validated['phone'];
             $lead->date = $validated['date'];
@@ -942,46 +987,80 @@ class LeadController extends Controller
                         ->with('error', $checkUser['message']);
                 }
 
-                $role = Role::where('name', 'client')
-                    ->where('created_by', $creatorId)
-                    ->first();
+                if (class_exists(\App\Services\CustomerService::class)) {
+                    $customerService = app(\App\Services\CustomerService::class);
+                    try {
+                        $customer = $customerService->createCustomer([
+                            'company_name' => $request->client_name,
+                            'contact_person_name' => $request->client_name,
+                            'contact_person_email' => $request->client_email,
+                            'contact_person_mobile' => $request->client_phone,
+                            'billing_address' => $request->client_address,
+                            'billing_city' => $request->client_city,
+                            'billing_state' => $request->client_state,
+                            'billing_country' => $request->client_country,
+                            'billing_zip_code' => $request->client_zip_code,
+                        ]);
+                        $client = User::find($customer->user_id);
+                        if ($request->filled('client_password') && $client) {
+                            $client->password = \Hash::make($request->client_password);
+                            $client->save();
+                        }
+                    } catch (\Illuminate\Validation\ValidationException $e) {
+                        return back()->withErrors($e->errors());
+                    } catch (\Exception $e) {
+                        $role = Role::where('name', 'client')
+                            ->where('created_by', $creatorId)
+                            ->first();
 
-                $enableEmailVerification = admin_setting('enableEmailVerification');
+                        $enableEmailVerification = admin_setting('enableEmailVerification');
 
-                $client = User::create([
-                    'name' => $request->client_name,
-                    'email' => $request->client_email,
-                    'phone' => $request->client_phone,
-                    'password' => \Hash::make($request->client_password),
-                    'email_verified_at' => $enableEmailVerification === 'on' ? null : now(),
-                    'type' => 'client',
-                    'lang' => company_setting('defaultLanguage') ?? 'en',
-                    'creator_id' => Auth::id(),
-                    'created_by' => $creatorId,
-                ]);
+                        $client = User::create([
+                            'name' => $request->client_name,
+                            'email' => $request->client_email,
+                            'phone' => $request->client_phone,
+                            'password' => \Hash::make($request->client_password ?? '12345678'),
+                            'email_verified_at' => $enableEmailVerification === 'on' ? null : now(),
+                            'type' => 'client',
+                            'lang' => company_setting('defaultLanguage') ?? 'en',
+                            'creator_id' => Auth::id(),
+                            'created_by' => $creatorId,
+                        ]);
 
-                $client->assignRole($role);
+                        if ($role) {
+                            $client->assignRole($role);
+                        }
+                    }
+                } else {
+                    $role = Role::where('name', 'client')
+                        ->where('created_by', $creatorId)
+                        ->first();
 
-                // Dispatch event for packages to handle their fields
-                CreateUser::dispatch($request, $client);
+                    $enableEmailVerification = admin_setting('enableEmailVerification');
 
-                if ($enableEmailVerification === 'on') {
-                    SetConfigEmail(creatorId());
-                    $client->sendEmailVerificationNotification();
+                    $client = User::create([
+                        'name' => $request->client_name,
+                        'email' => $request->client_email,
+                        'phone' => $request->client_phone,
+                        'password' => \Hash::make($request->client_password ?? '12345678'),
+                        'email_verified_at' => $enableEmailVerification === 'on' ? null : now(),
+                        'type' => 'client',
+                        'lang' => company_setting('defaultLanguage') ?? 'en',
+                        'creator_id' => Auth::id(),
+                        'created_by' => $creatorId,
+                    ]);
+
+                    if ($role) {
+                        $client->assignRole($role);
+                    }
+
+                    CreateUser::dispatch($request, $client);
                 }
             }
 
-
-            // $cArr = [
-            //     'email' => $request->client_email,
-            //     'password' => $request->client_password,
-            // ];
-
-            // // Send Email to client if they are new created.
-            // EmailTemplate::sendEmailTemplate('New User', [$client->id => $client->email], $cArr);
-
             if (
                 $request->client_check === 'new' &&
+                $client &&
                 company_setting('New User') == 'on'
             ) {
                 $emailData = [
@@ -1017,7 +1096,8 @@ class LeadController extends Controller
             $deal->products = in_array('products', $request->is_transfer ?? []) ? $lead->products : null;
             $deal->notes = in_array('notes', $request->is_transfer ?? []) ? $lead->notes : null;
             $deal->labels = $lead->labels;
-            $deal->status = 'Active';
+            $deal->status = $request->input('status', 'Active');
+            $deal->organization_type = $request->input('organization_type', $lead->organization_type);
             $deal->creator_id = Auth::id();
             $deal->created_by = $lead->created_by;
             $deal->save();

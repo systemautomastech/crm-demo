@@ -33,7 +33,7 @@ class MarketplaceSettingSeeder extends Seeder
                 'sections' => [
                     'hero' => [
                         'variant' => 'hero1',
-                        'title' => 'CRM Module for Automas CRM',
+                        'title' => 'CRM Module for Automas ERP',
                         'subtitle' => 'Streamline your CRM workflow with comprehensive tools and automated management.',
                         'primary_button_text' => 'Install CRM Module',
                         'primary_button_link' => '#install',

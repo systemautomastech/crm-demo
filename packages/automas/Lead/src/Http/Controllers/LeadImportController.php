@@ -678,7 +678,7 @@ class LeadImportController extends Controller
                 $query
                     ->where('id', creatorId())
                     ->orWhere(
-                        'creator_id',
+                        'created_by',
                         creatorId()
                     );
             })
@@ -874,6 +874,9 @@ class LeadImportController extends Controller
             PrepareLeadImport::dispatch(
                 $leadImport->id
             );
+            try {
+                \Illuminate\Support\Facades\Artisan::call('lead-import:process-queue');
+            } catch (\Throwable $e) {}
         }
 
         return redirect()
@@ -898,6 +901,12 @@ class LeadImportController extends Controller
             (int) $leadImport->created_by === (int) creatorId(),
             403
         );
+
+        if (in_array($leadImport->status, ['pending', 'preparing', 'processing'], true)) {
+            try {
+                \Illuminate\Support\Facades\Artisan::call('lead-import:process-queue');
+            } catch (\Throwable $e) {}
+        }
 
         $leadImport->refresh();
 
@@ -959,6 +968,12 @@ class LeadImportController extends Controller
             (int) $leadImport->created_by === (int) creatorId(),
             403
         );
+
+        if (in_array($leadImport->status, ['pending', 'preparing', 'processing'], true)) {
+            try {
+                \Illuminate\Support\Facades\Artisan::call('lead-import:process-queue');
+            } catch (\Throwable $e) {}
+        }
 
         $leadImport->refresh();
 
@@ -1246,6 +1261,9 @@ class LeadImportController extends Controller
         ]);
 
         PrepareLeadImport::dispatch($leadImport->id);
+        try {
+            \Illuminate\Support\Facades\Artisan::call('lead-import:process-queue');
+        } catch (\Throwable $e) {}
 
         return redirect()
             ->route('lead.leads.import.progress', $leadImport->uuid)
@@ -1374,7 +1392,7 @@ class LeadImportController extends Controller
                     ->where(function ($query) {
                         $query
                             ->where('id', creatorId())
-                            ->orWhere('creator_id', creatorId());
+                            ->orWhere('created_by', creatorId());
                     })->emp(['vendor', 'client'])
                     ->select([
                         'id',

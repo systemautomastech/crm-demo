@@ -13,7 +13,6 @@ return new class extends Migration
             Schema::create('pipelines', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
-                $table->boolean('is_default')->default(false);
                 $table->foreignId('creator_id')->nullable()->index();
                 $table->foreignId('created_by')->nullable()->index();
 

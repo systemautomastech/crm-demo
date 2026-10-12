@@ -1,5 +1,5 @@
-import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useForm } from "@inertiajs/react";
+import { DialogContent, DialogHeader, DialogTitle, Dialog } from "@/components/ui/dialog";
+import { useForm, usePage } from "@inertiajs/react";
 import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { Label } from '@/components/ui/label';
@@ -11,19 +11,27 @@ import { DateTimeRangePicker } from '@/components/ui/datetime-range-picker';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { MultiSelectEnhanced } from '@/components/ui/multi-select-enhanced';
 import { EditLeadProps, LeadFormData } from './types';
-import { usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { formatDate } from '@/utils/helpers';
-import { Tag, CheckCircle2, XCircle } from "lucide-react";
+import { Tag, CheckCircle2, XCircle, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFormFields } from '@/hooks/useFormFields';
+import axios from 'axios';
+import { toast } from 'sonner';
 
-export default function EditLead({ lead, sources: propSources, subjects: propSubjects, products: propProducts, onSuccess }: EditLeadProps & { sources?: any, subjects?: any, products?: any }) {
-    const { users, pipelines, products, labels: labelOptions, subjects: pageSubjects } = usePage<any>().props;
+export default function EditLead({ lead, sources: propSources, subjects: propSubjects, organizationTypes: propOrgTypes, products: propProducts, onSuccess }: EditLeadProps & { sources?: any, subjects?: any, organizationTypes?: any, products?: any }) {
+    const { users, pipelines, products, labels: labelOptions, subjects: pageSubjects, organizationTypes: pageOrgTypes, auth } = usePage<any>().props;
     const [stages, setStages] = useState([]);
     const [sources, setSources] = useState(propSources || []);
     const [subjects, setSubjects] = useState(propSubjects || pageSubjects || []);
+    const [orgTypes, setOrgTypes] = useState(propOrgTypes || pageOrgTypes || []);
     const [productOptions, setProductOptions] = useState(propProducts || []);
+    const [quickAddModal, setQuickAddModal] = useState<{ isOpen: boolean; type: 'subject' | 'organization_type' | null }>({
+        isOpen: false,
+        type: null
+    });
+    const [quickAddName, setQuickAddName] = useState('');
+    const [isQuickAdding, setIsQuickAdding] = useState(false);
 
     const { t } = useTranslation();
     const { data, setData, put, processing, errors } = useForm<LeadFormData>({
@@ -31,6 +39,7 @@ export default function EditLead({ lead, sources: propSources, subjects: propSub
         user_id: lead.user_id?.toString() || '',
         pipeline_id: lead.pipeline_id?.toString() || '',
         stage_id: lead.stage_id?.toString() || '',
+        organization_type: lead.organization_type || '',
         sources: Array.isArray(lead.sources) ? lead.sources : (lead.sources ? lead.sources.split(',') : []),
         products: Array.isArray(lead.products) ? lead.products : (lead.products ? lead.products.split(',') : []),
         labels: Array.isArray(lead.labels) ? lead.labels : (lead.labels ? lead.labels.split(',') : []),
@@ -45,8 +54,6 @@ export default function EditLead({ lead, sources: propSources, subjects: propSub
         setNotesEditorKey(prev => prev + 1);
     }, errors, 'edit', 'notes', 'Notes', 'lead', 'lead');
 
-
-
     useEffect(() => {
         if (propSubjects) {
             setSubjects(propSubjects);
@@ -54,89 +61,84 @@ export default function EditLead({ lead, sources: propSources, subjects: propSub
     }, [propSubjects]);
 
     useEffect(() => {
+        if (propOrgTypes) {
+            setOrgTypes(propOrgTypes);
+        }
+    }, [propOrgTypes]);
+
+    useEffect(() => {
         if (data.pipeline_id) {
-            // Fetch stages for selected pipeline
             fetch(route('lead.stages.by-pipeline', data.pipeline_id))
                 .then(res => res.json())
-                .then(data => setStages(data))
+                .then(stageList => {
+                    setStages(stageList || []);
+                })
                 .catch(() => setStages([]));
+        } else {
+            setStages([]);
         }
     }, [data.pipeline_id]);
 
-    const selectedStage: any = (stages as any[])?.find(
+    const isSubjectInList = (subjectName: string, list: any) => {
+        if (!subjectName || !list) return false;
+        if (Array.isArray(list)) {
+            return list.some((item: any) => (item.name ?? item) === subjectName);
+        }
+        return Object.values(list).some((name: any) => (typeof name === 'string' ? name : name?.name) === subjectName);
+    };
+
+    const isOrgTypeInList = (orgTypeName: string, list: any) => {
+        if (!orgTypeName || !list) return false;
+        if (Array.isArray(list)) {
+            return list.some((item: any) => (item.name ?? item) === orgTypeName);
+        }
+        return Object.values(list).some((name: any) => (typeof name === 'string' ? name : name?.name) === orgTypeName);
+    };
+
+    const selectedStage = (stages as any[])?.find(
         (s: any) => s.id?.toString() === data.stage_id?.toString()
     );
     const isFinalAccepted = !!selectedStage?.is_final_accepted;
     const isFinalRejected = !!selectedStage?.is_final_rejected;
 
-    const isSubjectInList = (val: string, list: any) => {
-        if (!val || !list) return false;
-        if (Array.isArray(list)) {
-            return list.some((item: any) => (item.name ?? item) === val);
-        }
-        return Object.values(list).includes(val) || Object.keys(list).includes(val);
-    };
+    const canCreateSubject = auth?.user?.permissions?.includes('create-subjects');
+    const canCreateOrgType = auth?.user?.permissions?.includes('create-organization-types');
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Convert arrays to comma-separated strings for backend
-        const submitData = {
-            ...data,
-            sources: Array.isArray(data.sources) ? (data.sources.length > 0 ? data.sources.join(',') : '') : data.sources,
-            products: Array.isArray(data.products) ? (data.products.length > 0 ? data.products.join(',') : '') : data.products,
-            labels: Array.isArray(data.labels) ? (data.labels.length > 0 ? data.labels.join(',') : '') : data.labels,
-        };
-
         put(route('lead.leads.update', lead.id), {
-            data: submitData,
             onSuccess: () => {
                 onSuccess();
             }
         });
     };
 
-    const normalizeLabels = (labels: unknown): string[] => {
-        if (!labels) {
-            return [];
-        }
+    const handleQuickAddSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!quickAddName.trim()) return;
 
-        if (Array.isArray(labels)) {
-            return labels
-                .map(String)
-                .map((value) => value.trim())
-                .filter(Boolean);
-        }
-
-        if (typeof labels === 'string') {
-            const value = labels.trim();
-
-            if (!value) {
-                return [];
+        setIsQuickAdding(true);
+        try {
+            if (quickAddModal.type === 'subject') {
+                const res = await axios.post(route('lead.subjects.store'), { name: quickAddName });
+                const newSubject = res.data?.data || { name: quickAddName };
+                setSubjects(prev => Array.isArray(prev) ? [...prev, newSubject] : [...Object.values(prev), newSubject]);
+                setData('subject', newSubject.name);
+                toast.success(t('Subject created successfully'));
+            } else if (quickAddModal.type === 'organization_type') {
+                const res = await axios.post(route('lead.organization-types.store'), { name: quickAddName });
+                const newOrgType = res.data?.data || { name: quickAddName };
+                setOrgTypes(prev => Array.isArray(prev) ? [...prev, newOrgType] : [...Object.values(prev), newOrgType]);
+                setData('organization_type', newOrgType.name);
+                toast.success(t('Organization Type created successfully'));
             }
-
-            // Handles JSON: ["4","5","8","9"]
-            try {
-                const parsed = JSON.parse(value);
-
-                if (Array.isArray(parsed)) {
-                    return parsed
-                        .map(String)
-                        .map((item) => item.trim())
-                        .filter(Boolean);
-                }
-            } catch {
-                // Not JSON, continue with comma-separated handling.
-            }
-
-            // Handles: 4,5,8,9
-            return value
-                .split(',')
-                .map((item) => item.replace(/[\[\]"]/g, '').trim())
-                .filter(Boolean);
+            setQuickAddName('');
+            setQuickAddModal({ isOpen: false, type: null });
+        } catch (err) {
+            toast.error(t('Failed to create item'));
+        } finally {
+            setIsQuickAdding(false);
         }
-
-        return [];
     };
 
     return (
@@ -177,7 +179,24 @@ export default function EditLead({ lead, sources: propSources, subjects: propSub
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <Label htmlFor="subject" required>{t('Subject')}</Label>
+                        <div className="flex items-center justify-between mb-1">
+                            <Label htmlFor="subject" required>{t('Subject')}</Label>
+                            {canCreateSubject && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-5 px-1.5 text-xs text-primary hover:text-primary/80 flex items-center gap-1 p-0"
+                                    onClick={() => {
+                                        setQuickAddName('');
+                                        setQuickAddModal({ isOpen: true, type: 'subject' });
+                                    }}
+                                >
+                                    <Plus className="h-3 w-3" />
+                                    {t('Add New')}
+                                </Button>
+                            )}
+                        </div>
                         <Select value={data.subject || ''} onValueChange={(value) => setData('subject', value)}>
                             <SelectTrigger>
                                 <SelectValue placeholder={t('Select Subject')} />
@@ -207,6 +226,55 @@ export default function EditLead({ lead, sources: propSources, subjects: propSub
                     </div>
 
                     <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <Label htmlFor="organization_type">{t('Organization Type')}</Label>
+                            {canCreateOrgType && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-5 px-1.5 text-xs text-primary hover:text-primary/80 flex items-center gap-1 p-0"
+                                    onClick={() => {
+                                        setQuickAddName('');
+                                        setQuickAddModal({ isOpen: true, type: 'organization_type' });
+                                    }}
+                                >
+                                    <Plus className="h-3 w-3" />
+                                    {t('Add New')}
+                                </Button>
+                            )}
+                        </div>
+                        <Select value={data.organization_type || ''} onValueChange={(value) => setData('organization_type', value)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder={t('Select Organization Type')} />
+                            </SelectTrigger>
+                            <SelectContent searchable>
+                                {Array.isArray(orgTypes) ? (
+                                    orgTypes.map((item: any) => (
+                                        <SelectItem key={item.id ?? item.name ?? item} value={item.name ?? item}>
+                                            {item.name ?? item}
+                                        </SelectItem>
+                                    ))
+                                ) : (
+                                    Object.entries(orgTypes || {}).map(([id, name]: [string, any]) => (
+                                        <SelectItem key={id} value={typeof name === 'string' ? name : (name?.name ?? id)}>
+                                            {typeof name === 'string' ? name : (name?.name ?? id)}
+                                        </SelectItem>
+                                    ))
+                                )}
+                                {data.organization_type && !isOrgTypeInList(data.organization_type, orgTypes) && (
+                                    <SelectItem key="current_org_type" value={data.organization_type}>
+                                        {data.organization_type}
+                                    </SelectItem>
+                                )}
+                            </SelectContent>
+                        </Select>
+                        <InputError message={errors.organization_type} />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
                         <Label htmlFor="user_id" required>{t('User')}</Label>
                         <Select value={data.user_id?.toString() || ''} onValueChange={(value) => setData('user_id', value)}>
                             <SelectTrigger>
@@ -222,9 +290,7 @@ export default function EditLead({ lead, sources: propSources, subjects: propSub
                         </Select>
                         <InputError message={errors.user_id} />
                     </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
                     <div>
                         <PhoneInputComponent
                             label={t('Phone No')}
@@ -233,7 +299,9 @@ export default function EditLead({ lead, sources: propSources, subjects: propSub
                             error={errors.phone}
                         />
                     </div>
+                </div>
 
+                <div className="grid grid-cols-2 gap-4">
                     <div>
                         <div className="flex items-center justify-between mb-1">
                             <Label className={isFinalAccepted ? 'text-emerald-700 dark:text-emerald-400 font-medium' : (isFinalRejected ? 'text-muted-foreground' : '')}>
@@ -265,12 +333,15 @@ export default function EditLead({ lead, sources: propSources, subjects: propSub
                         />
                         <InputError message={errors.date} />
                     </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
                     <div>
                         <Label htmlFor="pipeline_id">{t('Pipeline')}</Label>
-                        <Select value={data.pipeline_id?.toString() || ''} onValueChange={(value) => setData('pipeline_id', value)}>
+                        <Select
+                            value={data.pipeline_id || ''}
+                            onValueChange={(value) => {
+                                setData(prev => ({ ...prev, pipeline_id: value, stage_id: '' }));
+                            }}
+                        >
                             <SelectTrigger>
                                 <SelectValue placeholder={t('Select Pipeline')} />
                             </SelectTrigger>
@@ -284,25 +355,28 @@ export default function EditLead({ lead, sources: propSources, subjects: propSub
                         </Select>
                         <InputError message={errors.pipeline_id} />
                     </div>
+                </div>
 
+                <div className="grid grid-cols-2 gap-4">
                     <div>
                         <Label htmlFor="stage_id">{t('Stage')}</Label>
                         <Select
-                            value={data.stage_id?.toString() || ''}
+                            value={data.stage_id || ''}
                             onValueChange={(value) => {
-                                const stageObj: any = (stages as any[])?.find((s: any) => s.id?.toString() === value?.toString());
+                                const stageObj = (stages as any[])?.find((s: any) => s.id?.toString() === value?.toString());
                                 if (stageObj?.is_final_rejected) {
                                     setData(prev => ({ ...prev, stage_id: value, date: '' }));
                                 } else {
                                     setData('stage_id', value);
                                 }
                             }}
+                            disabled={!data.pipeline_id}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder={t('Select Stage')} />
+                                <SelectValue placeholder={data.pipeline_id ? t('Select Stage') : t('Select Pipeline first')} />
                             </SelectTrigger>
                             <SelectContent searchable>
-                                {stages?.map((item: any) => (
+                                {(stages as any[])?.map((item: any) => (
                                     <SelectItem key={item.id} value={item.id.toString()}>
                                         <div className="flex items-center justify-between w-full gap-2">
                                             <span>{item.name}</span>
@@ -323,59 +397,46 @@ export default function EditLead({ lead, sources: propSources, subjects: propSub
                         </Select>
                         <InputError message={errors.stage_id} />
                     </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <Label htmlFor="sources">{t('Sources')}</Label>
+                        <Label htmlFor="sources">
+                            {t('Sources')}
+                        </Label>
+
                         <MultiSelectEnhanced
-                            options={Object.entries(sources).map(([id, name]) => ({
-                                value: id,
-                                label: name as string
-                            }))}
-                            value={Array.isArray(data.sources) ? data.sources : []}
-                            onValueChange={(values) => setData('sources', values)}
+                            options={
+                                Array.isArray(sources)
+                                    ? sources.map((source: any) => ({
+                                        value: String(source.id),
+                                        label: String(source.name ?? ''),
+                                    }))
+                                    : Object.entries(sources || {}).map(
+                                        ([id, source]: [string, any]) => ({
+                                            value: String(
+                                                source?.id ?? id
+                                            ),
+                                            label: String(
+                                                source?.name ??
+                                                source ??
+                                                ''
+                                            ),
+                                        })
+                                    )
+                            }
+                            value={
+                                Array.isArray(data.sources)
+                                    ? data.sources.map(String)
+                                    : []
+                            }
+                            onValueChange={(values) =>
+                                setData('sources', values)
+                            }
                             placeholder={t('Select Sources')}
-                            searchable={true}
+                            searchable
                         />
+
                         <InputError message={errors.sources} />
                     </div>
-
-                    <div>
-                        <Label htmlFor="products">{t('Products')}</Label>
-                        <MultiSelectEnhanced
-                            options={Object.entries(productOptions).map(([id, name]) => ({
-                                value: id,
-                                label: name as string
-                            }))}
-                            value={Array.isArray(data.products) ? data.products : []}
-                            onValueChange={(values) => setData('products', values)}
-                            placeholder={t('Select Products')}
-                            searchable={true}
-                        />
-                        <InputError message={errors.products} />
-                    </div>
-                </div>
-                <div>
-                    <Label htmlFor="labels" className="mb-2">
-                        <Tag className="inline-block mr-2 h-4 w-4 text-purple-600" />
-                        {t('Labels')}</Label>
-                    <MultiSelectEnhanced
-                        options={Array.isArray(labelOptions)
-                            ? labelOptions.map((label: any) => ({
-                                value: String(label.id),
-                                label: String(label.name ?? ''),
-                            }))
-                            : Object.entries(labelOptions || {}).map(([id, label]: [string, any]) => ({
-                                value: String(label?.id ?? id),
-                                label: String(label?.name ?? label ?? ''),
-                            }))}
-                        value={Array.isArray(data.labels) ? data.labels.map(String) : []}
-                        onValueChange={(values) => setData('labels', values)}
-                        placeholder={t('Select Labels')}
-                        searchable={true}
-                    />
-                    <InputError message={errors.labels} />
                 </div>
 
                 <div>
@@ -415,6 +476,36 @@ export default function EditLead({ lead, sources: propSources, subjects: propSub
                     </Button>
                 </div>
             </form>
+
+            <Dialog open={quickAddModal.isOpen} onOpenChange={(open) => setQuickAddModal(prev => ({ ...prev, isOpen: open }))}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {quickAddModal.type === 'subject' ? t('Create Lead Subject') : t('Create Organization Type')}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleQuickAddSubmit} className="space-y-4">
+                        <div>
+                            <Label htmlFor="quick-add-name-edit">{t('Name')}</Label>
+                            <Input
+                                id="quick-add-name-edit"
+                                value={quickAddName}
+                                onChange={(e) => setQuickAddName(e.target.value)}
+                                placeholder={quickAddModal.type === 'subject' ? t('Enter Subject Name') : t('Enter Organization Type Name')}
+                                required
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setQuickAddModal({ isOpen: false, type: null })}>
+                                {t('Cancel')}
+                            </Button>
+                            <Button type="submit" disabled={isQuickAdding}>
+                                {isQuickAdding ? t('Creating...') : t('Create')}
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </DialogContent>
     );
 }

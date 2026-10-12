@@ -25,6 +25,7 @@ import {
     Tag,
     Pencil,
     List,
+    Building2,
 } from 'lucide-react';
 import { useFormFields } from '@/hooks/useFormFields';
 import LabelView from '../LabelView';
@@ -273,6 +274,16 @@ export default function General({ lead }: GeneralProps) {
                             <div>
                                 <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">{t('Subject')}</p>
                                 <p className="text-sm font-medium text-gray-800">{lead.subject || '-'}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                            <div className="mt-0.5 h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                                <Building2 className="h-4 w-4 text-amber-500" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">{t('Organization Type')}</p>
+                                <p className="text-sm font-medium text-gray-800">{lead.organization_type || '-'}</p>
                             </div>
                         </div>
 

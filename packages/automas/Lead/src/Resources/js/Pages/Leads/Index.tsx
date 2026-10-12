@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { Dialog } from "@/components/ui/dialog";
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import { Plus, Edit as EditIcon, Trash2, Eye, Users as UsersIcon, MoreVertical, Calendar, Kanban, List, ShoppingCart, Globe, CheckSquare, Table, Phone } from "lucide-react";
+import { Plus, Edit as EditIcon, Trash2, Eye, Users as UsersIcon, MoreVertical, Calendar, Kanban, List, ShoppingCart, Globe, CheckSquare, Upload, Phone } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FilterButton } from '@/components/ui/filter-button';
 import { Pagination } from "@/components/ui/pagination";
@@ -28,7 +28,6 @@ import { Lead, LeadsIndexProps, LeadFilters, LeadModalState } from './types';
 import { formatDate, formatDateTime, getImagePath, formatTimeFromDate } from '@/utils/helpers';
 import { usePageButtons } from '@/hooks/usePageButtons';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
-
 
 export default function Index() {
     const { t } = useTranslation();
@@ -539,8 +538,11 @@ export default function Index() {
             render: (_: any, row: Lead) => {
                 const subject = row.subject || '-';
                 return (
-                    <div className="text-xs leading-tight">
-                        <div className="text-foreground">{subject}</div>
+                    <div className="text-xs leading-tight space-y-0.5">
+                        <div className="text-foreground font-medium">{subject}</div>
+                        {row.organization_type && (
+                            <div className="text-[11px] text-muted-foreground">{row.organization_type}</div>
+                        )}
                     </div>
                 );
             }
@@ -880,7 +882,7 @@ export default function Index() {
                                             router.get(route('lead.leads.import.index'))
                                         }
                                     >
-                                        <Table className="h-4 w-4" />
+                                        <Upload className="h-4 w-4" />
                                     </Button>
                                 </TooltipTrigger>
 

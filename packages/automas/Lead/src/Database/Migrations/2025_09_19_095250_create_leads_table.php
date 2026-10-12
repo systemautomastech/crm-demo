@@ -26,8 +26,6 @@ return new class extends Migration
                 $table->string('phone', 20)->nullable();
                 $table->boolean('is_active')->default(true);
                 $table->integer('is_converted')->default(0);
-                $table->string('import_key', 100)->nullable()->index();
-                $table->foreignId('lead_import_id')->nullable()->index()->constrained('lead_imports')->nullOnDelete();
                 $table->dateTime('date')->nullable();
                 $table->foreignId('creator_id')->nullable()->index();
                 $table->foreignId('created_by')->nullable()->index();

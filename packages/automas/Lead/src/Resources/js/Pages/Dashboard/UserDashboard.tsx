@@ -21,8 +21,13 @@ import {
     Layers,
     ListTodo,
     ChevronRight,
+    ChevronDown,
+    ChevronUp,
     ArrowUpRight,
     Briefcase,
+    Building2,
+    Trophy,
+    Sparkles,
 } from 'lucide-react';
 import CustomEventCalendar, { CalendarEventItem } from '@/components/custom-event-calendar';
 import { Badge } from '@/components/ui/badge';
@@ -84,6 +89,7 @@ interface UserDashboardProps {
     recentLeads?: any[];
     calendarEvents?: CalendarEventItem[];
     followupEvents?: CalendarEventItem[];
+    organizationTypeConversion?: any[];
 }
 
 
@@ -96,10 +102,12 @@ export default function UserDashboard({
     recentLeads = [],
     calendarEvents = [],
     followupEvents = [],
+    organizationTypeConversion = [],
 }: UserDashboardProps) {
     const { t } = useTranslation();
 
     const [activeCalendarTab, setActiveCalendarTab] = useState<'followups' | 'tasks'>('followups');
+    const [showAllOrgTypes, setShowAllOrgTypes] = useState<boolean>(false);
 
     // Dynamic date subtitles for performance cards
     const dateSubtitles = useMemo(() => {
@@ -866,6 +874,134 @@ export default function UserDashboard({
                             eventsSummaryText={t('tasks scheduled or due')}
                             emptyText={t('No task events scheduled on this date.')}
                         />
+                    )}
+                </div>
+
+                {/* Organization Type Conversion Box (Positioned at the very end) */}
+                <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                                    <Building2 className="w-4 h-4" />
+                                </div>
+                                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                                    {t('Top Conversion by Organization Type')}
+                                </h3>
+                            </div>
+                            <p className="text-xs font-semibold text-slate-400 mt-1">
+                                {t('Leads to deal conversion rates by organization category')}
+                            </p>
+                        </div>
+                        {organizationTypeConversion && organizationTypeConversion.length > 0 && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 self-start sm:self-auto">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                {organizationTypeConversion.length} {t('Types Analyzed')}
+                            </span>
+                        )}
+                    </div>
+
+                    {organizationTypeConversion && organizationTypeConversion.length > 0 ? (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {(showAllOrgTypes ? organizationTypeConversion : organizationTypeConversion.slice(0, 3)).map((item: any, idx: number) => {
+                                    const isTop = idx === 0 && item.converted_deals > 0;
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className={`relative rounded-xl p-4 border transition-all duration-200 flex flex-col justify-between ${
+                                                isTop
+                                                    ? 'bg-gradient-to-br from-indigo-50/80 via-purple-50/40 to-white dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-slate-900 border-indigo-200 dark:border-indigo-800/70 shadow-sm ring-1 ring-indigo-500/20'
+                                                    : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600'
+                                            }`}
+                                        >
+                                            {isTop && (
+                                                <div className="absolute -top-2.5 right-3 bg-gradient-to-r from-amber-500 to-indigo-600 text-white text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                                                    <Trophy className="w-3 h-3" />
+                                                    {t('Top Performing')}
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <div className="flex items-center justify-between gap-2 mb-2">
+                                                    <span className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                                                        {item.name}
+                                                    </span>
+                                                    <span className={`text-xs font-extrabold px-2 py-0.5 rounded-full shrink-0 ${
+                                                        item.conversion_rate >= 50
+                                                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                                            : item.conversion_rate >= 20
+                                                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                                                            : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                                                    }`}>
+                                                        {item.conversion_rate}%
+                                                    </span>
+                                                </div>
+
+                                                {/* Metrics Row */}
+                                                <div className="grid grid-cols-3 gap-2 my-3 text-center">
+                                                    <div className="bg-white dark:bg-slate-900/80 rounded-lg p-2 border border-slate-100 dark:border-slate-800">
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">{t('Leads')}</p>
+                                                        <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{item.total_leads}</p>
+                                                    </div>
+                                                    <div className="bg-white dark:bg-slate-900/80 rounded-lg p-2 border border-slate-100 dark:border-slate-800">
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">{t('Deals')}</p>
+                                                        <p className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5">{item.converted_deals}</p>
+                                                    </div>
+                                                    <div className="bg-white dark:bg-slate-900/80 rounded-lg p-2 border border-slate-100 dark:border-slate-800">
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">{t('Won')}</p>
+                                                        <p className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">{item.won_deals}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Conversion Rate Bar */}
+                                                <div className="space-y-1">
+                                                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                                                        <div
+                                                            className="bg-gradient-to-r from-indigo-500 to-emerald-500 h-full rounded-full transition-all duration-500"
+                                                            style={{ width: `${Math.min(100, Math.max(0, item.conversion_rate))}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-3 mt-3 border-t border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between text-xs">
+                                                <span className="text-slate-400 font-semibold">{t('Total Deal Value')}</span>
+                                                <span className="font-extrabold text-slate-900 dark:text-white">
+                                                    {formatCurrency(item.total_value)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {organizationTypeConversion.length > 3 && (
+                                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAllOrgTypes(!showAllOrgTypes)}
+                                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-slate-200/80 dark:hover:bg-slate-700 transition-all shadow-2xs"
+                                    >
+                                        {showAllOrgTypes ? (
+                                            <>
+                                                <ChevronUp className="w-4 h-4" />
+                                                {t('View Less')}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ChevronDown className="w-4 h-4" />
+                                                {t('View More')} ({organizationTypeConversion.length - 3} {t('more')})
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="py-8 text-center text-xs font-semibold text-slate-400 bg-slate-50/50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                            {t('No organization type conversion data recorded yet.')}
+                        </div>
                     )}
                 </div>
             </div>

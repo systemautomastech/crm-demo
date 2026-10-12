@@ -51,8 +51,19 @@ class LeadSubjectController extends Controller
 
             CreateLeadSubject::dispatch($request, $subject);
 
+            if (!$request->header('X-Inertia') && ($request->wantsJson() || $request->ajax())) {
+                return response()->json([
+                    'success' => true,
+                    'message' => __('The subject has been created successfully.'),
+                    'data' => $subject,
+                ]);
+            }
+
             return redirect()->route('lead.subjects.index')->with('success', __('The subject has been created successfully.'));
         } else {
+            if (!$request->header('X-Inertia') && ($request->wantsJson() || $request->ajax())) {
+                return response()->json(['error' => __('Permission denied')], 403);
+            }
             return redirect()->route('lead.subjects.index')->with('error', __('Permission denied'));
         }
     }
