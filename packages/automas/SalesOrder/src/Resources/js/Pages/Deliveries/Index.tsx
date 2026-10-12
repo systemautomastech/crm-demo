@@ -1,15 +1,16 @@
 import { useState, useMemo } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
+import { Loader } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useFlashMessages } from '@/hooks/useFlashMessages';
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatDate } from '@/utils/helpers';
-import { Eye, Printer, Ban, FileText, Edit, RefreshCw, Truck } from "lucide-react";
+import { Eye, Printer, XCircle, Package, Edit, Truck } from "lucide-react";
 import { Pagination } from '@/components/ui/pagination';
 import { SearchInput } from "@/components/ui/search-input";
 import { FilterButton } from "@/components/ui/filter-button";
@@ -72,6 +73,7 @@ export default function DeliveryIndex({ deliveries, filters: propsFilters = {} }
     const [showFilters, setShowFilters] = useState(false);
     const [selectedDelivery, setSelectedDelivery] = useState<DeliveryItem | null>(null);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [loadingId, setLoadingId] = useState<number | null>(null);
 
     const activeFiltersCount = useMemo(() => {
         return [filters.status, filters.date_range].filter(Boolean).length;
@@ -126,22 +128,28 @@ export default function DeliveryIndex({ deliveries, filters: propsFilters = {} }
         });
     };
 
-    const renderStatusBadge = (st: string) => {
+    const getStatusClass = (st: string) => {
         switch (st) {
             case 'created':
-                return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-none font-medium">{t('Created')}</Badge>;
+                return 'bg-blue-500 text-white border-blue-500';
             case 'ongoing':
-                return <Badge className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300 border-none font-medium">{t('Ongoing')}</Badge>;
+                return 'bg-indigo-500 text-white border-indigo-500';
             case 'postponed':
-                return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-none font-medium">{t('Postponed')}</Badge>;
+                return 'bg-amber-400 text-white border-amber-400';
             case 'delivered':
-                return <Badge className="bg-emerald-600 text-white border-none font-medium">{t('Delivered')}</Badge>;
+                return 'bg-emerald-600 text-white border-emerald-600';
             case 'cancelled':
-                return <Badge variant="destructive" className="font-medium">{t('Cancelled')}</Badge>;
+                return 'bg-red-600 text-white border-red-600';
             default:
-                return <Badge variant="outline">{st}</Badge>;
+                return 'bg-slate-100 text-slate-700 border-slate-200';
         }
     };
+
+    const renderStatusBadge = (st: string) => (
+        <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusClass(st)}`}>
+            {t(st.charAt(0).toUpperCase() + st.slice(1))}
+        </span>
+    );
 
     return (
         <AuthenticatedLayout
@@ -255,7 +263,7 @@ export default function DeliveryIndex({ deliveries, filters: propsFilters = {} }
                                             <th className="p-4">{t('Delivery #')}</th>
                                             <th className="p-4">{t('Order #')}</th>
                                             <th className="p-4">{t('Customer')}</th>
-                                            <th className="p-4">{t('Delivery Date')}</th>
+                                            <th className="p-4">{t('Date')}</th>
                                             <th className="p-4">{t('Items')}</th>
                                             <th className="p-4">{t('Status')}</th>
                                             <th className="p-4 text-right">{t('Actions')}</th>
@@ -269,8 +277,10 @@ export default function DeliveryIndex({ deliveries, filters: propsFilters = {} }
                                             const order = delivery.sales_order;
 
                                             const handleRowStatusChange = (newStatus: string) => {
+                                                setLoadingId(delivery.id);
                                                 router.post(route('salesorder.deliveries.update-status', delivery.id), { status: newStatus }, {
                                                     preserveScroll: true,
+                                                    onFinish: () => setLoadingId(null),
                                                 });
                                             };
 
@@ -294,22 +304,29 @@ export default function DeliveryIndex({ deliveries, filters: propsFilters = {} }
                                                         )}
                                                     </td>
                                                     <td className="p-4">
-                                                        {order?.customer?.customer_name || <span className="text-muted-foreground">—</span>}
+                                                        {(order?.customer as any)?.customer_name || order?.customer?.name || (order as any)?.customer_name || <span className="text-muted-foreground">—</span>}
                                                     </td>
                                                     <td className="p-4 text-slate-700 dark:text-slate-300">
                                                         {formatDate(delivery.delivery_date)}
                                                     </td>
                                                     <td className="p-4">
                                                         <span className="inline-flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300">
-                                                            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                                                            {delivery.items?.length || 0} {t('items')}
+                                                            <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                                                            {delivery.items?.length || 0}
                                                         </span>
                                                     </td>
+
+                                                    {/* ─── Status Cell ─── */}
                                                     <td className="p-4">
-                                                        {!isFinal ? (
+                                                        {loadingId === delivery.id ? (
+                                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusClass(delivery.status)}`}>
+                                                                <Loader className="h-3 w-3 animate-spin" />
+                                                                {t(delivery.status.charAt(0).toUpperCase() + delivery.status.slice(1))}
+                                                            </span>
+                                                        ) : !isFinal ? (
                                                             <Select value={delivery.status} onValueChange={handleRowStatusChange}>
-                                                                <SelectTrigger className="h-8 text-xs w-32 border-none shadow-none p-0 bg-transparent">
-                                                                    {renderStatusBadge(delivery.status)}
+                                                                <SelectTrigger className={`h-auto w-auto border px-2.5 py-0.5 rounded-full text-xs font-medium shadow-none focus:ring-0 focus:ring-offset-0 gap-1 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-60 ${getStatusClass(delivery.status)}`}>
+                                                                    <SelectValue />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
                                                                     <SelectItem value="created">{t('Created')}</SelectItem>
@@ -323,44 +340,69 @@ export default function DeliveryIndex({ deliveries, filters: propsFilters = {} }
                                                             renderStatusBadge(delivery.status)
                                                         )}
                                                     </td>
+
+                                                    {/* ─── Actions Cell ─── */}
                                                     <td className="p-4 text-right">
-                                                        <div className="flex items-center justify-end gap-1">
-                                                            <Link href={route('salesorder.deliveries.show', delivery.id)}>
-                                                                <Button size="sm" variant="ghost" title={t('View Details')} className="h-8 w-8 p-0">
-                                                                    <Eye className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                                                                </Button>
-                                                            </Link>
-                                                            {!isFinal && (
-                                                                <Link href={route('salesorder.deliveries.edit', delivery.id)}>
-                                                                    <Button size="sm" variant="ghost" title={t('Edit Delivery')} className="h-8 w-8 p-0">
-                                                                        <Edit className="h-4 w-4 text-blue-600" />
-                                                                    </Button>
-                                                                </Link>
-                                                            )}
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                title={t('Print Challan')}
-                                                                className="h-8 w-8 p-0"
-                                                                onClick={() => window.open(route('salesorder.deliveries.challan', delivery.id), '_blank')}
-                                                            >
-                                                                <Printer className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                                                            </Button>
-                                                            {!isFinal && (
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="ghost"
-                                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-                                                                    title={t('Cancel Delivery')}
-                                                                    onClick={() => {
-                                                                        setSelectedDelivery(delivery);
-                                                                        setCancelDialogOpen(true);
-                                                                    }}
-                                                                >
-                                                                    <Ban className="h-4 w-4" />
-                                                                </Button>
-                                                            )}
-                                                        </div>
+                                                        <TooltipProvider delayDuration={200}>
+                                                            <div className="flex items-center justify-end gap-0.5">
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <Link href={route('salesorder.deliveries.show', delivery.id)}>
+                                                                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground">
+                                                                                <Eye className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </Link>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent><p>{t('View Details')}</p></TooltipContent>
+                                                                </Tooltip>
+
+                                                                {!isFinal && (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Link href={route('salesorder.deliveries.edit', delivery.id)}>
+                                                                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-blue-600">
+                                                                                    <Edit className="h-4 w-4" />
+                                                                                </Button>
+                                                                            </Link>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent><p>{t('Edit')}</p></TooltipContent>
+                                                                    </Tooltip>
+                                                                )}
+
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="ghost"
+                                                                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                                                                            onClick={() => window.open(route('salesorder.deliveries.challan', delivery.id), '_blank')}
+                                                                        >
+                                                                            <Printer className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent><p>{t('Print Challan')}</p></TooltipContent>
+                                                                </Tooltip>
+
+                                                                {!isFinal && (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="ghost"
+                                                                                className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                                                onClick={() => {
+                                                                                    setSelectedDelivery(delivery);
+                                                                                    setCancelDialogOpen(true);
+                                                                                }}
+                                                                            >
+                                                                                <XCircle className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent><p>{t('Cancel Delivery')}</p></TooltipContent>
+                                                                    </Tooltip>
+                                                                )}
+                                                            </div>
+                                                        </TooltipProvider>
                                                     </td>
                                                 </tr>
                                             );
