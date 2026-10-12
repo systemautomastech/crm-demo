@@ -11,11 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatDate, formatCurrency } from '@/utils/helpers';
-import { FileText, Users, UserCheck, User, Lock, RotateCcw, ArrowRight, Truck, AlertCircle, Printer, Edit, CheckCircle, Package, MapPin } from 'lucide-react';
+import { FileText, Users, UserCheck, User, Lock, RotateCcw, ArrowRight, Truck, AlertCircle, Printer, Edit, CheckCircle, Package, MapPin, Calendar } from 'lucide-react';
 import { useFormFields } from '@/hooks/useFormFields';
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { MultiSelectEnhanced } from '@/components/ui/multi-select-enhanced';
+import ConvertToInvoiceForm from './components/ConvertToInvoiceForm';
 
 interface ShowSalesOrderProps {
     salesOrder: any;
@@ -49,6 +50,23 @@ function AssignmentBadge({ status }: { status: string }) {
     return <Badge variant="secondary"><AlertCircle className="w-3 h-3 mr-1" />{t('Unassigned')}</Badge>;
 }
 
+// ─── Challan Status Helper ────────────────────────────────────────────────────
+
+function getChallanStatusClass(status?: string) {
+    const s = (status || '').toLowerCase();
+    if (s === 'delivered') {
+        return 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/60 dark:text-emerald-300 dark:border-emerald-700';
+    }
+    if (s === 'ongoing' || s === 'in_transit' || s === 'dispatched') {
+        return 'bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-900/60 dark:text-sky-300 dark:border-sky-700';
+    }
+    if (s === 'postponed' || s === 'cancelled') {
+        return 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-900/60 dark:text-rose-300 dark:border-rose-700';
+    }
+    // Default (created / pending / draft)
+    return 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/60 dark:text-amber-300 dark:border-amber-700';
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function Show() {
@@ -77,7 +95,6 @@ export default function Show() {
     const [cancelOrderDialogOpen, setCancelOrderDialogOpen] = useState(false);
     const [releaseOrderDialogOpen, setReleaseOrderDialogOpen] = useState(false);
     const [convertDialogOpen, setConvertDialogOpen] = useState(false);
-    const [isConverting, setIsConverting] = useState(false);
     const [selectedGroupId, setSelectedGroupId] = useState<string>('');
     const [reassignType, setReassignType] = useState<'group' | 'user'>('group');
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -121,18 +138,25 @@ export default function Show() {
         });
     };
 
-    const handleConvertInvoice = () => {
-        router.post(route('salesorder.orders.convert', salesOrder.id), {}, {
-            onStart: () => setIsConverting(true),
+    const [convertingProcessing, setConvertingProcessing] = useState(false);
+
+    const handleConvertInvoice = (customItems?: Array<{ id: number; quantity: number }>) => {
+        setConvertingProcessing(true);
+        const payload: Record<string, any> = {};
+        if (customItems && customItems.length > 0) {
+            payload.items = customItems;
+        }
+        router.post(route('salesorder.orders.convert', salesOrder.id), payload, {
             onSuccess: () => {
-                setIsConverting(false);
+                setConvertingProcessing(false);
                 setConvertDialogOpen(false);
             },
             onError: () => {
-                setIsConverting(false);
+                setConvertingProcessing(false);
+                setConvertDialogOpen(false);
             },
             onFinish: () => {
-                setIsConverting(false);
+                setConvertingProcessing(false);
             }
         });
     };
@@ -163,75 +187,135 @@ export default function Show() {
 
             <div className="space-y-6">
                 {salesOrder.status === 'confirmed' && (() => {
-                    const steps = [
-                        {
-                            key: 'confirmed',
-                            label: t('Confirmed'),
-                            icon: CheckCircle,
-                            done: true,
-                            active: !['group_assigned', 'acquired'].includes(salesOrder.assignment_status) && salesOrder.delivery_status !== 'delivered',
-                        },
-                        {
+                    const isGroupFlow = !!salesOrder.assigned_group || salesOrder.assignment_status === 'group_assigned';
+                    const isAcquired = salesOrder.assignment_status === 'acquired';
+                    const isDelivered = salesOrder.delivery_status === 'delivered';
+
+                    const steps: Array<{
+                        key: string;
+                        label: string;
+                        icon: any;
+                        done: boolean;
+                        doneClass: string;
+                        subtext?: string;
+                        time?: string;
+                    }> = [
+                            {
+                                key: 'confirmed',
+                                label: t('Confirmed'),
+                                icon: CheckCircle,
+                                done: true,
+                                doneClass: 'bg-green-600 text-white border-green-600',
+                                time: formatDate(salesOrder.confirmed_at || salesOrder.order_date),
+                            },
+                        ];
+
+                    if (isGroupFlow) {
+                        steps.push({
                             key: 'group_assigned',
                             label: t('Group Assigned'),
                             icon: Users,
                             done: ['group_assigned', 'acquired'].includes(salesOrder.assignment_status),
-                            active: salesOrder.assignment_status === 'group_assigned',
-                        },
-                        {
-                            key: 'acquired',
-                            label: t('Acquired'),
-                            icon: Lock,
-                            done: salesOrder.assignment_status === 'acquired',
-                            active: salesOrder.assignment_status === 'acquired' && salesOrder.delivery_status !== 'delivered',
-                        },
-                        {
-                            key: 'delivered',
-                            label: t('Delivered'),
-                            icon: Package,
-                            done: salesOrder.delivery_status === 'delivered',
-                            active: salesOrder.delivery_status === 'delivered',
-                        },
-                    ];
+                            doneClass: 'bg-blue-600 text-white border-blue-600',
+                            subtext: salesOrder.assigned_group?.name,
+                        });
+                    }
+
+                    steps.push({
+                        key: 'acquired',
+                        label: t('Assigned'),
+                        icon: Lock,
+                        done: isAcquired,
+                        doneClass: 'bg-indigo-600 text-white border-indigo-600',
+                        subtext: isAcquired ? (salesOrder.acquired_by_user?.name || t('Acquired')) : undefined,
+                        time: isAcquired && salesOrder.acquired_at ? formatDate(salesOrder.acquired_at) : undefined,
+                    });
+
+                    // Challan Issued Step
+                    const hasDeliveries = deliveries.length > 0;
+                    const latestDelivery = hasDeliveries ? deliveries[deliveries.length - 1] : null;
+                    const challanSubtext = hasDeliveries
+                        ? (deliveries.length === 1
+                            ? (latestDelivery?.delivery_number ? `#${latestDelivery.delivery_number}` : t('Issued'))
+                            : t(':count Challans', { count: deliveries.length }))
+                        : undefined;
+                    const challanTime = latestDelivery?.delivery_date ? formatDate(latestDelivery.delivery_date) : undefined;
+
+                    steps.push({
+                        key: 'challan_issued',
+                        label: t('Challan Issued'),
+                        icon: Truck,
+                        done: hasDeliveries,
+                        doneClass: 'bg-blue-600 text-white border-blue-600',
+                        subtext: challanSubtext,
+                        time: challanTime,
+                    });
+
+                    // Delivered Step (clean: only date and delivered by user if available)
+                    const deliveredChallans = deliveries.filter((d: any) => d.status === 'delivered');
+                    const lastDeliveredChallan = deliveredChallans.length > 0 ? deliveredChallans[deliveredChallans.length - 1] : null;
+
+                    const deliveredUser = salesOrder.delivered_by_user?.name
+                        || salesOrder.delivered_by
+                        || lastDeliveredChallan?.creator?.name;
+
+                    const deliveredDate = salesOrder.delivered_at
+                        || lastDeliveredChallan?.delivery_date;
+
+                    steps.push({
+                        key: 'delivered',
+                        label: t('Delivered'),
+                        icon: Package,
+                        done: isDelivered,
+                        doneClass: 'bg-emerald-600 text-white border-emerald-600',
+                        subtext: isDelivered && deliveredUser ? deliveredUser : undefined,
+                        time: isDelivered && deliveredDate ? formatDate(deliveredDate) : undefined,
+                    });
+
                     const currentStepIndex = steps.reduce((acc, s, i) => s.done ? i : acc, 0);
 
                     return (
-                        <Card className="border-0 shadow-md bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+                        <Card className="shadow-sm">
                             {/* Header */}
-                            <div className="px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3 flex-wrap">
+                            <div className="px-5 py-4 border-b flex items-center justify-between gap-3 flex-wrap">
                                 <div className="flex items-center gap-2.5">
-                                    <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900">
-                                        <Truck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                    <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                        <Truck className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{t('Assignment & Delivery Workflow')}</h3>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">{t('Track assignment and fulfilment progress')}</p>
+                                        <h3 className="text-sm font-semibold text-foreground">{t('Sales Order Workflow')}</h3>
+                                        <p className="text-xs text-muted-foreground">{t('Track assignment and fulfilment progress')}</p>
                                     </div>
                                 </div>
                                 <AssignmentBadge status={salesOrder.assignment_status || 'unassigned'} />
                             </div>
 
-                            <CardContent className="p-5 space-y-5">
+                            <CardContent className="p-4 space-y-4">
                                 {/* ── Workflow Timeline ── */}
-                                <div className="relative">
-                                    {/* Connecting line */}
-                                    <div className="absolute top-4 left-4 right-4 h-0.5 bg-slate-200 dark:bg-slate-700" />
-                                    <div
-                                        className="absolute top-4 left-4 h-0.5 bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-500"
-                                        style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
-                                    />
-                                    <div className="relative flex justify-between">
-                                        {steps.map((step, i) => {
+                                <div className="relative px-2 py-1">
+                                    <div className="relative flex justify-between items-start">
+                                        {/* Background connecting track: centered at top-[18px] through w-9 icons */}
+                                        <div className="absolute top-[18px] left-6 right-6 h-[2px] bg-muted dark:bg-slate-800 -z-0" />
+                                        <div
+                                            className="absolute top-[18px] left-6 h-[2px] bg-gradient-to-r from-green-500 via-blue-500 to-indigo-500 transition-all duration-500 -z-0"
+                                            style={{
+                                                width: currentStepIndex === 0
+                                                    ? '0%'
+                                                    : `calc(${((currentStepIndex / (steps.length - 1)) * 100).toFixed(2)}% - ${((currentStepIndex / (steps.length - 1)) * 48).toFixed(0)}px)`
+                                            }}
+                                        />
+
+                                        {steps.map((step) => {
                                             const Icon = step.icon;
                                             return (
-                                                <div key={step.key} className="flex flex-col items-center gap-1.5" style={{ width: `${100 / steps.length}%` }}>
-                                                    <div className={`z-10 w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${step.done
-                                                        ? 'bg-gradient-to-br from-blue-500 to-green-500 border-transparent text-white shadow-md'
-                                                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-400'
-                                                        } ${step.active && !step.done ? 'ring-2 ring-blue-300 ring-offset-1' : ''}`}>
-                                                        <Icon className="w-3.5 h-3.5" />
+                                                <div key={step.key} className="flex flex-col items-center z-10 max-w-[160px] text-center">
+                                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all duration-300 shadow-sm mb-1.5 ${step.done
+                                                        ? step.doneClass
+                                                        : 'bg-background border-muted text-muted-foreground'
+                                                        }`}>
+                                                        <Icon className="w-4 h-4" />
                                                     </div>
-                                                    <span className={`text-xs font-medium text-center leading-tight ${step.done ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'}`}>
+                                                    <span className={`text-xs font-semibold tracking-tight leading-tight ${step.done ? 'text-foreground' : 'text-muted-foreground'}`}>
                                                         {step.label}
                                                     </span>
                                                 </div>
@@ -240,63 +324,154 @@ export default function Show() {
                                     </div>
                                 </div>
 
-                                {/* ── Info Grid ── */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    {salesOrder.assigned_group && (
-                                        <div className="flex items-center gap-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-3 shadow-sm">
-                                            <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-900/50 shrink-0">
-                                                <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                {/* ── 4 Stage Details Cards ── */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+                                    {/* Card 1: Confirmed */}
+                                    <div className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                                <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                                                {t('Confirmed')}
+                                            </span>
+                                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium border bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-800">
+                                                {t('Done')}
+                                            </span>
+                                        </div>
+                                        <div className="space-y-1 text-xs">
+                                            <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                                {salesOrder.order_number ? `#${salesOrder.order_number}` : '-'}
                                             </div>
-                                            <div className="min-w-0">
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">{t('Assigned Group')}</p>
-                                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{salesOrder.assigned_group.name}</p>
+                                            <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                                <Calendar className="w-3 h-3 text-muted-foreground/60" />
+                                                {formatDate(salesOrder.confirmed_at || salesOrder.order_date)}
                                             </div>
                                         </div>
-                                    )}
-                                    {salesOrder.assignment_status === 'acquired' && salesOrder.acquired_by_user && (
-                                        <div className="flex items-center gap-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-3 shadow-sm">
-                                            <div className="p-1.5 rounded-md bg-green-50 dark:bg-green-900/50 shrink-0">
-                                                <UserCheck className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                                    </div>
+
+                                    {/* Card 2: Assignment */}
+                                    <div className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                                <Lock className="w-3.5 h-3.5 text-indigo-600" />
+                                                {t('Assigned')}
+                                            </span>
+                                            <span
+                                                className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${isAcquired
+                                                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-400 dark:border-indigo-800'
+                                                    : salesOrder.assignment_status === 'group_assigned'
+                                                        ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800'
+                                                        : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                                                    }`}
+                                            >
+                                                {isAcquired ? t('Acquired') : (salesOrder.assignment_status === 'group_assigned' ? t('Group') : t('Pending'))}
+                                            </span>
+                                        </div>
+                                        <div className="space-y-1 text-xs">
+                                            <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                                {isAcquired
+                                                    ? (salesOrder.acquired_by_user?.name || t('Acquired'))
+                                                    : (salesOrder.assigned_group?.name || t('Unassigned'))}
                                             </div>
-                                            <div className="min-w-0">
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">{t('Acquired By')}</p>
-                                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{salesOrder.acquired_by_user.name}</p>
+                                            <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                                {isAcquired && salesOrder.acquired_at ? (
+                                                    <>
+                                                        <Calendar className="w-3 h-3 text-muted-foreground/60" />
+                                                        {formatDate(salesOrder.acquired_at)}
+                                                    </>
+                                                ) : (
+                                                    <span>{salesOrder.assignment_status === 'group_assigned' ? t('Awaiting pick up') : t('Not assigned yet')}</span>
+                                                )}
                                             </div>
                                         </div>
-                                    )}
-                                    {salesOrder.acquired_at && (
-                                        <div className="flex items-center gap-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-3 shadow-sm">
-                                            <div className="p-1.5 rounded-md bg-purple-50 dark:bg-purple-900/50 shrink-0">
-                                                <CheckCircle className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">{t('Acquired At')}</p>
-                                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{formatDate(salesOrder.acquired_at)}</p>
-                                            </div>
+                                    </div>
+
+                                    {/* Card 3: Challan Issued */}
+                                    <div className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                                <Truck className="w-3.5 h-3.5 text-blue-600" />
+                                                {t('Challan Issued')}
+                                            </span>
+                                            <span
+                                                className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${hasDeliveries
+                                                    ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800'
+                                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                                                    }`}
+                                            >
+                                                {hasDeliveries ? `${deliveries.length} ${t('Challan')}` : t('Pending')}
+                                            </span>
                                         </div>
-                                    )}
-                                    {/* Delivery Progress */}
-                                    {totalOrdered > 0 && (
-                                        <div className="flex items-center gap-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-3 shadow-sm sm:col-span-3">
-                                            <div className="p-1.5 rounded-md bg-orange-50 dark:bg-orange-900/50 shrink-0">
-                                                <Package className="w-3.5 h-3.5 text-orange-500" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-center mb-1.5">
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400">{t('Delivery Progress')}</p>
-                                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                                                        {totalDelivered} / {totalOrdered} ({deliveryPercentage}%)
+                                        <div className="space-y-1 text-xs">
+                                            <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 flex-wrap">
+                                                {hasDeliveries && latestDelivery ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => router.visit(route('salesorder.deliveries.show', latestDelivery.id))}
+                                                        className="text-primary hover:underline hover:text-primary/80 font-bold transition-colors cursor-pointer text-left"
+                                                        title={t('View Delivery Challan')}
+                                                    >
+                                                        {deliveries.length === 1
+                                                             ? (latestDelivery.delivery_number ? `#${latestDelivery.delivery_number}` : t('Challan Created'))
+                                                             : (latestDelivery.delivery_number ? `#${latestDelivery.delivery_number} (+${deliveries.length - 1})` : t(':count Challans', { count: deliveries.length }))}
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-slate-500">{t('No Challan yet')}</span>
+                                                )}
+                                                {hasDeliveries && latestDelivery?.status && (
+                                                    <span
+                                                        className={`text-[10px] px-1.5 py-0.5 leading-none uppercase tracking-wide font-semibold border rounded ${getChallanStatusClass(latestDelivery.status)}`}
+                                                    >
+                                                        {latestDelivery.status}
                                                     </span>
-                                                </div>
-                                                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                                    <div
-                                                        className={`h-full rounded-full transition-all duration-500 ${deliveryPercentage === 100 ? 'bg-green-500' : 'bg-gradient-to-r from-blue-400 to-blue-600'}`}
-                                                        style={{ width: `${deliveryPercentage}%` }}
-                                                    />
-                                                </div>
+                                                )}
+                                            </div>
+                                            <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                                {challanTime ? (
+                                                    <>
+                                                        <Calendar className="w-3 h-3 text-muted-foreground/60" />
+                                                        {challanTime}
+                                                    </>
+                                                ) : (
+                                                    <span>{t('Waiting for creation')}</span>
+                                                )}
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
+
+                                    {/* Card 4: Delivered */}
+                                    <div className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                                <Package className="w-3.5 h-3.5 text-emerald-600" />
+                                                {t('Delivered')}
+                                            </span>
+                                            <span
+                                                className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${isDelivered
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
+                                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                                                    }`}
+                                            >
+                                                {isDelivered ? t('Completed') : t('Pending')}
+                                            </span>
+                                        </div>
+                                        <div className="space-y-1 text-xs">
+                                            <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                                {isDelivered
+                                                    ? (deliveredUser || t('Delivered'))
+                                                    : t('Pending Delivery')}
+                                            </div>
+                                            <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                                {isDelivered && deliveredDate ? (
+                                                    <>
+                                                        <Calendar className="w-3 h-3 text-muted-foreground/60" />
+                                                        {formatDate(deliveredDate)}
+                                                    </>
+                                                ) : (
+                                                    <span>{t('Awaiting completion')}</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* ── Action Buttons ── */}
@@ -848,16 +1023,14 @@ export default function Show() {
                 onConfirm={handleConfirmRelease}
             />
 
-            {/* ─── Convert to Invoice Confirmation Dialog ────────────────────── */}
-            <ConfirmationDialog
+            {/* ─── Convert to Invoice Products & Stock Modal ─────────────────── */}
+            <ConvertToInvoiceForm
                 open={convertDialogOpen}
                 onOpenChange={setConvertDialogOpen}
-                title={t('Convert to Sales Invoice')}
-                message={t('Are you sure you want to convert sales order :num to a sales invoice?', { num: salesOrder.order_number || `#${salesOrder.id}` })}
-                confirmText={isConverting ? t('Converting...') : t('Yes, Convert')}
-                cancelText={t('Cancel')}
+                salesOrder={salesOrder}
+                orderItems={orderItems || []}
                 onConfirm={handleConvertInvoice}
-                isLoading={isConverting}
+                processing={convertingProcessing}
             />
         </AuthenticatedLayout>
     );

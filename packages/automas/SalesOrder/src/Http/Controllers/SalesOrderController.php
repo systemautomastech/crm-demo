@@ -1038,7 +1038,7 @@ class SalesOrderController extends Controller
         }
     }
 
-    public function convertToSalesInvoice(SalesOrder $salesOrder)
+    public function convertToSalesInvoice(Request $request, SalesOrder $salesOrder)
     {
         if (!Auth::user()->can('convert-sales-orders') && !Auth::user()->can('create-sales-invoices')) {
             return back()->with('error', __('Permission denied'));
@@ -1056,10 +1056,60 @@ class SalesOrderController extends Controller
             return back()->with('error', __('Sales Invoice module is not available.'));
         }
 
-        $salesOrder->load(['customer', 'items.taxes', 'warehouse']);
+        $warehouseId = $salesOrder->warehouse_id;
+        $salesOrder->load([
+            'customer',
+            'warehouse',
+            'items.taxes',
+            'items.product' => function ($pq) use ($warehouseId) {
+                if ($warehouseId) {
+                    $pq->with(['warehouseStocks' => fn($sq) => $sq->where('warehouse_id', $warehouseId)]);
+                } else {
+                    $pq->with('warehouseStocks');
+                }
+            }
+        ]);
+
+        // Optional customized quantities per item from modal: items => [ [id => 12, quantity => 5], ... ]
+        $customQuantities = [];
+        if ($request->has('items') && is_array($request->input('items'))) {
+            foreach ($request->input('items') as $reqItem) {
+                if (isset($reqItem['id']) && isset($reqItem['quantity'])) {
+                    $customQuantities[$reqItem['id']] = max(1, (float) $reqItem['quantity']);
+                }
+            }
+        }
+
+        // Validate stock availability for products (services excluded)
+        $insufficientItems = [];
+        foreach ($salesOrder->items as $item) {
+            $qtyToInvoice = isset($customQuantities[$item->id]) ? $customQuantities[$item->id] : (float) $item->quantity;
+            $product = $item->product;
+            if (!$product || ($product->type ?? 'product') === 'service') {
+                continue;
+            }
+            $availableStock = $warehouseId
+                ? (float) ($product->warehouseStocks->first()?->quantity ?? 0)
+                : (float) $product->warehouseStocks->sum('quantity');
+
+            if ($availableStock < $qtyToInvoice) {
+                $insufficientItems[] = [
+                    'name' => $product->name ?? $item->description ?? 'Item #' . $item->id,
+                    'required' => $qtyToInvoice,
+                    'available' => $availableStock,
+                ];
+            }
+        }
+
+        if (!empty($insufficientItems)) {
+            $msgDetails = collect($insufficientItems)->map(function ($i) {
+                return "{$i['name']} (Required: {$i['required']}, Stock: {$i['available']})";
+            })->join(', ');
+            return back()->with('error', __('Cannot convert to invoice. Insufficient stock: ') . $msgDetails);
+        }
 
         try {
-            $invoice = DB::transaction(function () use ($salesOrder) {
+            $invoice = DB::transaction(function () use ($salesOrder, $customQuantities) {
                 $customer = $salesOrder->customer;
 
                 $invoice = new SalesInvoice();
@@ -1077,37 +1127,55 @@ class SalesOrderController extends Controller
                 } else {
                     $invoice->customer_address = $billingAddress ?? (is_array($customer->billing_address ?? null) ? json_encode($customer->billing_address) : ($customer->billing_address ?? null));
                 }
-                $invoice->warehouse_id = $salesOrder->warehouse_id ?? 1;
+                $invoice->warehouse_id = $salesOrder->warehouse_id ?: null;
                 $invoice->type = 'product';
                 $invoice->notes = $salesOrder->notes;
-                $invoice->subtotal = $salesOrder->subtotal ?? 0;
-                $invoice->tax_amount = $salesOrder->tax_amount ?? 0;
-                $invoice->discount_amount = $salesOrder->discount_amount ?? 0;
-                $invoice->total_amount = $salesOrder->total_amount ?? 0;
+                $invoice->subtotal = 0;
+                $invoice->tax_amount = 0;
+                $invoice->discount_amount = 0;
+                $invoice->discount_type = 'percentage';
+                $invoice->total_amount = 0;
                 $invoice->paid_amount = 0;
-                $invoice->balance_amount = $salesOrder->total_amount ?? 0;
+                $invoice->balance_amount = 0;
                 $invoice->status = 'draft';
                 $invoice->creator_id = Auth::id() ?: ($salesOrder->creator_id ?: creatorId());
                 $invoice->created_by = creatorId();
                 $invoice->save();
 
-                foreach ($salesOrder->items as $item) { 
+                $calculatedSubtotal = 0;
+                $calculatedDiscount = 0;
+                $calculatedTax = 0;
+
+                foreach ($salesOrder->items as $item) {
+                    $qty = isset($customQuantities[$item->id]) ? $customQuantities[$item->id] : (float) $item->quantity;
+
                     $invoiceItem = new SalesInvoiceItem();
                     $invoiceItem->invoice_id = $invoice->id;
                     $invoiceItem->product_id = $item->product_id;
                     $invoiceItem->description = $item->description;
                     $invoiceItem->product_type = $item->product_type ?? ($item->product?->type ?? 'product');
-                    $invoiceItem->quantity = $item->quantity;
+                    $invoiceItem->quantity = $qty;
                     $invoiceItem->unit_price = $item->unit_price;
                     $invoiceItem->discount_type = $item->discount_type ?? 'percentage';
                     $invoiceItem->discount_percentage = $item->discount_percentage ?? 0;
                     $invoiceItem->discount_amount = $item->discount_amount ?? 0;
                     $invoiceItem->tax_percentage = $item->tax_percentage ?? 0;
                     $invoiceItem->tax_amount = $item->tax_amount ?? 0;
-                    $invoiceItem->total_amount = $item->total_amount ?? ($item->final_price ?? 0);
                     $invoiceItem->creator_id = $invoice->creator_id;
                     $invoiceItem->created_by = $invoice->created_by;
+
+                    $lineSubtotal = ($qty * $item->unit_price);
+                    $lineDiscount = ($lineSubtotal * ($item->discount_percentage ?? 0)) / 100;
+                    $lineAfterDiscount = $lineSubtotal - $lineDiscount;
+                    $lineTax = ($lineAfterDiscount * ($item->tax_percentage ?? 0)) / 100;
+                    $lineTotal = max(0, $lineAfterDiscount + $lineTax);
+
+                    $invoiceItem->total_amount = $lineTotal;
                     $invoiceItem->save();
+
+                    $calculatedSubtotal += $lineSubtotal;
+                    $calculatedDiscount += $lineDiscount;
+                    $calculatedTax += $lineTax;
 
                     if (!empty($item->taxes)) {
                         foreach ($item->taxes as $tax) {
@@ -1120,6 +1188,15 @@ class SalesOrderController extends Controller
                     }
                 }
 
+                $finalTotal = max(0, $calculatedSubtotal - $calculatedDiscount + $calculatedTax);
+                $invoice->update([
+                    'subtotal' => $calculatedSubtotal,
+                    'discount_amount' => $calculatedDiscount,
+                    'tax_amount' => $calculatedTax,
+                    'total_amount' => $finalTotal,
+                    'balance_amount' => $finalTotal,
+                ]);
+
                 $salesOrder->update([
                     'is_invoiced' => true,
                     'invoice_id' => $invoice->id,
@@ -1128,13 +1205,17 @@ class SalesOrderController extends Controller
                 return $invoice;
             });
 
-            if (\Route::has('sales-invoices.show')) {
+            if (\Route::has('sales-invoices.show') && Auth::user()->can('view-sales-invoices')) {
                 return redirect()->route('sales-invoices.show', $invoice->id)
                     ->with('success', __('Sales Order converted to invoice successfully.'));
             }
 
             return back()->with('success', __('Sales Order converted to invoice successfully.'));
         } catch (\Throwable $th) {
+            \Log::error('Sales Order convertToSalesInvoice error: ' . $th->getMessage(), [
+                'sales_order_id' => $salesOrder->id,
+                'exception' => $th,
+            ]);
             return back()->with('error', __('Failed to convert Sales Order to invoice: ') . $th->getMessage());
         }
     }

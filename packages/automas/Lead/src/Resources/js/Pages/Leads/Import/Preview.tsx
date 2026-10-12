@@ -472,7 +472,10 @@ export default function Preview({
                 leadImport.uuid
             ),
             {
-                preserveScroll: true,
+                preserveScroll: false,
+                onError: (errors) => {
+                    console.error('Import Mapping Errors:', errors);
+                },
             }
         );
     };
