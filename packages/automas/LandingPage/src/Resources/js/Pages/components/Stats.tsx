@@ -87,13 +87,13 @@ export default function Stats({ settings }: StatsProps) {
                     {statsList.map((statItem: any, idx: number) => (
                         <div
                             key={idx}
-                            className="rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group min-h-[105px] sm:min-h-[130px] flex flex-col justify-center"
+                            className="gsap-stat-card rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group min-h-[105px] sm:min-h-[130px] flex flex-col justify-center"
                             style={{ backgroundColor: accentColor }}
                         >
                             {/* Subtle Inner Glow Highlight */}
                             <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-                            <div className="text-2xl sm:text-4xl lg:text-5xl font-['Plus_Jakarta_Sans',sans-serif] font-extrabold text-white tracking-tight mb-1 sm:mb-2">
+                            <div className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-1 sm:mb-2">
                                 {formatValue(statItem, idx)}
                             </div>
                             <div className="text-xs sm:text-sm text-white/90 font-medium tracking-wide">

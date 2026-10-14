@@ -76,11 +76,11 @@ export default function CTA({ settings, plans: propPlans = [], activeModules = [
             <div className="max-w-7xl mx-auto px-6 lg:px-8">
 
                 {/* Header from settings */}
-                <div className="text-center max-w-2xl mx-auto mb-12">
+                <div className="text-center max-w-2xl mx-auto mb-12 gsap-section-header">
                     <span className="inline-flex items-center gap-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full border border-slate-200 mb-4" style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}>
                         {t('Flexible Subscriptions')}
                     </span>
-                    <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">
+                    <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">
                         {pricingSettings.title || t('Choose Your Pricing Plan')}
                     </h2>
                     {pricingSettings.subtitle && (
@@ -133,7 +133,7 @@ export default function CTA({ settings, plans: propPlans = [], activeModules = [
                                 <div
                                     key={plan.id}
                                     style={isFeatured ? { borderColor: primaryColor } : {}}
-                                    className={`rounded-2xl p-8 transition-all duration-300 flex flex-col justify-between ${isFeatured
+                                    className={`gsap-card-reveal rounded-2xl p-8 transition-[box-shadow,border-color] duration-300 flex flex-col justify-between ${isFeatured
                                         ? 'bg-[#0A1E42] text-white shadow-2xl ring-2 relative md:-translate-y-3'
                                         : 'bg-white text-slate-900 border border-slate-200 shadow-xs hover:border-slate-300 hover:shadow-md'
                                         }`}
@@ -146,7 +146,7 @@ export default function CTA({ settings, plans: propPlans = [], activeModules = [
                                     )}
 
                                     <div>
-                                        <h3 className="font-['Plus_Jakarta_Sans',sans-serif] text-2xl font-bold mb-2">
+                                        <h3 className="font-display text-2xl font-bold mb-2">
                                             {t(plan.name)}
                                         </h3>
 
@@ -220,7 +220,7 @@ export default function CTA({ settings, plans: propPlans = [], activeModules = [
                                     <a
                                         href={route('register')}
                                         style={isFeatured ? { backgroundColor: primaryColor } : {}}
-                                        className={`w-full py-3.5 rounded-xl text-center text-sm font-semibold transition-all shadow-xs ${isFeatured
+                                        className={`w-full py-3.5 rounded-[10px] text-center text-sm font-semibold transition-all shadow-xs ${isFeatured
                                             ? 'text-white hover:opacity-90'
                                             : 'bg-[#0A1E42] text-white hover:bg-[#122A52]'
                                             }`}
@@ -237,7 +237,7 @@ export default function CTA({ settings, plans: propPlans = [], activeModules = [
                                 <div
                                     key={idx}
                                     style={isFeatured ? { borderColor: primaryColor } : {}}
-                                    className={`rounded-2xl p-8 transition-all duration-300 flex flex-col justify-between ${isFeatured
+                                    className={`gsap-card-reveal rounded-2xl p-8 transition-all duration-300 flex flex-col justify-between ${isFeatured
                                         ? 'bg-[#0A1E42] text-white shadow-xl ring-2 relative md:-translate-y-3'
                                         : 'bg-white text-slate-900 border border-slate-200 shadow-xs hover:border-slate-300 hover:shadow-md'
                                         }`}
@@ -250,7 +250,7 @@ export default function CTA({ settings, plans: propPlans = [], activeModules = [
                                     )}
 
                                     <div>
-                                        <h3 className="font-['Plus_Jakarta_Sans',sans-serif] text-xl font-bold mb-2">
+                                        <h3 className="font-display text-xl font-bold mb-2">
                                             {t(plan.name)}
                                         </h3>
 
@@ -290,7 +290,7 @@ export default function CTA({ settings, plans: propPlans = [], activeModules = [
                                     <a
                                         href={route('register')}
                                         style={isFeatured ? { backgroundColor: primaryColor } : {}}
-                                        className={`w-full py-3.5 rounded-xl text-center text-sm font-semibold transition-all shadow-xs ${isFeatured
+                                        className={`w-full py-3.5 rounded-[10px] text-center text-sm font-semibold transition-all shadow-xs ${isFeatured
                                             ? 'text-white hover:opacity-90'
                                             : 'bg-[#0A1E42] text-white hover:bg-[#122A52]'
                                             }`}
@@ -304,9 +304,9 @@ export default function CTA({ settings, plans: propPlans = [], activeModules = [
                 </div>
 
                 {/* Clean, Enterprise Dark Blue Container */}
-                <div className="bg-[#0A1E42] text-white rounded-3xl p-10 md:p-16 text-center border border-[#122A52] shadow-2xl relative overflow-hidden">
+                <div className="gsap-cta-banner bg-[#0A1E42] text-white rounded-3xl p-10 md:p-16 text-center border border-[#122A52] shadow-2xl relative overflow-hidden">
                     <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-                        <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+                        <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
                             {t(title)}
                         </h2>
 
@@ -318,7 +318,7 @@ export default function CTA({ settings, plans: propPlans = [], activeModules = [
                             <a
                                 href={route('register')}
                                 style={{ backgroundColor: primaryColor }}
-                                className="px-8 py-3.5 rounded-xl text-base font-semibold text-white transition-all shadow-md inline-flex items-center justify-center gap-2 w-full sm:w-auto hover:opacity-90"
+                                className="px-8 py-3.5 rounded-[10px] text-base font-semibold text-white transition-all shadow-md inline-flex items-center justify-center gap-2 w-full sm:w-auto hover:opacity-90"
                             >
                                 <span>{t(primaryButtonText)}</span>
                                 <ArrowRight className="w-4 h-4" />
@@ -326,7 +326,7 @@ export default function CTA({ settings, plans: propPlans = [], activeModules = [
 
                             <a
                                 href="#contact"
-                                className="px-8 py-3.5 rounded-xl text-base font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/15 transition-all w-full sm:w-auto"
+                                className="px-8 py-3.5 rounded-[10px] text-base font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/15 transition-all w-full sm:w-auto"
                             >
                                 {t(secondaryButtonText)}
                             </a>

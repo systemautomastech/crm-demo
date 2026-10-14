@@ -21,6 +21,15 @@ class DatabaseSeeder extends Seeder
             EmailTemplatesSeeder::class,
             NotificationsTableSeeder::class,
             PackageSeeder::class,
+            WarehouseSeeder::class,
+            ProductSeeder::class,
+            UserSeeder::class,
+            CustomerSeeder::class,
+            DealStageSeeder::class,
+            LeadSeeder::class,
+            LeadTaskSeeder::class,
+            DealSeeder::class,
+            DealTaskSeeder::class,
         ]);
 
         $companyUser = User::where('type', 'company')->first();

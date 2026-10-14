@@ -148,7 +148,7 @@ export default function Features({ settings }: FeaturesProps) {
                     >
                         <span className="text-[10px]">◆</span> {t('Main Features')}
                     </span>
-                    <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">
+                    <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">
                         {t(title)}
                     </h2>
                     {subtitle && (
@@ -170,7 +170,7 @@ export default function Features({ settings }: FeaturesProps) {
                         return (
                             <div
                                 key={idx}
-                                className="gsap-card-reveal rounded-xl sm:rounded-2xl border border-slate-200/80 p-3.5 sm:p-8 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl group flex flex-col justify-between h-full min-h-[160px] sm:min-h-[220px]"
+                                className="gsap-card-reveal rounded-xl sm:rounded-2xl border border-slate-200/80 p-3.5 sm:p-8 transition-[box-shadow,border-color] duration-300 hover:shadow-xl group flex flex-col justify-between h-full min-h-[160px] sm:min-h-[220px]"
                                 style={{ backgroundColor: cardBg }}
                             >
                                 <div>
@@ -188,7 +188,7 @@ export default function Features({ settings }: FeaturesProps) {
                                         )}
                                     </div>
 
-                                    <h3 className="font-['Plus_Jakarta_Sans',sans-serif] text-sm sm:text-xl font-bold text-slate-900 mb-1.5 sm:mb-3 line-clamp-2">
+                                    <h3 className="font-display text-sm sm:text-xl font-bold text-slate-900 mb-1.5 sm:mb-3 line-clamp-2">
                                         {t(item.title)}
                                     </h3>
 

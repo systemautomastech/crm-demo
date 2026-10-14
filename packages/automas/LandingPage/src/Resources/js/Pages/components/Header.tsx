@@ -114,21 +114,59 @@ export default function Header({ settings }: HeaderProps) {
 
                     {/* Action Buttons - Desktop only (>=1024px) */}
                     <div className="hidden lg:flex items-center gap-4">
+                        <style>{`
+                            .nav-btn-saas {
+                                position: relative;
+                                background-color: ${primaryColor};
+                                background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 100%);
+                                border-radius: 10px;
+                                padding: 9px 20px;
+                                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05),
+                                            0 4px 14px 0 rgba(19, 7, 116, 0.22),
+                                            inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
+                                            inset 0 -1px 0 0 rgba(0, 0, 0, 0.18);
+                                font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                font-size: 14px;
+                                font-weight: 600;
+                                letter-spacing: -0.01em;
+                                line-height: 1.5;
+                                color: #ffffff;
+                                text-decoration: none;
+                                display: inline-flex;
+                                align-items: center;
+                                justify-content: center;
+                                gap: 7px;
+                                cursor: pointer;
+                                transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+                            }
+                            .nav-btn-saas:hover {
+                                transform: translateY(-1px);
+                                box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.08),
+                                            0 6px 18px 0 rgba(19, 7, 116, 0.3),
+                                            inset 0 1px 0 0 rgba(255, 255, 255, 0.45),
+                                            inset 0 -1px 0 0 rgba(0, 0, 0, 0.2);
+                                filter: brightness(1.03);
+                            }
+                            .nav-btn-saas:active {
+                                transform: translateY(0);
+                                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.08),
+                                            inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+                            }
+                        `}</style>
                         {isAuthenticated ? (
                             <button
                                 onClick={() => router.visit(route('dashboard'))}
-                                style={{ backgroundColor: primaryColor }}
-                                className="px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-all shadow-md flex items-center gap-2 hover:opacity-90"
+                                className="nav-btn-saas"
                             >
                                 <ShieldCheck className="w-4 h-4" />
-                                {t('Dashboard')}
+                                <span>{t('Dashboard')}</span>
                             </button>
                         ) : (
                             <>
                                 <a href={route('login')} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
                                     {t('Login')}
                                 </a>
-                                <a href={route('register')} style={{ backgroundColor: primaryColor }} className="px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-all shadow-md hover:opacity-90">
+                                <a href={route('register')} className="nav-btn-saas">
                                     {t(ctaText)}
                                 </a>
                             </>
@@ -171,25 +209,23 @@ export default function Header({ settings }: HeaderProps) {
                                     setMobileMenuOpen(false);
                                     router.visit(route('dashboard'));
                                 }}
-                                style={{ backgroundColor: primaryColor }}
-                                className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all shadow-md flex items-center justify-center gap-2"
+                                className="nav-btn-saas w-full py-3"
                             >
                                 <ShieldCheck className="w-4 h-4" />
-                                {t('Dashboard')}
+                                <span>{t('Dashboard')}</span>
                             </button>
                         ) : (
                             <>
                                 <a
                                     href={route('login')}
-                                    className="w-full py-2.5 rounded-xl text-center text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+                                    className="w-full py-2.5 rounded-[10px] text-center text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     {t('Login')}
                                 </a>
                                 <a
                                     href={route('register')}
-                                    style={{ backgroundColor: primaryColor }}
-                                    className="w-full py-3 rounded-xl text-center text-sm font-semibold text-white transition-all shadow-md"
+                                    className="nav-btn-saas w-full py-3"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     {t(ctaText)}

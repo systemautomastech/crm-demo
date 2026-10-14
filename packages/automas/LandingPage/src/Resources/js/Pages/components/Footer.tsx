@@ -136,13 +136,13 @@ export default function Footer({ settings }: FooterProps) {
                                 value={emailInput}
                                 onChange={(e) => setEmailInput(e.target.value)}
                                 disabled={isSubmitting}
-                                className="flex-1 px-4 py-3 rounded-full bg-[#122A52] border border-[#233A63] text-white placeholder-slate-400 text-xs focus:outline-none focus:border-slate-500"
+                                className="flex-1 px-4 py-3 rounded-[10px] bg-[#122A52] border border-[#233A63] text-white placeholder-slate-400 text-xs focus:outline-none focus:border-slate-500"
                             />
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
                                 style={{ backgroundColor: primaryColor }}
-                                className="px-5 py-3 rounded-full text-white text-xs font-semibold flex items-center gap-1 shadow-md transition-all hover:opacity-90"
+                                className="px-5 py-3 rounded-[10px] text-white text-xs font-semibold flex items-center gap-1 shadow-md transition-all hover:opacity-90"
                             >
                                 <span>{t('Subscribe')}</span>
                                 <ArrowRight className="w-3.5 h-3.5" />

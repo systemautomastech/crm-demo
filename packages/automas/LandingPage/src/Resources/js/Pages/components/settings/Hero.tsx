@@ -61,13 +61,28 @@ export default function Hero({ data, getSectionData, updateSectionData, updateSe
                             </Select>
                         </div>
                         <div>
-                            <Label>{t('Hero Title')}</Label>
+                            <Label>{t('Hero Title Prefix / Static Title')}</Label>
                             <Input
                                 value={getSectionData('hero').title || ''}
                                 onChange={(e) => updateSectionData('hero', { title: e.target.value })}
-                                placeholder={t('Your main headline')}
+                                placeholder={t('e.g. Transform Your Business with')}
                             />
                         </div>
+                    </div>
+                    <div>
+                        <Label>{t('Animated Rotating Titles (Comma separated)')}</Label>
+                        <Input
+                            value={
+                                Array.isArray(getSectionData('hero').rotating_texts)
+                                    ? getSectionData('hero').rotating_texts.join(', ')
+                                    : (getSectionData('hero').rotating_texts || '')
+                            }
+                            onChange={(e) => updateSectionData('hero', { rotating_texts: e.target.value })}
+                            placeholder={t('Automas CRM, Project Management, HRM & Payroll, POS & Inventory')}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {t('Comma-separated list of titles that will automatically animate and rotate in the hero section.')}
+                        </p>
                     </div>
                     <div>
                         <Label>{t('Hero Subtitle')}</Label>

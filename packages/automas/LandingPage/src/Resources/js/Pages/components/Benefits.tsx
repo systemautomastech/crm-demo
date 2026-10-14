@@ -99,8 +99,8 @@ export default function Benefits({ settings }: BenefitsProps) {
             {/* Why Choose Automas CRM */}
             <section className="relative py-6 lg:py-24 bg-transparent">
                 <div className="max-w-7xl mx-auto px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-4xl md:text-5xl font-bold text-slate-900 mb-5 tracking-tight">
+                    <div className="text-center mb-16 gsap-section-header">
+                        <h2 className="font-display text-4xl md:text-5xl font-bold text-slate-900 mb-5 tracking-tight">
                             {t(sectionTitle)}
                         </h2>
                         <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto font-normal">
@@ -119,7 +119,7 @@ export default function Benefits({ settings }: BenefitsProps) {
                                 <div
                                     key={idx}
                                     style={{ backgroundColor: cardBg }}
-                                    className="rounded-xl sm:rounded-2xl p-3.5 sm:p-8 border border-slate-200/80 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between h-full min-h-[160px] sm:min-h-[220px]"
+                                    className="gsap-card-reveal rounded-xl sm:rounded-2xl p-3.5 sm:p-8 border border-slate-200/80 shadow-xs hover:shadow-xl transition-[box-shadow,border-color] duration-300 group flex flex-col justify-between h-full min-h-[160px] sm:min-h-[220px]"
                                 >
                                     <div>
                                         <div
@@ -128,7 +128,7 @@ export default function Benefits({ settings }: BenefitsProps) {
                                         >
                                             <IconComponent className="w-4 h-4 sm:w-6 sm:h-6 stroke-[2]" />
                                         </div>
-                                        <h3 className="text-sm sm:text-xl font-['Plus_Jakarta_Sans',sans-serif] font-bold text-slate-900 mb-1.5 sm:mb-3 line-clamp-2">
+                                        <h3 className="text-sm sm:text-xl font-display font-bold text-slate-900 mb-1.5 sm:mb-3 line-clamp-2">
                                             {t(item.title)}
                                         </h3>
                                         <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal line-clamp-3 sm:line-clamp-none">
@@ -146,8 +146,8 @@ export default function Benefits({ settings }: BenefitsProps) {
             <section id="demo" className="relative py-16 lg:py-20 bg-transparent">
                 <div className="max-w-7xl mx-auto px-6 lg:px-8">
 
-                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
-                        <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-[1.05] max-w-xl">
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12 gsap-section-header">
+                        <h2 className="font-display text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-[1.05] max-w-xl">
                             {t(galleryTitle)}
                         </h2>
                         <p className="text-base sm:text-lg text-slate-500 max-w-sm lg:text-right leading-relaxed">
@@ -155,7 +155,7 @@ export default function Benefits({ settings }: BenefitsProps) {
                         </p>
                     </div>
 
-                    <div className="grid lg:grid-cols-[200px_1fr] gap-0 border border-slate-200 rounded-2xl overflow-hidden">
+                    <div className="gsap-card-reveal grid lg:grid-cols-[200px_1fr] gap-0 border border-slate-200 rounded-2xl overflow-hidden">
                         {/* Left Tab List without right border line or gap on mobile */}
                         <div className="bg-slate-50/60 flex lg:flex-col overflow-x-auto lg:overflow-visible p-2 lg:p-3 gap-1.5 lg:gap-2">
                             {screenshots.map((shot, idx) => {
@@ -244,14 +244,14 @@ export default function Benefits({ settings }: BenefitsProps) {
             {/* FAQ Section */}
             <section className="relative py-6 lg:py-24 bg-transparent">
                 <div className="max-w-7xl mx-auto px-6 lg:px-8">
-                    <div className="text-left mb-12">
+                    <div className="text-left mb-12 gsap-section-header">
                         <span
                             className="inline-flex items-center gap-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full border border-slate-200 mb-3 shadow-2xs"
                             style={{ backgroundColor: `${primaryColor}12`, color: primaryColor }}
                         >
                             {t('Got Questions?')}
                         </span>
-                        <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight">
+                        <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight">
                             {t('Frequently Asked Questions')}
                         </h2>
                     </div>
@@ -264,11 +264,11 @@ export default function Benefits({ settings }: BenefitsProps) {
                                 return (
                                     <div
                                         key={idx}
-                                        className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs transition-all duration-300"
+                                        className="gsap-faq-item bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs transition-all duration-300"
                                     >
                                         <button
                                             onClick={() => setOpenFaq(isOpen ? null : idx)}
-                                            className="w-full px-6 py-5 text-left flex items-center justify-between gap-4 font-['Plus_Jakarta_Sans',sans-serif] font-bold text-slate-900 text-base sm:text-lg"
+                                            className="w-full px-6 py-5 text-left flex items-center justify-between gap-4 font-display font-bold text-slate-900 text-base sm:text-lg"
                                         >
                                             <span>{t(faq.q)}</span>
                                             <span className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-45 bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}>
@@ -286,7 +286,7 @@ export default function Benefits({ settings }: BenefitsProps) {
                         </div>
 
                         {/* Right Side: Storage FAQ Image */}
-                        <div className="lg:col-span-5 sticky top-24">
+                        <div className="lg:col-span-5 sticky top-24 gsap-faq-media">
                             <div className="relative rounded-3xl overflow-hidden p-3">
                                 <img
                                     src={getImagePath('storage/app/public/media/faq.png')}

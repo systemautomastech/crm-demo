@@ -76,7 +76,7 @@ export default function Pricing(props: PricingProps) {
 
             <Header settings={settings} />
 
-            <main className="min-h-screen bg-slate-50/70 pt-28 pb-24 font-['Plus_Jakarta_Sans',sans-serif]">
+            <main className="min-h-screen bg-slate-50/70 pt-28 pb-24 font-sans">
                 <div className="max-w-7xl mx-auto px-6 lg:px-8">
 
                     {/* Header */}
@@ -153,7 +153,7 @@ export default function Pricing(props: PricingProps) {
                                             )}
 
                                             <div>
-                                                <h3 className="font-['Plus_Jakarta_Sans',sans-serif] text-2xl font-bold mb-2">
+                                                <h3 className="font-display text-2xl font-bold mb-2">
                                                     {t(plan.name)}
                                                 </h3>
 

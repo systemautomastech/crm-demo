@@ -136,7 +136,7 @@ export default function Modules({ settings }: ModulesProps) {
         <section id="modules" className="relative py-6 lg:py-24 bg-transparent text-slate-900 overflow-hidden select-none">
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
-                <div className="text-center max-w-3xl mx-auto mb-10 lg:mb-14">
+                <div className="text-center max-w-3xl mx-auto mb-10 lg:mb-14 gsap-section-header">
                     <span
                         className="inline-flex items-center gap-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full border border-slate-200/80 mb-4 shadow-2xs"
                         style={{ backgroundColor: `${primaryColor}12`, color: primaryColor }}
@@ -144,7 +144,7 @@ export default function Modules({ settings }: ModulesProps) {
                         <Layers className="w-3.5 h-3.5" />
                         {t('Business Modules')}
                     </span>
-                    <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-tight mb-4">
+                    <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-tight mb-4">
                         {t(sectionTitle)}
                     </h2>
                     {sectionSubtitle && (
@@ -182,7 +182,7 @@ export default function Modules({ settings }: ModulesProps) {
 
             {/* Slider Wrapper */}
             <div
-                className="relative z-10 w-full"
+                className="gsap-modules-carousel relative z-10 w-full"
                 onMouseEnter={() => setIsAutoPlay(false)}
                 onMouseLeave={() => setIsAutoPlay(true)}
             >
@@ -267,7 +267,7 @@ export default function Modules({ settings }: ModulesProps) {
 
                                                 {/* Title & Description */}
                                                 <div className="space-y-3">
-                                                    <h3 className="font-['Plus_Jakarta_Sans',sans-serif] text-2xl sm:text-3xl font-bold text-slate-900 leading-tight tracking-tight">
+                                                    <h3 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 leading-tight tracking-tight">
                                                         {t(mod.title)}
                                                     </h3>
                                                     <p className="text-slate-400 text-sm leading-relaxed font-normal">
