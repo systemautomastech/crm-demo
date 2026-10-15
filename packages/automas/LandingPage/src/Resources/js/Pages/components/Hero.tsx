@@ -226,13 +226,13 @@ export default function Hero({ settings }: HeroProps) {
                     top: 2px;
                     width: 52px;
                     height: 20px;
-                    transform: translate3d(0, 0, 0);
+                    transform: translate3d(-26px, 0, 0);
                     will-change: transform;
-                    transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+                    transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
                 }
 
                 .topbox-btn-primary:hover .topbox-btn-slide-icon-track {
-                    transform: translate3d(-26px, 0, 0);
+                    transform: translate3d(0, 0, 0);
                 }
 
                 .topbox-btn-primary:hover {
@@ -478,21 +478,6 @@ export default function Hero({ settings }: HeroProps) {
                     }
                 }
 
-                /* Topbox Left-Side Ambient Backdrop Blur Layer */
-                .topbox-blur-layer {
-                    -webkit-backdrop-filter: blur(100px);
-                    backdrop-filter: blur(100px);
-                    z-index: 1;
-                    width: 60%;
-                    position: absolute;
-                    top: 0;
-                    bottom: 40px;
-                    left: 0;
-                    -webkit-mask: linear-gradient(270deg, rgba(0,0,0,0) 0%, #000000 69%);
-                    mask: linear-gradient(270deg, rgba(0,0,0,0) 0%, #000000 69%);
-                    pointer-events: none;
-                }
-
                 /* Floating keyframe animations */
                 @keyframes topboxFloat1 {
                     0%, 100% { transform: translateY(0px); }
@@ -607,8 +592,6 @@ export default function Hero({ settings }: HeroProps) {
                 className="relative overflow-hidden w-full pt-[120px] sm:pt-[135px] lg:pt-[150px] pb-0 topbox-root select-text"
                 style={{ backgroundColor: bgColor }}
             >
-                {/* Topbox Left Ambient Backdrop Blur Layer */}
-                <div className="topbox-blur-layer" />
 
                 {/* Pattern 1: Upper Curved Wave Pattern */}
                 <div className="absolute top-[33%] left-[29px] right-[-259px] w-[calc(100%+230px)] h-[265px] -translate-y-1/2 pointer-events-none z-0 overflow-visible select-none">

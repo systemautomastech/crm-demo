@@ -83,50 +83,64 @@ export default function Landing({ settings, plans, activeModules }: LandingProps
                 delay: 0.5
             });
 
-            // 2. Parallax Scrub on Ambient Orbs while user scrolls
-            gsap.to('.gsap-ambient-orb-1', {
-                y: 220,
-                x: 60,
-                ease: 'none',
-                scrollTrigger: {
-                    trigger: 'body',
-                    start: 'top top',
-                    end: 'bottom bottom',
-                    scrub: 1.5,
-                }
-            });
 
-            gsap.to('.gsap-ambient-orb-2', {
-                y: -240,
-                x: -70,
-                ease: 'none',
-                scrollTrigger: {
-                    trigger: 'body',
-                    start: 'top top',
-                    end: 'bottom bottom',
-                    scrub: 2,
-                }
-            });
 
-            // 3. Stats Cards - Individual scroll reveal with scale up
+            // 3. Stats Cards - Smooth card entrance & inner text rise choreography
             const statCards = gsap.utils.toArray('.gsap-stat-card');
             statCards.forEach((card: any, i: number) => {
-                gsap.fromTo(card,
-                    { y: 35, opacity: 0, scale: 0.93 },
+                const numberEl = card.querySelector('.gsap-stat-number');
+                const labelEl = card.querySelector('.gsap-stat-label');
+                const subEl = card.querySelector('.gsap-stat-sub');
+                const iconEl = card.querySelector('.gsap-stat-icon');
+                const badgeEl = card.querySelector('.gsap-stat-badge');
+
+                const cardTl = gsap.timeline({
+                    scrollTrigger: {
+                        trigger: card,
+                        start: 'top 88%',
+                        toggleActions: 'play none none none',
+                    }
+                });
+
+                // Smooth lift for card container
+                cardTl.fromTo(card,
+                    { y: 30, opacity: 0, scale: 0.96 },
                     {
                         y: 0,
                         opacity: 1,
                         scale: 1,
-                        duration: 0.65,
-                        ease: 'back.out(1.4)',
+                        duration: 0.7,
+                        delay: i * 0.1,
+                        ease: 'power3.out',
                         force3D: true,
-                        scrollTrigger: {
-                            trigger: card,
-                            start: 'top 88%',
-                            toggleActions: 'play none none none',
-                        }
                     }
                 );
+
+                // Smooth pop for badge & icon
+                if (iconEl && badgeEl) {
+                    cardTl.fromTo([iconEl, badgeEl],
+                        { scale: 0.85, opacity: 0 },
+                        { scale: 1, opacity: 1, duration: 0.45, stagger: 0.08, ease: 'back.out(1.5)' },
+                        '-=0.45'
+                    );
+                }
+
+                // Silky smooth rise for metric number, label, and subtitle
+                const textElements = [numberEl, labelEl, subEl].filter(Boolean);
+                if (textElements.length > 0) {
+                    cardTl.fromTo(textElements,
+                        { y: 16, opacity: 0 },
+                        {
+                            y: 0,
+                            opacity: 1,
+                            duration: 0.6,
+                            stagger: 0.08,
+                            ease: 'power3.out',
+                            force3D: true,
+                        },
+                        '-=0.4'
+                    );
+                }
             });
 
             // 4. Section Headers - Clean rise with badge pop
@@ -284,20 +298,45 @@ export default function Landing({ settings, plans, activeModules }: LandingProps
     const sectionOrder = settings?.config_sections?.section_order ||
         ['header', 'hero', 'stats', 'features', 'modules', 'benefits', 'gallery', 'cta', 'footer'];
 
+    const sectionBgMap: Record<string, string> = {
+        header: 'bg-transparent',
+        hero: 'bg-[#f9f7f2]',
+        stats: 'bg-[#f9f7f2]',
+        features: 'bg-white',
+        modules: 'bg-[#f9f7f2]',
+        benefits: 'bg-white',
+        gallery: 'bg-[#f9f7f2]',
+        cta: 'bg-white',
+        footer: 'bg-transparent',
+    };
+
     const renderSection = (sectionKey: string) => {
         if (!isSectionVisible(sectionKey)) return null;
+
+        let sectionElement = null;
         switch (sectionKey) {
-            case 'header': return <Header key={sectionKey} settings={settings} />;
-            case 'hero': return <Hero key={sectionKey} settings={settings} />;
-            case 'stats': return <Stats key={sectionKey} settings={settings} />;
-            case 'features': return <Features key={sectionKey} settings={settings} />;
-            case 'modules': return <Modules key={sectionKey} settings={settings} />;
-            case 'benefits': return <Benefits key={sectionKey} settings={settings} />;
-            case 'gallery': return <Gallery key={sectionKey} settings={settings} />;
-            case 'cta': return <CTA key={sectionKey} settings={settings} plans={plans} activeModules={activeModules} />;
-            case 'footer': return <Footer key={sectionKey} settings={settings} />;
+            case 'header': sectionElement = <Header key={sectionKey} settings={settings} />; break;
+            case 'hero': sectionElement = <Hero key={sectionKey} settings={settings} />; break;
+            case 'stats': sectionElement = <Stats key={sectionKey} settings={settings} />; break;
+            case 'features': sectionElement = <Features key={sectionKey} settings={settings} />; break;
+            case 'modules': sectionElement = <Modules key={sectionKey} settings={settings} />; break;
+            case 'benefits': sectionElement = <Benefits key={sectionKey} settings={settings} />; break;
+            case 'gallery': sectionElement = <Gallery key={sectionKey} settings={settings} />; break;
+            case 'cta': sectionElement = <CTA key={sectionKey} settings={settings} plans={plans} activeModules={activeModules} />; break;
+            case 'footer': sectionElement = <Footer key={sectionKey} settings={settings} />; break;
             default: return null;
         }
+
+        const bgClass = sectionBgMap[sectionKey] || 'bg-transparent';
+        if (sectionKey === 'header' || sectionKey === 'footer') {
+            return sectionElement;
+        }
+
+        return (
+            <div key={sectionKey} className={`w-full ${bgClass} transition-colors duration-300`}>
+                {sectionElement}
+            </div>
+        );
     };
 
     const colorScheme = settings?.config_sections?.colors || {
@@ -308,8 +347,9 @@ export default function Landing({ settings, plans, activeModules }: LandingProps
 
     return (
         <div
-            className="landing-page-root min-h-screen bg-slate-50 relative"
+            className="landing-page-root min-h-screen relative"
             style={{
+                backgroundColor: '#f9f7f2',
                 '--color-primary': colorScheme.primary || '#130774',
                 '--color-secondary': colorScheme.secondary || '#0b55b7',
                 '--color-accent': colorScheme.accent || '#130674',
@@ -331,23 +371,13 @@ export default function Landing({ settings, plans, activeModules }: LandingProps
                     font-family: 'Satoshi', -apple-system, sans-serif;
                 }
             `}</style>
-            {/* STICKY BACKGROUND LAYER (Stays sticky behind all scrolling sections) */}
+            {/* CLEAN BACKGROUND LAYER */}
             <div className="sticky top-0 h-screen w-full pointer-events-none z-0 overflow-hidden -mb-[100vh]">
-                {/* Primary Top-Left Ambient Orb */}
-                <div
-                    className="gsap-ambient-orb-1 absolute w-[650px] h-[650px] rounded-full blur-[140px] top-10 -left-40"
-                    style={{ backgroundColor: colorScheme.primary || '#130774', opacity: 0.14 }}
-                />
-                {/* Secondary Bottom-Right Ambient Orb */}
-                <div
-                    className="gsap-ambient-orb-2 absolute w-[600px] h-[600px] rounded-full blur-[140px] bottom-10 -right-20"
-                    style={{ backgroundColor: colorScheme.secondary || '#0b55b7', opacity: 0.14 }}
-                />
-                {/* Sticky Grid Texture */}
+                {/* Subtle Grid Texture */}
                 <div
                     className="absolute inset-0 opacity-[0.25]"
                     style={{
-                        backgroundImage: 'radial-gradient(rgba(148,163,184,0.2) 1px, transparent 1px)',
+                        backgroundImage: 'radial-gradient(rgba(148,163,184,0.18) 1px, transparent 1px)',
                         backgroundSize: '36px 36px'
                     }}
                 />
@@ -356,6 +386,9 @@ export default function Landing({ settings, plans, activeModules }: LandingProps
             <Head title={`${settings?.company_name || 'Automas CRM'} - All-in-One Business Management Solution`}>
                 <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="anonymous" />
                 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400,300&display=swap" rel="stylesheet" />
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Plus+Jakarta+Sans:wght@700;800;900&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet" />
 
                 {faviconUrl && <link rel="icon" type="image/x-icon" href={faviconUrl} />}
             </Head>
